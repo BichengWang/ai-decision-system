@@ -1,12 +1,18 @@
 # python-notebook
-### Auth Info
-Email: bichengwang17@gmail.com   
+### Auth
 ### Makefile
-
+```
+make bootstrap
+make env
+source venv/bin/activate
+```
 #### Refresh Dependencies
-```angular2html
+```
 pip install pip-tools>=4.2.0
 pip-compile --no-emit-index-url requirements.in
 ```
-### Comment
-Private Python Notebook, let me know if any reference.
+### Git
+pruning origin deleted branches
+```
+git remote prune origin
+```
