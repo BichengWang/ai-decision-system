@@ -1,0 +1,24 @@
+# This file is where you specify your high-level dependencies.
+# For example you might add a line that looks like this:
+#
+# pytz>2016.3
+memory-profiler
+numpy
+requests
+pyyaml
+python-dateutil
+scipy
+seaborn
+backoff
+click
+mock
+pydump
+pycurl
+
+# test
+pytest
+pytest-custom-exit-code
+pytest-cov
+
+# flake8
+flake8
