@@ -12,7 +12,7 @@ knowledge_graph_dict = {
             },
             "Capital Gain Tax": {
                 "Trending": "Negative",
-            }
+            },
         },
         "Economic Stimulus Package": {
             "Trending": "Positive",
@@ -25,11 +25,20 @@ knowledge_graph_dict = {
                         "XLY Consumer discretionary select sector SPDR fund",
                     ],
                     "Trending": "Positive",
-                    "Reason": "Covid recover and stimulus package delivered."
-                }
-            }
+                    "Reason": "Covid recover and stimulus package delivered.",
+                },
+            },
         },
-    }
+    },
+    "New Type of Inflation": {
+        "Phenomenon": "Fed release money -> core CPI not increasing fast, but asset bull",
+        "Result": "New Type of Inflation, fool people and rich richest all the time",
+        "Reason": "This is so call new type of inflation. "
+                  "Traditional CPI index already out of style, because the necessity in the modern world is not food but asset."
+                  "Fed blindly or intend to blindly use old world index as CPI to fool people."
+                  "Then, the asset increase fast, and the gap between rich and poor split more."
+                  "The side effect would show the result sooner or later.",
+    },
 }
 
 
