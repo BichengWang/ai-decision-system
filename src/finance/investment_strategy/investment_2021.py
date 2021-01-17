@@ -1,4 +1,4 @@
-key_words = ["Trending", "Fact", "Reason", "Side Effect"]
+key_words = ["Trending", "Fact", "Reason", "Side Effect", "Index", "Stock"]
 knowledge_graph_dict = {
     "Value Investing": {},
     "Risk Management": {},
@@ -19,7 +19,8 @@ knowledge_graph_dict = {
             "Reason": "buy the rumor sell the news.",
             "Fact": "Negative",
             "Side Effect": {
-                "Consumption Discretionary Industry": {
+                "Consumption Discretionary Sector": {
+                    "Index": "",
                     "Trending": "Positive",
                     "Reason": "Covid recover and stimulus package delivered."
                 }
