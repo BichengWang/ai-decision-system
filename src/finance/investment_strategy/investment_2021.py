@@ -53,6 +53,13 @@ investment_principle = {
         "Trending": "Negative",
         "Reason": "Picked like leek",
     },
+    "principle3": {
+        "Principle": "Find the frontier and the edger of the world who being laughed at.",
+        "Trending": "Positive",
+        "Reason": "Margin cost lowest but margin reward highest in the uncultivated land to lead the world."
+                  "Being laughed at by the crowd means less people realize the real value and underestimated but already obtain attention."
+                  "Truth is in the hands of a few",
+    },
 }
 
 
