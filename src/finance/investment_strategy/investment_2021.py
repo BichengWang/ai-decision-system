@@ -94,6 +94,8 @@ target_assets = [
 
 ]
 
+todo_list = ["https://en.wikipedia.org/wiki/Ronald_S._Baron"]
+
 
 class Investment2021:
     def __init__(self):
