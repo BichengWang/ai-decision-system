@@ -1,4 +1,5 @@
 key_words = ["Trending", "Fact", "Reason", "Side Effect", "Index", "Stock", "ETF"]
+
 knowledge_graph_dict = {
     "Value Investing": {},
     "Risk Management": {},
@@ -41,7 +42,6 @@ knowledge_graph_dict = {
     },
 }
 
-
 investment_principle = {
     "principle1": {
         "Principle": "Other investors haven't go into the underlying but will plan to.",
@@ -54,6 +54,47 @@ investment_principle = {
         "Reason": "Picked like leek",
     },
 }
+
+target_assets = [
+    {
+        "Name": "Asana",
+        "Symbol": "ASAN",
+        "Type": "Equity",
+        "Positive": [],
+        "Negative": [],
+    },
+    {
+        "Name": "Nano Dimension",
+        "Symbol": "NNDM",
+        "Type": "Equity",
+        "Positive": [],
+        "Negative": [],
+    },
+    {
+        "Name": "Lockheed",
+        "Symbol": "LMT",
+        "Type": "Equity",
+        "Positive": [],
+        "Negative": [],
+    },
+    {
+        "Name": "Lockheed",
+        "Symbol": "LMT",
+        "Type": "Equity",
+        "Positive": [],
+        "Negative": [],
+    },
+    {
+        "Name": "Bitcoin",
+        "Symbol": "BTC",
+        "Type": "Cryptocurrencies",
+        "Positive": [],
+        "Negative": [],
+    },
+
+]
+
+todo_list = ["https://en.wikipedia.org/wiki/Ronald_S._Baron"]
 
 
 class Investment2021:
