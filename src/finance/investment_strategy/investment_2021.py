@@ -102,6 +102,15 @@ target_assets = [
         "Positive": [],
         "Negative": [],
     },
+    {
+        "Name": "Uber",
+        "Symbol": "Uber",
+        "Type": "Equity",
+        "Positive": [
+            "SP500 target stock",
+        ],
+        "Negative": [],
+    }
 
 ]
 
