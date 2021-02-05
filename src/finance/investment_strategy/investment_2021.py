@@ -60,6 +60,10 @@ investment_principle = {
                   "Being laughed at by the crowd means less people realize the real value and underestimated but already obtain attention."
                   "Truth is in the hands of a few",
     },
+    "principle4": {
+        "Principle": "The highest risk is not long the position but is sell then buy again risk.",
+        "Reason": "long time experience",
+    }
 }
 
 target_assets = [
@@ -98,6 +102,15 @@ target_assets = [
         "Positive": [],
         "Negative": [],
     },
+    {
+        "Name": "Uber",
+        "Symbol": "Uber",
+        "Type": "Equity",
+        "Positive": [
+            "SP500 target stock",
+        ],
+        "Negative": [],
+    }
 
 ]
 
