@@ -5,9 +5,16 @@ import pandas as pd
 import numpy as np
 
 
-class LCRecorder:
+
+class PricingModel:
     def __init__(self):
-        self.df = pd_utils.pd_read_csv('../../data/files/lc_record.csv')
+        self.df = pd.DataFrame({
+            "restaurant": np.array([], dtype='str'),
+            "user": np.array([], dtype='str'),
+            "price": np.array([], dtype='float64'),
+            "cost": np.array([], dtype='float64'),
+            "date": np.array([], dtype='str')
+        })
 
     def _init_non_record(self):
         self.df = pd.DataFrame({
@@ -42,19 +49,3 @@ class LCRecorder:
 
     def today_records(self):
         return self.df[self.df['date'] == date.today().strftime("%Y-%m-%d")]
-
-
-if __name__ == "__main__":
-    lc_recorder = LCRecorder()
-    lc_num, lc_url = 0, ""
-    print(lc_recorder.today_records())
-    while True:
-        lc_n = input("lc num: ")
-        if lc_n == "exit":
-            break
-        lc_num = int(lc_n)
-        if lc_recorder.is_exist('lc_num', lc_num):
-            print("lc num existed.")
-        lc_url = input("lc url: ")
-        lc_recorder.add_record(lc_num, lc_url)
-        print("Saved.")
