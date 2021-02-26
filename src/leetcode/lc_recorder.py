@@ -1,3 +1,5 @@
+from collections import deque
+
 from src.utils import pd_utils
 from datetime import date
 import logging
@@ -48,6 +50,8 @@ if __name__ == "__main__":
     lc_recorder = LCRecorder()
     lc_num, lc_url = 0, ""
     print(lc_recorder.today_records())
+    d = deque()
+    d.a
     while True:
         lc_n = input("lc num: ")
         if lc_n == "exit":

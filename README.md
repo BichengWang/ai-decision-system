@@ -2,6 +2,8 @@
 ### Auth
 ### Makefile
 ```
+python -m pip install --upgrade pip
+pip-compile requirements.in
 make bootstrap
 make env
 source venv/bin/activate
