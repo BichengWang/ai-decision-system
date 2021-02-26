@@ -4,43 +4,209 @@
 #
 #    pip-compile requirements.in
 #
+absl-py==0.11.0
+    # via
+    #   tensorboard
+    #   tensorflow
+astunparse==1.6.3
+    # via tensorflow
+atomicwrites==1.4.0
+    # via pytest
+attrs==20.3.0
+    # via pytest
+backoff==1.10.0
+    # via -r requirements.in
+cachetools==4.2.1
+    # via google-auth
+certifi==2020.12.5
+    # via requests
+chardet==4.0.0
+    # via requests
+click==7.1.2
+    # via -r requirements.in
+colorama==0.4.4
+    # via pytest
+coverage==5.3.1
+    # via pytest-cov
+cycler==0.10.0
+    # via matplotlib
+flake8==3.8.4
+    # via -r requirements.in
+flatbuffers==1.12
+    # via tensorflow
+gast==0.3.3
+    # via tensorflow
+google-auth-oauthlib==0.4.2
+    # via tensorboard
+google-auth==1.27.0
+    # via
+    #   google-auth-oauthlib
+    #   tensorboard
+google-pasta==0.2.0
+    # via tensorflow
+grpcio==1.32.0
+    # via
+    #   tensorboard
+    #   tensorflow
+h5py==2.10.0
+    # via
+    #   -r requirements.in
+    #   keras
+    #   tensorflow
+idna==2.10
+    # via requests
+importlib-metadata==3.4.0
+    # via
+    #   flake8
+    #   markdown
+    #   pluggy
+    #   pytest
+iniconfig==1.1.1
+    # via pytest
+keras-preprocessing==1.1.2
+    # via tensorflow
+keras==2.4.3
+    # via -r requirements.in
+kiwisolver==1.3.1
+    # via matplotlib
+markdown==3.3.3
+    # via tensorboard
+matplotlib==3.3.3
+    # via seaborn
+mccabe==0.6.1
+    # via flake8
+memory-profiler==0.58.0
+    # via -r requirements.in
+mock==4.0.3
+    # via -r requirements.in
+numpy==1.19.4
+    # via
+    #   -r requirements.in
+    #   h5py
+    #   keras
+    #   keras-preprocessing
+    #   matplotlib
+    #   opt-einsum
+    #   pandas
+    #   scipy
+    #   seaborn
+    #   tensorboard
+    #   tensorflow
+oauthlib==3.1.0
+    # via requests-oauthlib
+opt-einsum==3.3.0
+    # via tensorflow
+packaging==20.8
+    # via pytest
+pandas==1.2.0
+    # via seaborn
+pillow==8.0.1
+    # via matplotlib
+pluggy==0.13.1
+    # via pytest
+protobuf==3.15.1
+    # via
+    #   tensorboard
+    #   tensorflow
+psutil==5.8.0
+    # via memory-profiler
+py==1.10.0
+    # via pytest
+pyasn1-modules==0.2.8
+    # via google-auth
+pyasn1==0.4.8
+    # via
+    #   pyasn1-modules
+    #   rsa
+pycodestyle==2.6.0
+    # via flake8
+pydump==1.2.0
+    # via -r requirements.in
+pyflakes==2.2.0
+    # via flake8
+pyparsing==2.4.7
+    # via
+    #   matplotlib
+    #   packaging
+pytest-cov==2.10.1
+    # via -r requirements.in
+pytest-custom-exit-code==0.3.0
+    # via -r requirements.in
+pytest==6.2.1
+    # via
+    #   -r requirements.in
+    #   pytest-cov
+    #   pytest-custom-exit-code
+python-dateutil==2.8.1
+    # via
+    #   -r requirements.in
+    #   matplotlib
+    #   pandas
+pytz==2020.5
+    # via pandas
+pyyaml==5.3.1
+    # via
+    #   -r requirements.in
+    #   keras
+requests-oauthlib==1.3.0
+    # via google-auth-oauthlib
+requests==2.25.1
+    # via
+    #   -r requirements.in
+    #   requests-oauthlib
+    #   tensorboard
+rsa==4.7.1
+    # via google-auth
+scipy==1.5.4
+    # via
+    #   -r requirements.in
+    #   keras
+    #   seaborn
+seaborn==0.11.1
+    # via -r requirements.in
+six==1.15.0
+    # via
+    #   absl-py
+    #   astunparse
+    #   cycler
+    #   google-auth
+    #   google-pasta
+    #   grpcio
+    #   h5py
+    #   keras-preprocessing
+    #   protobuf
+    #   python-dateutil
+    #   tensorboard
+    #   tensorflow
+tensorboard-plugin-wit==1.8.0
+    # via tensorboard
+tensorboard==2.4.1
+    # via tensorflow
+tensorflow-estimator==2.4.0
+    # via tensorflow
+tensorflow==2.4.1
+    # via -r requirements.in
+termcolor==1.1.0
+    # via tensorflow
+toml==0.10.2
+    # via pytest
+typing-extensions==3.7.4.3
+    # via
+    #   importlib-metadata
+    #   tensorflow
+urllib3==1.26.2
+    # via requests
+werkzeug==1.0.1
+    # via tensorboard
+wheel==0.36.2
+    # via
+    #   astunparse
+    #   tensorboard
+    #   tensorflow
+wrapt==1.12.1
+    # via tensorflow
+zipp==3.4.0
+    # via importlib-metadata
 
-attrs==20.3.0             # via pytest
-backoff==1.10.0           # via -r requirements.in
-certifi==2020.12.5        # via requests
-chardet==4.0.0            # via requests
-click==7.1.2              # via -r requirements.in
-coverage==5.3.1           # via pytest-cov
-cycler==0.10.0            # via matplotlib
-flake8==3.8.4             # via -r requirements.in
-idna==2.10                # via requests
-iniconfig==1.1.1          # via pytest
-kiwisolver==1.3.1         # via matplotlib
-matplotlib==3.3.3         # via seaborn
-mccabe==0.6.1             # via flake8
-memory-profiler==0.58.0   # via -r requirements.in
-mock==4.0.3               # via -r requirements.in
-numpy==1.19.4             # via -r requirements.in, matplotlib, pandas, scipy, seaborn
-packaging==20.8           # via pytest
-pandas==1.2.0             # via seaborn
-pillow==8.0.1             # via matplotlib
-pluggy==0.13.1            # via pytest
-psutil==5.8.0             # via memory-profiler
-py==1.10.0                # via pytest
-pycodestyle==2.6.0        # via flake8
-pycurl==7.43.0.6          # via -r requirements.in
-pydump==1.2.0             # via -r requirements.in
-pyflakes==2.2.0           # via flake8
-pyparsing==2.4.7          # via matplotlib, packaging
-pytest-cov==2.10.1        # via -r requirements.in
-pytest-custom-exit-code==0.3.0  # via -r requirements.in
-pytest==6.2.1             # via -r requirements.in, pytest-cov, pytest-custom-exit-code
-python-dateutil==2.8.1    # via -r requirements.in, matplotlib, pandas
-pytz==2020.5              # via pandas
-pyyaml==5.3.1             # via -r requirements.in
-requests==2.25.1          # via -r requirements.in
-scipy==1.5.4              # via -r requirements.in, seaborn
-seaborn==0.11.1           # via -r requirements.in
-six==1.15.0               # via python-dateutil
-toml==0.10.2              # via pytest
-urllib3==1.26.2           # via requests
+# The following packages are considered to be unsafe in a requirements file:
+# setuptools

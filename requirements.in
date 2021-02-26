@@ -13,7 +13,9 @@ backoff
 click
 mock
 pydump
-pycurl
+tensorflow
+h5py
+keras
 
 # test
 pytest

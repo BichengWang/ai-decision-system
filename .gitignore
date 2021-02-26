@@ -130,3 +130,5 @@ dmypy.json
 
 # pycharm
 .idea
+/src/ml/tensorflow_lr/aclImdb/
+/src/ml/tensorflow_lr/aclImdb_v1.tar.gz.tar.gz
