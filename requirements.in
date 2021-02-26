@@ -16,6 +16,7 @@ pydump
 tensorflow
 h5py
 keras
+seaborn
 
 # test
 pytest
