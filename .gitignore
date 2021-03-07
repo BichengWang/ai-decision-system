@@ -133,3 +133,15 @@ dmypy.json
 /src/ml/tensorflow_lr/aclImdb/
 /src/ml/tensorflow_lr/aclImdb_v1.tar.gz.tar.gz
 /src/ml/tensorflow_lr/my_model.h5
+/src/ml/tensorflow_lr/my_dir/
+/src/ml/tensorflow_lr/-p/
+/src/ml/tensorflow_lr/.ipynb_checkpoints/
+/src/ml/tensorflow_lr/aclImdb/
+/src/ml/tensorflow_lr/class_a/
+/src/ml/tensorflow_lr/class_b/
+/src/ml/tensorflow_lr/dnn_model/
+/src/ml/tensorflow_lr/my_dir/
+/src/ml/tensorflow_lr/saved_model/
+/src/ml/tensorflow_lr/training_1/
+/src/ml/tensorflow_lr/training_2/
+/src/ml/tensorflow_lr/dnn_model/
