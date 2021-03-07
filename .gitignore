@@ -132,3 +132,4 @@ dmypy.json
 .idea
 /src/ml/tensorflow_lr/aclImdb/
 /src/ml/tensorflow_lr/aclImdb_v1.tar.gz.tar.gz
+/src/ml/tensorflow_lr/my_model.h5
