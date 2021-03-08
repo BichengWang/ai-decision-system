@@ -147,3 +147,4 @@ dmypy.json
 /src/ml/tensorflow_lr/dnn_model/
 /src/ml/tensorflow_lr/metadata.tsv
 /src/ml/tensorflow_lr/logs/
+/src/ml/tensorflow_lr/vectors.tsv
