@@ -57,6 +57,7 @@ if __name__ == "__main__":
         lc_num = int(lc_n)
         if lc_recorder.is_exist('lc_num', lc_num):
             print("lc num existed.")
+            continue
         lc_url = input("lc url: ")
         lc_recorder.add_record(lc_num, lc_url)
         print("Saved.")
