@@ -22,6 +22,7 @@ tf-models-nightly
 h5py
 keras
 seaborn
+sklearn
 
 # test
 pytest
