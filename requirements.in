@@ -15,7 +15,10 @@ mock
 pydump
 tensorflow
 tensorflow-text
+tensorflow-text-nightly
+tf-nightly
 tf-models-official
+tf-models-nightly
 h5py
 keras
 seaborn
