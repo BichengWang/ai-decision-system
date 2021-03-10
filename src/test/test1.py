@@ -52,9 +52,40 @@ def bruceforcesong(time):
     return cnt
 
 
+def first_missing_positive(nums):
+    """
+    :type nums: List[int]
+    :rtype: int
+     Basic idea:
+    1. for any array whose length is l, the first missing positive must be in range [1,...,l+1],
+        so we only have to care about those elements in this range and remove the rest.
+    2. we can use the array index as the hash to restore the frequency of each number within
+         the range [1,...,l+1]
+    """
+    nums.append(0)
+    n = len(nums)
+    for i in range(len(nums)):  # delete those useless elements
+        if nums[i] < 0 or nums[i] >= n:
+            nums[i] = 0
+    print(nums)
+    for i in range(len(nums)):  # use the index as the hash to record the frequency of each number
+        nums[nums[i] % n] //=n
+        nums[nums[i] % n] += n
+
+    print(nums)
+    for i in range(1, len(nums)):
+        if nums[i] / n == 0:
+            return i
+
+    print(nums)
+    return n
+
+
 if __name__ == '__main__':
     print(find_first([3, 5, 6, 9, 10], 6, 4))
     print(find_first([1, 3, 5, 7, 9], 3, 4))
 
     print(compress(['a', 'b', 'b', 'b', 'c', 'c', 'c', 'c']))
-    print(bruceforcesong([30,20,150,100,40]))
+    print(bruceforcesong([30, 20, 150, 100, 40]))
+
+    print(first_missing_positive([3,4,-1,1]))
