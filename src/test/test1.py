@@ -89,3 +89,12 @@ if __name__ == '__main__':
     print(bruceforcesong([30, 20, 150, 100, 40]))
 
     print(first_missing_positive([3,4,-1,1]))
+
+    car = {
+      "brand": "Ford",
+      "model": "Mustang",
+      "year": 1964
+    }
+
+    for k, v in car.items():
+        print(k, v)
