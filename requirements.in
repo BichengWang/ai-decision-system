@@ -24,6 +24,9 @@ keras
 seaborn
 sklearn
 
+# notebook
+jupyter
+
 # test
 pytest
 pytest-custom-exit-code
