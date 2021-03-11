@@ -16,6 +16,10 @@ source venv/bin/activate
 pip install pip-tools>=4.2.0
 pip-compile --no-emit-index-url requirements.in
 ```
+or add current environment full requirements into file
+```
+pip freeze > requirements.txt
+```
 ### Git
 pruning origin deleted branches
 ```
