@@ -15,9 +15,9 @@ mock
 pydump
 tensorflow
 tensorflow-text
-tensorflow-text-nightly
-tf-nightly
 tf-models-official
+tf-nightly
+tensorflow-text-nightly
 tf-models-nightly
 h5py
 keras
