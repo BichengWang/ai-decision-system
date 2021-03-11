@@ -26,7 +26,7 @@ endif
 bootstrap:
 	pip3 install pip-tools>=44.0.0
 	pip3 install --upgrade pip setuptools wheel
-	pip3 install -r requirements.txt
+	pip3 install --no-deps -r requirements.txt
 
 .PHONY: env
 env:
