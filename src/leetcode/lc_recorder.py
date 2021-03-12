@@ -1,5 +1,3 @@
-from collections import deque
-
 from src.utils import pd_utils
 from datetime import date
 import logging
