@@ -1,6 +1,6 @@
 # python-notebook
-### Auth
-@bichengwang17@gmail.com
+## Auth
+bichengwang17@gmail.com
 ### Recommend Env
 The recommended running env is conda env to avoid some windows crash or compile issue.
 ### Makefile
