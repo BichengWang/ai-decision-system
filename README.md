@@ -1,4 +1,6 @@
 # python-notebook
+## Motto
+Being Honest with Yourself.
 ## Auth
 bichengwang17@gmail.com
 ### Recommend Env
