@@ -11,7 +11,12 @@ def gen_script(content):
 def gen_windows_search(file_name):
     with open(file_name, 'r', encoding='UTF-8') as fp:
         content = fp.read()
-        ret = re.findall(r'[A-Z]{1,5}[0-9]{3}', content)
+        reg_ret = re.findall(r'[A-Z]{1,5}[0-9]{3}', content)
+        ret = []
+        for reg in reg_ret:
+            if ret and reg == ret[-1]:
+                continue
+            ret.append(reg)
         ret = [gen_script(x) for x in ret]
     return ret
 
