@@ -1,4 +1,4 @@
-from src.utils import pd_utils
+from src.utils.general import pd_utils
 from datetime import date
 import logging
 import pandas as pd
