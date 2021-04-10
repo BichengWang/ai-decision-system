@@ -12,7 +12,7 @@ fundamental_analysis = [{
             }
         }
     }
-},{
+}, {
     "topic": "2021-01-30 analysis",
     "source": "lone capital",
     "contents": [{
