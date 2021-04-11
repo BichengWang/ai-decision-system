@@ -22,4 +22,4 @@ def gen_windows_search(file_name):
 
 
 if __name__ == "__main__":
-    print(*gen_windows_search('cache.txt'), sep='\n', end='\n')
+    print(*gen_windows_search('../../../data/files/cache.txt'), sep='\n', end='\n')
