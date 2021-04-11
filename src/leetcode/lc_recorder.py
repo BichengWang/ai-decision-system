@@ -9,13 +9,6 @@ class LCRecorder:
     def __init__(self):
         self.df = pd_utils.pd_read_csv('../../data/files/lc_record.csv')
 
-    def _init_non_record(self):
-        self.df = pd.DataFrame({
-            "lc_num": np.array([0, 1], dtype='int64'),
-            "lc_url": np.array(['st1r', 's2'], dtype='str'),
-            "date": np.array(['2020-01-01', '2020-01-01'], dtype='str')
-        })
-
     def print_df(self, df=None):
         if not df:
             df = self.df
