@@ -8,6 +8,9 @@ import re
 
 
 class LCComparison:
+    """
+    LC Comparison could compare https://leetcode.com/problemset/all/ num with exist num data/files/cache.txt to find new
+    """
     def __init__(self, file_name='../../data/files/cache.txt'):
         self.file_name = file_name
         self.lc_r = LCRecorder()
