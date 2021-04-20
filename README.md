@@ -3,9 +3,11 @@
 Being Honest with Yourself.
 ## Auth
 bichengwang17@gmail.com
-### Recommend Env
+## Recommend Env
 The recommended running env is conda env to avoid some windows crash or compile issue.
-### Makefile
+## Directory Structure
+In different directory, it would content specific readme file for different code tools.
+## Makefile
 ```
 python -m pip install --upgrade pip
 pip-compile requirements.in
@@ -22,7 +24,7 @@ or add current environment full requirements into file
 ```
 pip freeze > requirements.txt
 ```
-### Git
+## Git
 pruning origin deleted branches
 ```
 git remote prune origin
