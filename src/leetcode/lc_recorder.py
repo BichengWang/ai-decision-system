@@ -6,6 +6,9 @@ import numpy as np
 
 
 class LCRecorder:
+    """
+    LC Recorder is used to record every day LC num and url
+    """
     def __init__(self):
         self.df = pd_utils.pd_read_csv('../../data/files/lc_record.csv')
 
