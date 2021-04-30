@@ -10,10 +10,12 @@ In different directory, it would content specific readme file for different code
 ## Makefile
 ```
 python -m pip install --upgrade pip
-pip-compile requirements.in
 make bootstrap
 make env
 source venv/bin/activate
+python -m pip install -U pip-tools
+pip-compile requirements.in
+pip install -r requirements.txt
 ```
 #### Refresh Dependencies
 ```
