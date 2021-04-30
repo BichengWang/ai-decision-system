@@ -13,16 +13,19 @@ backoff
 click
 mock
 pydump
-tensorflow
-tensorflow-text
-tf-models-official
-tf-nightly
-tensorflow-text-nightly
-tf-models-nightly
+tensorflow==2.4.1
+# tensorflow-text
+# tf-models-official
+# tf-nightly
+# tensorflow-text-nightly
+# tf-models-nightly
 h5py
 keras
 seaborn
 sklearn
+
+# dependency
+# grpcio==1.32.0
 
 # notebook
 jupyter
