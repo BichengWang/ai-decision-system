@@ -13,7 +13,7 @@ backoff
 click
 mock
 pydump
-tensorflow==2.4.1
+tensorflow-gpu==2.4.1
 # tensorflow-text
 # tf-models-official
 # tf-nightly
