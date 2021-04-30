@@ -12,7 +12,7 @@ In different directory, it would content specific readme file for different code
 python -m pip install --upgrade pip
 make bootstrap
 make env
-source env/bin/activate
+source venv/bin/activate
 python -m pip install -U pip-tools
 pip-compile requirements.in
 pip install -r requirements.txt
