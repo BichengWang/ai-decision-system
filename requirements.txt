@@ -319,7 +319,7 @@ tensorboard==2.5.0
     # via tensorflow
 tensorflow-estimator==2.4.0
     # via tensorflow
-tensorflow==2.4.1
+tensorflow-gpu==2.4.1
     # via -r requirements.in
 termcolor==1.1.0
     # via tensorflow
