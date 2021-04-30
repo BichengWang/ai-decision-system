@@ -1,4 +1,3 @@
-
 # python-notebook
 ## Motto
 Being Honest with Yourself.
@@ -11,11 +10,10 @@ In different directory, it would content specific readme file for different code
 ## Makefile
 ```
 python -m pip install --upgrade pip
-make bootstrap
 make env
 source venv/bin/activate
+make bootstrap
 python -m pip install -U pip-tools
-pip-compile requirements.in
 pip install -r requirements.txt
 ```
 #### Refresh Dependencies
