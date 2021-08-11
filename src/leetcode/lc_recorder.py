@@ -1,9 +1,6 @@
 from src.utils.general import pd_utils
 from datetime import date
 import logging
-import pandas as pd
-import numpy as np
-
 
 class LCRecorder:
     """
