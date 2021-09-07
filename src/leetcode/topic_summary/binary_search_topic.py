@@ -1,5 +1,6 @@
-class BinarySearch:
+from bisect import bisect_left
 
+class BinarySearch:
     def binary1(self, nums, tgt):
         """
         list:   [1, 3, 5]
@@ -40,6 +41,7 @@ class BinarySearch:
                     l = mid + 1
         return l if nums[l] == target else -1
 
-
+    def binary_search_lib(self, nums, target):
+        return bisect_left(nums, target)
 
 

@@ -15,7 +15,7 @@ class TestBinary1(TestCase):
         print(bs.binary1([1, 3], 1))
         print(bs.binary1([1, 3], 2))
         print(bs.binary1([1, 3], 3))
-        print(bs.binary1([0,10,60], 0))
+        print(bs.binary1([0, 10, 60], 0))
 
     def test_binary2(self):
         bs = BinarySearch()
@@ -25,3 +25,9 @@ class TestBinary1(TestCase):
         print(bs.binary2([5, 1, 3], 1))
         print(bs.binary2([5, 1, 3], 2))
         print(bs.binary2([5, 1, 3], 5))
+
+    def test_binary_search_lib(self):
+        bs = BinarySearch()
+        self.assertEqual(2, bs.binary_search_lib([1, 3, 5, 7, 9, 11], 5))
+        self.assertEqual(3, bs.binary_search_lib([1, 3, 5, 7, 9, 11], 6))
+        self.assertEqual(3, bs.binary_search_lib([1, 3, 5, 7, 9, 11], 7))
