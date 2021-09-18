@@ -13,6 +13,12 @@ def match(house, street):
 
 
 def delete1(house, street):
+    """
+    if exactly match, delete both
+    :param house:
+    :param street:
+    :return:
+    """
     return list((Counter(house) - Counter(street)).elements()), list((Counter(street) - Counter(house)).elements())
 
 
@@ -40,6 +46,12 @@ def rebuild(s_dict):
 
 
 def delete2(house, street):
+    """
+    if fuzzy match, delete both
+    :param house:
+    :param street:
+    :return:
+    """
     h_dict = helper(house)
     s_dict = helper(street)
     for h_k, user_d in h_dict.items():
@@ -69,6 +81,12 @@ def delete2(house, street):
 
 
 def delete3(house, street):
+    """
+    if fuzzy match, delete both
+    :param house:
+    :param street:
+    :return:
+    """
     h_dict = helper(house)
     s_dict = helper(street)
     for h_k, user_d in h_dict.items():
