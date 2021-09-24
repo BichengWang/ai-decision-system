@@ -104,3 +104,20 @@ def tree_right_side_view(root):
     return ret
 
 
+
+def lowestCommonAncestor(p, q):
+        p_set = {p}
+        q_set = {q}
+
+        while p or q:
+            p, q = p.parent if p else p, q.parent if q else q
+            if p == q:
+                return p
+            elif p in q_set:
+                return p
+            elif q in p_set:
+                return q
+            else:
+                p_set.add(p)
+                q_set.add(q)
+        return None

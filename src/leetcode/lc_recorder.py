@@ -42,7 +42,13 @@ class LCRecorder:
     def add_record(self, lc_num, lc_url):
         if self.is_exist('lc_num', lc_num):
             logging.error("Num existed. {}".format(lc_num))
-        new_row = {'lc_num': lc_num, 'lc_url': lc_url, 'date': date.today().strftime("%Y-%m-%d")}
+        new_row = {
+            'lc_num': lc_num,
+            'lc_url': lc_url,
+            'date': date.today().strftime("%Y-%m-%d"),
+            'tags': "[]",
+            'cnt': 1,
+        }
         self.df = self.df.append(new_row, ignore_index=True)
         self.save_df()
 
