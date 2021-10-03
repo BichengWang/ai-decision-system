@@ -1,6 +1,6 @@
 lc_num,lc_url,date,tags,cnt
 1,https://leetcode.com/problems/two-sum/,2021-09-22,"['Array', 'HashTable']",2.0
-146,https://leetcode.com/problems/lru-cache/,2021-02-01,['HashTable' 'LinkedList'],1.0
+146,https://leetcode.com/problems/lru-cache/,2021-02-01,"['A', 'HashTableLinkedList']",1.0
 42,https://leetcode.com/problems/trapping-rain-water/,2021-02-01,['Array' 'TwoPointers' 'DynamicProgramming' 'Stack'],1.0
 91,https://leetcode.com/problems/decode-ways/,2021-02-01,['DynamicProgramming'],1.0
 200,https://leetcode.com/problems/number-of-islands/,2021-02-01,['DFS' 'UnionFind' 'Array'],1.0
@@ -109,4 +109,12 @@ lc_num,lc_url,date,tags,cnt
 1762,https://leetcode.com/problems/buildings-with-an-ocean-view/,2021-09-23,"['Array', 'Stack']",1.0
 1650,https://leetcode.com/problems/lowest-common-ancestor-of-a-binary-tree-iii/,2021-09-23,"['Tree', 'HashTable']",1.0
 827,https://leetcode.com/problems/making-a-large-island/,2021-09-23,"['UnionFind', 'DFS']",1.0
-909,https://leetcode.com/problems/snakes-and-ladders/,2021-09-23,"[]",1.0
+909,https://leetcode.com/problems/snakes-and-ladders/,2021-09-30,[],1.0
+523,https://leetcode.com/problems/continuous-subarray-sum/,2021-09-29,"['Array', 'HashTable']",2.0
+670,https://leetcode.com/problems/maximum-swap/,2021-09-29,['Greedy'],1.0
+249,https://leetcode.com/problems/group-shifted-strings/,2021-09-29,['HashTable'],1.0
+314,https://leetcode.com/problems/binary-tree-vertical-order-traversal/,2021-09-29,"['Tree', 'BFS', 'DFS']",1.0
+1047,https://leetcode.com/problems/remove-all-adjacent-duplicates-in-string/,2021-09-29,"['String', 'Stack']",1.0
+987,https://leetcode.com/problems/vertical-order-traversal-of-a-binary-tree/,2021-10-02,"['HashTable', 'Tree']",1.0
+270,https://leetcode.com/problems/closest-binary-search-tree-value/,2021-10-02,"['Tree', 'BinarySearch']",1.0
+689,https://leetcode.com/problems/maximum-sum-of-3-non-overlapping-subarrays/,2021-10-02,"['DP', 'Math']",1.0
