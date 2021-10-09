@@ -126,3 +126,8 @@ lc_num,lc_url,date,tags,cnt
 987,https://leetcode.com/problems/vertical-order-traversal-of-a-binary-tree/,2021-10-02,"['HashTable', 'Tree']",1.0
 270,https://leetcode.com/problems/closest-binary-search-tree-value/,2021-10-02,"['Tree', 'BinarySearch']",1.0
 689,https://leetcode.com/problems/maximum-sum-of-3-non-overlapping-subarrays/,2021-10-02,"['DP', 'Math']",1.0
+311,https://leetcode.com/problems/sparse-matrix-multiplication/,2021-10-03,['Matrix'],1.0
+1060,https://leetcode.com/problems/missing-element-in-sorted-array/,2021-10-03,['BinarySearch'],1.0
+71,https://leetcode.com/problems/simplify-path/,2021-10-03,['Stack'],1.0
+896,https://leetcode.com/problems/monotonic-array/,2021-10-03,['Array'],1.0
+825,https://leetcode.com/problems/friends-of-appropriate-ages/,2021-10-03,"['BinarySearch', 'HashTable']",2.0
