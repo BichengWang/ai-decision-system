@@ -109,6 +109,14 @@ lc_num,lc_url,date,tags,cnt
 1762,https://leetcode.com/problems/buildings-with-an-ocean-view/,2021-09-23,"['Array', 'Stack']",1.0
 1650,https://leetcode.com/problems/lowest-common-ancestor-of-a-binary-tree-iii/,2021-09-23,"['Tree', 'HashTable']",1.0
 827,https://leetcode.com/problems/making-a-large-island/,2021-09-23,"['UnionFind', 'DFS']",1.0
+909,https://leetcode.com/problems/snakes-and-ladders/,2021-09-23,[],1.0
+1026,https://leetcode.com/problems/maximum-difference-between-node-and-ancestor/,2021-10-03,"['Tree', 'DFS']",1.0
+958,https://leetcode.com/problems/check-completeness-of-a-binary-tree/,2021-10-03,"['Tree', 'DFS']",1.0
+824,https://leetcode.com/problems/goat-latin/,2021-10-03,[String'],1.0
+1004,https://leetcode.com/problems/max-consecutive-ones-iii/,2021-10-03,"['SlidingWindows', 'DP']",1.0
+266,https://leetcode.com/problems/palindrome-permutation/,2021-10-03,['HashTable'],1.0
+1216,https://leetcode.com/problems/valid-palindrome-iii/,2021-10-03,"['Dict', 'DP', 'Cache']",1.0
+536,https://leetcode.com/problems/construct-binary-tree-from-string/,2021-10-04,"['Tree', 'Stack']",1.0
 909,https://leetcode.com/problems/snakes-and-ladders/,2021-09-30,[],1.0
 523,https://leetcode.com/problems/continuous-subarray-sum/,2021-09-29,"['Array', 'HashTable']",2.0
 670,https://leetcode.com/problems/maximum-swap/,2021-09-29,['Greedy'],1.0
