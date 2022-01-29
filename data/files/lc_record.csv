@@ -130,3 +130,6 @@ lc_num,lc_url,date,tags,cnt
 71,https://leetcode.com/problems/simplify-path/,2021-10-03,['Stack'],1.0
 896,https://leetcode.com/problems/monotonic-array/,2021-10-03,['Array'],1.0
 825,https://leetcode.com/problems/friends-of-appropriate-ages/,2021-10-03,"['BinarySearch', 'HashTable']",2.0
+957,https://leetcode.com/problems/prison-cells-after-n-days/,2021-10-19,['HashTable'],1.0
+726,https://leetcode.com/problems/number-of-atoms/,2021-12-28,['Stack'],1.0
+1352,https://leetcode.com/problems/product-of-the-last-k-numbers/,2021-12-28,['Stream'],1.0
