@@ -1,11 +1,13 @@
 from collections import OrderedDict
 
+
 def iterate():
     letters = OrderedDict({("a", 1), ("b", 2), ("c", 3)})
     for k, v in letters.items():
         print(k, v)
     for k, v in reversed(letters.items()):
         print(k, v)
+
 
 def create_obj():
     numbers = OrderedDict()
@@ -24,4 +26,3 @@ def create_obj():
 if __name__ == "__main__":
     create_obj()
     iterate()
-
