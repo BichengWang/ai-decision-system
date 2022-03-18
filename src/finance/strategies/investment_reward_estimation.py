@@ -1,3 +1,4 @@
+import bisect
 
 
 def saving_from_salary(salary):
@@ -15,6 +16,7 @@ def calc_year_over_year_saving(annualRates, annualSalary):
         rst += saving_from_salary(w)
         rst *= (1.0 + r / 100.0)
         print("year: {}, saving: {}".format(i, rst))
+    bisect.bisect_left()
     return r
 
 
