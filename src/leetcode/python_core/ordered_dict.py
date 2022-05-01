@@ -26,3 +26,5 @@ def create_obj():
 if __name__ == "__main__":
     create_obj()
     iterate()
+    for i in "ab1 c":
+        print(i.islower())
