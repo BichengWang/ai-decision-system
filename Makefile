@@ -28,7 +28,7 @@ bootstrap:
 	pip3 install wheel
 	pip3 install --upgrade pip setuptools wheel
 	pip3 install --no-deps -r requirements.txt
-
+	pip3 install torch torchvision torchaudio --extra-index-url https://download.pytorch.org/whl/cu116
 .PHONY: env
 env:
 	python3 -m venv venv
