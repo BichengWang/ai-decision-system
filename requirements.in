@@ -5,7 +5,6 @@
 memory-profiler
 numpy
 requests
-pyyaml
 python-dateutil
 scipy
 seaborn
@@ -19,6 +18,13 @@ tensorflow-gpu==2.4.1
 # tf-nightly
 # tensorflow-text-nightly
 # tf-models-nightly
+
+# pytorch
+# in make file
+torch
+torchvision
+torchaudio
+
 h5py
 keras
 seaborn
