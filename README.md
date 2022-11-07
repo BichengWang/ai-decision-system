@@ -25,6 +25,18 @@ or add current environment full requirements into file
 ```
 pip freeze > requirements.txt
 ```
+## Conda
+```
+conda create --name python-notebook python=3.7
+```
+
+```
+activate python-notebook
+```
+install libs
+```angular2html
+conda install pywin32
+```
 ## Git
 pruning origin deleted branches
 ```
