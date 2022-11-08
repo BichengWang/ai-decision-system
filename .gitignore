@@ -151,3 +151,8 @@ dmypy.json
 /src/tensorflow_lr/text/aclImdb_v1.tar.gz.tar.gz
 /src/tensorflow_lr/text/aclImdb/
 /src/tensorflow_lr/structured_data/datasets/
+/src/tensorflow_lr/recommenders/converted_model.tflite
+/src/tensorflow_lr/recommenders/example_generation_movielens.py
+/src/tensorflow_lr/recommenders/export/
+/src/tensorflow_lr/recommenders/data/
+/4.2.0
