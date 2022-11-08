@@ -21,13 +21,18 @@ pip install -r requirements.txt
 pip install pip-tools>=4.2.0
 pip-compile --no-emit-index-url requirements.in
 ```
-or add current environment full requirements into file
+Optional: add current environment full requirements into file
 ```
 pip freeze > requirements.txt
+```
+Checking: check specific lib exist or not
+```
+pip freeze | grep tensorflow-gpu
 ```
 ## Conda
 ```
 conda create --name python-notebook python=3.7
+conda info --envs
 ```
 
 ```
