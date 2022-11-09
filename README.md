@@ -56,3 +56,7 @@ git config --global alias.ci commit
 git config --global alias.st status
 git config --global alias.ll "log --oneline"
 ```
+git useful cmd
+```
+git pull --rebase origin master # on your dev branch, it would pull and rebase origin master.
+```
