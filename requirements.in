@@ -12,7 +12,7 @@ backoff
 click
 mock
 pydump
-tensorflow-gpu==2.4.1
+tensorflow-gpu
 # tensorflow-text
 # tf-models-official
 # tf-nightly
@@ -24,6 +24,7 @@ tensorflow-gpu==2.4.1
 torch
 torchvision
 torchaudio
+torchrec-nightly
 
 h5py
 keras
