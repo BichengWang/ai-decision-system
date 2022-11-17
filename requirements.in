@@ -12,15 +12,20 @@ backoff
 click
 mock
 pydump
+
+# tensorflow related
 tensorflow-gpu
-# tensorflow-text
-# tf-models-official
-# tf-nightly
+tensorflow-text
+tf-models-official
+tf-nightly
+
 # tensorflow-text-nightly
 # tf-models-nightly
+# tensorflow optional
+tensorflow-datasets
+tensorflow-recommenders
 
-# pytorch
-# in make file
+# pytorch related (run makefile first)
 torch
 torchvision
 torchaudio
