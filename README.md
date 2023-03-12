@@ -60,3 +60,8 @@ git useful cmd
 ```
 git pull --rebase origin master # on your dev branch, it would pull and rebase origin master.
 ```
+
+Appendix:   
+tensorflow & pytorch for M1   
+https://caffeinedev.medium.com/how-to-install-tensorflow-on-m1-mac-8e9b91d93706
+https://pytorch.org/get-started/locally/
