@@ -31,7 +31,7 @@ bootstrap:
 	pip3 install torch torchvision torchaudio --extra-index-url https://download.pytorch.org/whl/cu116
 .PHONY: env
 env:
-	python3.7 -m venv venv
+	python3 -m venv venv
 
 .PHONY: test
 test: clean lint
