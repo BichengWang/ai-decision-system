@@ -31,15 +31,40 @@ pip freeze | grep tensorflow-gpu
 ```
 ## Conda
 ```
-conda create --name python-notebook python=3.7
+brew install --cask anaconda
+```
+### Create Conda Env
+```
+conda remove -n python-notebook --all
+conda create --name python-notebook python=3
 conda info --envs
-```
-
-```
 activate python-notebook
 ```
-install libs
-```angular2html
+### For M1 specific   
+install conda in linux or M1
+M1 conda: https://github.com/conda-forge/miniforge   
+https://caffeinedev.medium.com/how-to-install-tensorflow-on-m1-mac-8e9b91d93706   
+```
+conda config --set auto_activate_base false
+conda remove -n python-notebook --all
+conda create --name python-notebook python=3
+conda info --envs
+conda activate python-notebook
+```
+then   
+```
+conda install -c apple tensorflow-deps
+python -m pip install tensorflow-macos==2.9
+python -m pip install tensorflow-metal==0.5.0
+conda install pytorch torchvision torchaudio -c pytorch
+conda install -c conda-forge -y pandas jupyter
+pip install tensorflow_datasets
+pip install asitop
+pip install pytorch-transformers
+```
+### For Win specific
+install libs for win32
+```
 conda install pywin32
 ```
 ## Git
@@ -47,7 +72,6 @@ pruning origin deleted branches
 ```
 git remote prune origin
 ```
-
 git global config for all general commands:
 ```
 git config --global alias.co checkout
@@ -56,7 +80,19 @@ git config --global alias.ci commit
 git config --global alias.st status
 git config --global alias.ll "log --oneline"
 ```
-git useful cmd
+Pull and rebase origin master   
 ```
-git pull --rebase origin master # on your dev branch, it would pull and rebase origin master.
+git pull --rebase origin master
 ```
+
+## Appendix:   
+To test which python in path
+```
+import sys
+print(sys.path)
+```
+
+tensorflow & pytorch for M1   
+https://caffeinedev.medium.com/how-to-install-tensorflow-on-m1-mac-8e9b91d93706   
+https://pytorch.org/get-started/locally/   
+https://developer.apple.com/forums/thread/695963   
