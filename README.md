@@ -80,6 +80,7 @@ git config --global alias.br branch
 git config --global alias.ci commit
 git config --global alias.st status
 git config --global alias.ll "log --oneline"
+git config --global alias.rb "pull --rebase origin"
 ```
 Pull and rebase origin master   
 ```
