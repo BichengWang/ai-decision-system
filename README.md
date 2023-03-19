@@ -47,9 +47,10 @@ https://caffeinedev.medium.com/how-to-install-tensorflow-on-m1-mac-8e9b91d93706
 ```
 conda config --set auto_activate_base false
 conda remove -n python-notebook --all
-conda create --name python-notebook python=3
+conda create --name python-notebook python=3.8 # must be 3.8
 conda info --envs
 conda activate python-notebook
+conda install causalml
 ```
 then   
 ```
