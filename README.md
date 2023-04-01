@@ -81,6 +81,7 @@ git config --global alias.ci commit
 git config --global alias.st status
 git config --global alias.ll "log --oneline"
 git config --global alias.rb "pull --rebase origin"
+git config --global alias.sq "rebase -i HEAD~"
 ```
 Pull and rebase origin master   
 ```
