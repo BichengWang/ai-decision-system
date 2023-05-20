@@ -99,3 +99,5 @@ tensorflow & pytorch for M1
 https://caffeinedev.medium.com/how-to-install-tensorflow-on-m1-mac-8e9b91d93706   
 https://pytorch.org/get-started/locally/   
 https://developer.apple.com/forums/thread/695963   
+
+For test
