@@ -450,6 +450,7 @@ tensorflow-estimator==2.4.0
     # via tensorflow-gpu
 tensorflow-gpu==2.4.1
     # via -r requirements.in
+tensorflow-text
 termcolor==1.1.0
     # via tensorflow-gpu
 terminado==0.9.4
