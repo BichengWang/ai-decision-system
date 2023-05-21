@@ -44,7 +44,10 @@ activate python-notebook
 install conda in linux or M1
 M1 conda: https://github.com/conda-forge/miniforge   
 https://caffeinedev.medium.com/how-to-install-tensorflow-on-m1-mac-8e9b91d93706   
+https://developer.apple.com/metal/tensorflow-plugin/   
 ```
+conda init zsh
+conda init bash
 conda config --set auto_activate_base false
 conda remove -n python-notebook --all
 conda create --name python-notebook python=3.8 # must be 3.8
@@ -55,18 +58,32 @@ conda install causalml
 then   
 ```
 conda install -c apple tensorflow-deps
-python -m pip install tensorflow-macos==2.9
-python -m pip install tensorflow-metal==0.5.0
+python -m pip install -U tensorflow-macos==2.9
+python -m pip install -U tensorflow-metal==0.5.0
 conda install pytorch torchvision torchaudio -c pytorch
 conda install -c conda-forge -y pandas jupyter
 pip install tensorflow_datasets
 pip install asitop
 pip install pytorch-transformers
 ```
+for tensorflow-text special case   
+```
+https://developer.apple.com/forums/thread/700906   
+python -m pip install --ignore-installed ~/Downloads/....whl
+```
 ### For Win specific
 install libs for win32
 ```
 conda install pywin32
+```
+
+### Jupyter notebook
+#### lint
+```
+pip install pylint
+pip install jupyter_contrib_nbextensions
+jupyter contrib nbextension install --user
+
 ```
 ## Git
 pruning origin deleted branches
