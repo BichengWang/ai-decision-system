@@ -1,4 +1,4 @@
-# python-notebook
+# My Python Notebook
 ## Motto
 Being Honest with Yourself.
 ## Auth
