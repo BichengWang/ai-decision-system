@@ -40,6 +40,7 @@ def reverseKGroup(h, k):
     del dummy
     return h
 
+
 if __name__ == "__main__":
     h = ListNode(1, ListNode(2, ListNode(3, ListNode(4, ListNode(5)))))
     h = reverseKGroup(h, 3)
