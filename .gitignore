@@ -1,5 +1,8 @@
+<<<<<<< HEAD
 data/.local/
 
+=======
+>>>>>>> eb715ec (ci)
 # Byte-compiled / optimized / DLL files
 __pycache__/
 *.py[cod]

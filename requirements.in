@@ -49,8 +49,11 @@ pytest-cov
 
 # flake8
 flake8
+<<<<<<< HEAD
 
 # finance
 yfinance
 tabulate
 matplotlib
+=======
+>>>>>>> eb715ec (ci)
