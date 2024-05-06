@@ -1,25 +1,11 @@
-Collecting pip-tools
-  Downloading pip_tools-7.3.0-py3-none-any.whl.metadata (23 kB)
-Collecting build (from pip-tools)
-  Downloading build-1.0.3-py3-none-any.whl.metadata (4.2 kB)
-Collecting click>=8 (from pip-tools)
-  Downloading click-8.1.7-py3-none-any.whl.metadata (3.0 kB)
-Requirement already satisfied: pip>=22.2 in ./venv/lib/python3.11/site-packages (from pip-tools) (23.3.1)
-Requirement already satisfied: setuptools in ./venv/lib/python3.11/site-packages (from pip-tools) (68.2.2)
-Collecting wheel (from pip-tools)
-  Downloading wheel-0.41.3-py3-none-any.whl.metadata (2.2 kB)
-Collecting packaging>=19.0 (from build->pip-tools)
-  Downloading packaging-23.2-py3-none-any.whl.metadata (3.2 kB)
-Collecting pyproject_hooks (from build->pip-tools)
-  Downloading pyproject_hooks-1.0.0-py3-none-any.whl (9.3 kB)
-Downloading pip_tools-7.3.0-py3-none-any.whl (57 kB)
-   ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━ 57.4/57.4 kB 1.1 MB/s eta 0:00:00
-Downloading click-8.1.7-py3-none-any.whl (97 kB)
-   ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━ 97.9/97.9 kB 1.5 MB/s eta 0:00:00
-Downloading build-1.0.3-py3-none-any.whl (18 kB)
-Downloading wheel-0.41.3-py3-none-any.whl (65 kB)
-   ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━ 65.8/65.8 kB 1.5 MB/s eta 0:00:00
-Downloading packaging-23.2-py3-none-any.whl (53 kB)
-   ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━ 53.0/53.0 kB 1.7 MB/s eta 0:00:00
-Installing collected packages: wheel, pyproject_hooks, packaging, click, build, pip-tools
-Successfully installed build-1.0.3 click-8.1.7 packaging-23.2 pip-tools-7.3.0 pyproject_hooks-1.0.0 wheel-0.41.3
+Requirement already satisfied: pip-tools in ./venv/lib/python3.9/site-packages (7.4.1)
+Requirement already satisfied: build>=1.0.0 in ./venv/lib/python3.9/site-packages (from pip-tools) (1.2.1)
+Requirement already satisfied: click>=8 in ./venv/lib/python3.9/site-packages (from pip-tools) (8.1.7)
+Requirement already satisfied: pip>=22.2 in ./venv/lib/python3.9/site-packages (from pip-tools) (24.0)
+Requirement already satisfied: pyproject-hooks in ./venv/lib/python3.9/site-packages (from pip-tools) (1.1.0)
+Requirement already satisfied: setuptools in ./venv/lib/python3.9/site-packages (from pip-tools) (58.0.4)
+Requirement already satisfied: wheel in ./venv/lib/python3.9/site-packages (from pip-tools) (0.43.0)
+Requirement already satisfied: tomli in ./venv/lib/python3.9/site-packages (from pip-tools) (2.0.1)
+Requirement already satisfied: packaging>=19.1 in ./venv/lib/python3.9/site-packages (from build>=1.0.0->pip-tools) (24.0)
+Requirement already satisfied: importlib-metadata>=4.6 in ./venv/lib/python3.9/site-packages (from build>=1.0.0->pip-tools) (7.1.0)
+Requirement already satisfied: zipp>=0.5 in ./venv/lib/python3.9/site-packages (from importlib-metadata>=4.6->build>=1.0.0->pip-tools) (3.18.1)
