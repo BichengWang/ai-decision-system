@@ -49,3 +49,6 @@ pytest-cov
 
 # flake8
 flake8
+
+# finance
+yfinance
