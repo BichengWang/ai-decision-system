@@ -52,3 +52,5 @@ flake8
 
 # finance
 yfinance
+tabulate
+matplotlib
