@@ -50,9 +50,9 @@ conda init zsh
 conda init bash
 conda config --set auto_activate_base false
 conda remove -n python-notebook --all
-conda create --name python-notebook python=3.8 # must be 3.8
+conda create --name python-notebook python=3.12 # must be 3.12
 conda info --envs
-conda activate python-notebook
+conda activate python-notebook2
 conda install causalml
 ```
 then   
@@ -60,7 +60,7 @@ then
 conda install -c apple tensorflow-deps
 python -m pip install -U tensorflow-macos==2.9
 python -m pip install -U tensorflow-metal==0.5.0
-conda install pytorch torchvision torchaudio -c pytorch
+conda install pytorch torchvision torchaudio -c pytorch-nightly
 conda install -c conda-forge -y pandas jupyter
 pip install tensorflow_datasets
 pip install asitop
