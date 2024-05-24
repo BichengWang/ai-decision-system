@@ -49,8 +49,8 @@ https://developer.apple.com/metal/tensorflow-plugin/
 conda init zsh
 conda init bash
 conda config --set auto_activate_base false
-conda remove -n python-notebook --all
-conda create --name python-notebook python=3.8 # must be 3.8
+conda remove -n python-notebook2 --all
+conda create --name python-notebook python=3.11 # must be 3.11
 conda info --envs
 conda activate python-notebook
 conda install causalml
@@ -60,7 +60,7 @@ then
 conda install -c apple tensorflow-deps
 python -m pip install -U tensorflow-macos==2.9
 python -m pip install -U tensorflow-metal==0.5.0
-conda install pytorch torchvision torchaudio -c pytorch
+conda install pytorch torchvision torchaudio torchdata -c pytorch-nightly
 conda install -c conda-forge -y pandas jupyter
 pip install tensorflow_datasets
 pip install asitop
