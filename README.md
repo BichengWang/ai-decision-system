@@ -49,8 +49,8 @@ https://developer.apple.com/metal/tensorflow-plugin/
 conda init zsh
 conda init bash
 conda config --set auto_activate_base false
-conda remove -n python-notebook2 --all
-conda create --name python-notebook python=3.11 # must be 3.11
+conda remove -n python-notebook --all
+conda create --name python-notebook python=3.8 # must be 3.8
 conda info --envs
 conda activate python-notebook
 conda install causalml
