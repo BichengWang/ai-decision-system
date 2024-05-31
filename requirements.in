@@ -58,3 +58,4 @@ matplotlib
 # llm
 airllm
 mlx
+absl-py
