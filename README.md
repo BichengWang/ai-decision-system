@@ -92,13 +92,17 @@ git remote prune origin
 ```
 git global config for all general commands:
 ```
+git lfs install
 git config --global alias.co checkout
 git config --global alias.br branch
 git config --global alias.ci commit
 git config --global alias.st status
 git config --global alias.ll "log --oneline"
+git config --global alias.lg "log --oneline --graph --all --decorate"
 git config --global alias.rb "pull --rebase origin"
 git config --global alias.sq "rebase -i"
+git config --global push.default current
+git config --global core.editor "vim"
 ```
 Pull and rebase origin master   
 ```
