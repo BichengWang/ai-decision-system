@@ -1,8 +1,5 @@
 *.zip filter=lfs diff=lfs merge=lfs -text
 *.h5.zip filter=lfs diff=lfs merge=lfs -text
-<<<<<<< HEAD
 *.tar.gz filter=lfs diff=lfs merge=lfs -text
 .tar.gz filter=lfs diff=lfs merge=lfs -text
 *.gz filter=lfs diff=lfs merge=lfs -text
-=======
->>>>>>> eb715ec (ci)
