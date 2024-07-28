@@ -1,5 +1,4 @@
-from sortedcontainers import SortedList
-from sortedcontainers import SortedDict
+from sortedcontainers import SortedList, SortedSet, SortedDict
 
 
 def iterate():
@@ -29,3 +28,11 @@ if __name__ == "__main__":
     iterate()
     for i in "ab1 c":
         print(i.islower())
+    sorted_list = SortedList([1, 3, 2, 4])
+    print(sorted_list)
+    sorted_set = SortedSet([1, 3, 2, 4])
+    print(sorted_set)
+    sorted_dict = SortedDict({1: 3, 3: 1, 2: 4, 4: 2})
+    sorted_dict.bisect_key_left
+    print(sorted_dict)
+    
