@@ -25,16 +25,13 @@ def setup_driver():
 
 # Scrape the webpage to get torrent links
 def get_torrent_links(url, num_pages):
-    response = requests.get(url)
-    soup = BeautifulSoup(response.content, "html.parser")
     links = []
     for page in range(1, num_pages+1):
-        
         url = f"{base_url}?page={page}"
         response = requests.get(url)
         soup = BeautifulSoup(response.content, "html.parser")
         for a in soup.find_all("a", href=True):
-            if "torrent" in a["href"]:  # Adjust this condition based on actual link structure
+            if "torrent" in a["href"] and a.endswith('torrent'):  # Adjust this condition based on actual link structure
                 links.append("https://onejav.com"+a["href"])
     return links
 
