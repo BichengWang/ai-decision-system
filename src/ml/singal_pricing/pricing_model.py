@@ -5,7 +5,6 @@ import pandas as pd
 import numpy as np
 
 
-
 class PricingModel:
     def __init__(self):
         self.df = pd.DataFrame({

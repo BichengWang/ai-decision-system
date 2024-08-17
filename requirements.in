@@ -14,27 +14,27 @@ mock
 pydump
 
 # tensorflow related
-tensorflow-gpu
-tensorflow-text
-tf-models-official
-tf-nightly
-
-# tensorflow-text-nightly
+# tensorflow-gpu
+# tf-models-official
 # tf-models-nightly
+# tf-nightly
+
+# tensorflow-text
+# tensorflow-text-nightly
 # tensorflow optional
-tensorflow-datasets
-tensorflow-recommenders
+# tensorflow-datasets
+# tensorflow-recommenders
 
 # pytorch related (run makefile first)
-torch
-torchvision
-torchaudio
-torchrec-nightly
+# torch
+# torchvision
+# torchaudio
+# torchrec-nightly
 
 h5py
 keras
 seaborn
-sklearn
+scikit-learn
 
 # dependency
 # grpcio==1.32.0
