@@ -1,9 +1,5 @@
 #!/bin/bash
 
-# Variables Setup
-# INSTANCE_NAME="instance-20240817-102216"
-# PROJECT_ID="gen-lang-client-0826027133"
-# ZONE="us-west1-a"
 source ./.envrc
 
 # Get the External IP Address: 
@@ -12,7 +8,8 @@ IP=$( gcloud compute instances describe instance-20240817-102216 --zone=us-west1
 echo $IP
 
 # SSH into the Instance:
-# eg. gcloud compute ssh instance-20240817-102216 --project=gen-lang-client-0826027133 --zone=us-west1-a --troubleshoot --tunnel-through-iap
+# gcloud compute ssh --zone "us-west1-a" "instance-glc-ec2-small-or-20240817-213831" --project "gen-lang-client-0826027133"
+# gcloud compute ssh --zone "us-west1-a" "instance-glc-ec2-small-or-20240817-213831" --project "gen-lang-client-0826027133" --troubleshoot --tunnel-through-iap
 gcloud compute ssh $INSTANCE_NAME --zone $ZONE --project $PROJECT_ID
 
 # Install Environment
