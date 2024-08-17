@@ -50,7 +50,7 @@ conda init zsh
 conda init bash
 conda config --set auto_activate_base false
 conda remove -n python-notebook --all
-conda create --name python-notebook python=3.8 # must be 3.8
+conda create --name python-notebook python=3.9 # must be 3.9
 conda info --envs
 conda activate python-notebook
 conda install causalml
