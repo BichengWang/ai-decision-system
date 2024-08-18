@@ -9,6 +9,11 @@ Host github.com
     HostName github.com
     # PreferredAuthentications publickey
     IdentityFile ~/.ssh/id_rsa
+# Host github.com
+#     ForwardAgent yes
+#     # AddKeysToAgent yes
+#     # UseKeychain yes
+#     IdentityFile ~/.ssh/id_ed25519
 
 # GITLAB
 Host gitlab.com
