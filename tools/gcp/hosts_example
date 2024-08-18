@@ -1,0 +1,26 @@
+# Read more about SSH config files: https://linux.die.net/man/5/ssh_config
+# Host alias
+#     HostName hostname
+#     User user
+
+# GITHUB
+Host github.com
+    # ForwardAgent yes
+    HostName github.com
+    # PreferredAuthentications publickey
+    IdentityFile ~/.ssh/id_rsa
+
+# GITLAB
+Host gitlab.com
+    HostName gitlab.com
+    PreferredAuthentications publickey
+    IdentityFile ~/.ssh/id_rsa_lab
+
+# GCP
+# ssh -i ~/.ssh/google_compute_engine bichengwang@35.212.163.149
+# gcloud compute ssh --zone "us-west1-a" "instance-glc-ec2-small-or-20240817-213831" --project "gen-lang-client-0826027133"
+Host 35.212.163.149
+    HostName 35.212.163.149
+    User bichengwang
+    PreferredAuthentications publickey
+    IdentityFile ~/.ssh/google_compute_engine
