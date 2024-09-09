@@ -56,7 +56,7 @@ brew install --cask anaconda
 
 ```shell
 conda remove -n python-notebook --all
-conda create --name python-notebook python=3
+conda create --name python-notebook python=3.9
 conda info --envs
 activate python-notebook
 ```
