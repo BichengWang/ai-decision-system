@@ -14,22 +14,22 @@ mock
 pydump
 
 # tensorflow related
-# tensorflow-gpu
-# tf-models-official
-# tf-models-nightly
-# tf-nightly
+tensorflow
+tf-models-official
+tf-models-nightly
+tf-nightly
 
-# tensorflow-text
-# tensorflow-text-nightly
+tensorflow-text
+tensorflow-text-nightly
 # tensorflow optional
-# tensorflow-datasets
-# tensorflow-recommenders
+tensorflow-datasets
+tensorflow-recommenders
 
 # pytorch related (run makefile first)
-# torch
-# torchvision
-# torchaudio
-# torchrec-nightly
+torch
+torchvision
+torchaudio
+torchrec-nightly
 
 h5py
 keras
@@ -37,7 +37,7 @@ seaborn
 scikit-learn
 
 # dependency
-# grpcio==1.32.0
+grpcio
 
 # notebook
 jupyter
@@ -57,5 +57,5 @@ matplotlib
 
 # llm
 airllm
-mlx
+# mlx
 absl-py
