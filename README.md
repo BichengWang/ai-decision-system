@@ -136,6 +136,7 @@ git config --global alias.ll "log --oneline"
 git config --global alias.lg "log --oneline --graph --all --decorate"
 git config --global alias.rb "pull --rebase origin"
 git config --global alias.sq "rebase -i"
+git config --global alias.dl '!git push --delete origin $1 && git branch -D $1'
 git config --global push.default current
 git config --global core.editor "vim"
 ```
