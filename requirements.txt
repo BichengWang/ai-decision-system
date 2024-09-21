@@ -4,8 +4,8 @@
 #
 #    pip-compile requirements.in
 #
---index-url http://artifactory.uber.internal:4587/artifactory/api/pypi/pypi/simple/
---trusted-host artifactory.uber.internal
+# --index-url http://artifactory.uber.internal:4587/artifactory/api/pypi/pypi/simple/
+# --trusted-host artifactory.uber.internal
 
 absl-py==0.12.0
     # via
