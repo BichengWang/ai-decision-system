@@ -15,9 +15,9 @@ pydump
 
 # tensorflow related
 tensorflow
-tf-models-official
-tf-models-nightly
-tf-nightly
+# tf-models-official
+# tf-models-nightly
+# tf-nightly
 
 tensorflow-text
 tensorflow-text-nightly
@@ -27,9 +27,9 @@ tensorflow-recommenders
 
 # pytorch related (run makefile first)
 torch
-torchvision
-torchaudio
-torchrec-nightly
+# torchvision
+# torchaudio
+# torchrec-nightly
 
 h5py
 keras
