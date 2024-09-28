@@ -5,7 +5,7 @@ import numpy as np
 
 def pnl():
     # spy return rate
-    spy_rate = 1.2070
+    spy_rate = 571.30/467.58
     today = datetime.today()
     delta = (today - datetime(2024, 1, 1)).days
     daily_rate = spy_rate ** (1./delta)
@@ -16,7 +16,7 @@ def pnl():
     ))
     transfer_base = np.sum(df['price'] * df['number'])
     begin = 2294.66
-    current = 297554.64
+    current = 317145.05
     pnl = current - begin - transfer_base
     spy_expect_return = begin * (daily_rate ** delta) + np.sum(df['spy_expect_return'])
     print(f"pnl: {pnl:.2f}\npnl_rate:{pnl/current:.2f}\ncurrent: {current:.2f}\nspy expect: {spy_expect_return:.2f}")
