@@ -1,7 +1,6 @@
 import argparse
 
 
-<<<<<<< HEAD
 class KellyGeneralModel:
     # https://www.investopedia.com/articles/trading/04/091504.asp
     def __init__(self, win_possible=0.0, win_reward=0.0, target_reward = 1.0, target_loss = 0.0, current_price=1.0):
@@ -15,16 +14,6 @@ class KellyGeneralModel:
 
     def fit(self):
         result = (self.win_possible * self.win_ratio + self.win_possible - 1) / self.win_ratio
-=======
-class KellyGeneralModel(object):
-    def __init__(self, win_possible=0.0, win_reward=0.0):
-        self.win_possible = win_possible
-        self.win_reward = win_reward
-        self.optimal_investment_percentage = None
-
-    def fit(self):
-        result = (self.win_possible * self.win_reward + self.win_possible - 1) / self.win_reward
->>>>>>> eb715ec (ci)
         self.optimal_investment_percentage = result
 
     def get_investment_ratio(self):
@@ -33,7 +22,6 @@ class KellyGeneralModel(object):
         return self.optimal_investment_percentage
 
 
-<<<<<<< HEAD
 # python3 /Users/bichengwang/Documents/codes/python-notebook/src/finance/strategies/kelly_criterion_models.py -p 0.8 -r 2.0
 # ratio = reward/loss
 parser = argparse.ArgumentParser()
@@ -42,11 +30,6 @@ parser.add_argument('-p', '--win_possible', type=float, help='win possible')
 parser.add_argument('-t', '--target_reward', type=float, help='target reward')
 parser.add_argument('-l', '--target_loss', type=float, help='target loss')
 parser.add_argument('-c', '--current_price', type=float, help='current price')
-=======
-parser = argparse.ArgumentParser()
-parser.add_argument('-p', '--win_possible', type=float, help='win possible')
-parser.add_argument('-r', '--win_reward', type=float, help='win gain')
->>>>>>> eb715ec (ci)
 args_dict = vars(parser.parse_args())
 print(args_dict)
 print("best investment ratio: %.3f" % KellyGeneralModel(**args_dict).get_investment_ratio())
