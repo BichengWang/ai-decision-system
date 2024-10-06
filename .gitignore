@@ -161,4 +161,4 @@ dmypy.json
 /4.2.0
 
 # Pytorch files
-.pth
+*.pth
