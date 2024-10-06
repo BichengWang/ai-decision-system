@@ -21,8 +21,9 @@ def pnl(robinhood, ib, fidelity, moomoo):
     
     pnl = current - begin - transfer_base
     spy_expect_return = begin * (daily_rate ** delta) + np.sum(df['spy_expect_return'])
-    print(f"pnl: {pnl:.2f}\npnl_rate:{pnl/(begin+transfer_base):.2f}\ncurrent: {current:.2f}\nspy expect: {spy_expect_return:.2f}")
     total_assets = current + robinhood + ib + fidelity
+    
+    print(f"pnl: {pnl:.2f}\npnl_rate: {pnl/(begin+transfer_base):.2f}\ncurrent: {current:.2f}\nspy expect: {spy_expect_return:.2f}")
     print(f"moomoo: {current:.2f}\nrobinhood: {robinhood:.2f}\nib: {ib:.2f}\nfidelity: {fidelity:.2f}\ntotal assets: {total_assets:.2f}")
 
 
