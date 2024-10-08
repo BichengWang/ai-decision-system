@@ -1,5 +1,4 @@
 from ib_insync import *
-# from ibapi import *
 
 from ibapi.client import EClient
 from ibapi.wrapper import EWrapper
@@ -38,6 +37,7 @@ if __name__ == "__main__":
 #     """_summary_
 #     https://www.interactivebrokers.com/campus/ibkr-api-page/twsapi-doc/
 #     tws setup: https://www.interactivebrokers.com/campus/ibkr-api-page/twsapi-doc/#setup-py-updates
+#     install with source lib: https://stackoverflow.com/questions/57618117/installing-the-ibapi-package
 #     """
 #     ib = IB()
 #     app.connect("127.0.0.1", args.port, clientId=0)
