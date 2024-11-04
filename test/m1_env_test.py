@@ -1,7 +1,21 @@
 import time
 import numpy as np
+import sys
+import os
+
+
 
 if __name__ == "__main__":
+    # check path
+    print(sys.path)
+    
+    # check environment
+    os.system('nvcc --version')
+    os.system('nvidia-smi')
+    os.system('python --version')
+    
+    
+    
     np.random.seed(42)
     a = np.random.uniform(size=(300, 300))
     runtimes = 10
