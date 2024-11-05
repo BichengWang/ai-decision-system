@@ -1,8 +1,6 @@
-<<<<<<< HEAD
 data/.local/
+**/data/
 
-=======
->>>>>>> eb715ec (ci)
 # Byte-compiled / optimized / DLL files
 __pycache__/
 *.py[cod]
@@ -161,3 +159,6 @@ dmypy.json
 /src/tensorflow_lr/recommenders/export/
 /src/tensorflow_lr/recommenders/data/
 /4.2.0
+
+# Pytorch files
+*.pth

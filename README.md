@@ -56,7 +56,7 @@ brew install --cask anaconda
 
 ```shell
 conda remove -n python-notebook --all
-conda create --name python-notebook python=3
+conda create --name python-notebook python=3.9
 conda info --envs
 activate python-notebook
 ```
@@ -128,7 +128,6 @@ git remote prune origin
 git global config for all general commands:
 
 ```shell
-git lfs install
 git config --global alias.co checkout
 git config --global alias.br branch
 git config --global alias.ci commit
@@ -136,9 +135,11 @@ git config --global alias.st status
 git config --global alias.ll "log --oneline"
 git config --global alias.lg "log --oneline --graph --all --decorate"
 git config --global alias.rb "pull --rebase origin"
-git config --global alias.sq "rebase -i"
+git config --global alias.sq "rebase -i HEAD~10"
+git config --global alias.dl '!git branch -D $1 && git push --delete origin $1'
 git config --global push.default current
 git config --global core.editor "vim"
+git config --global alias.amendpush '!git add . && git commit --amend --no-edit && git push --force origin'
 ```
 
 Pull and rebase origin master
