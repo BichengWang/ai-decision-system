@@ -35,7 +35,7 @@ env:
 
 .PHONY: test
 test: clean lint
-	SIM_TEST_MODE=true $(pytest) -k "not personal_transport_e2e and not uber_everything_e2e" tests/$(file_name) $(pytest_extra_args)
+	SIM_TEST_MODE=true $(pytest) -k "not personal_transport_e2e" tests/$(file_name) $(pytest_extra_args)
 
 .PHONY: all_test
 all_test: test
