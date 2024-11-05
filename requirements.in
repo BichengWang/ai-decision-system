@@ -14,7 +14,7 @@ mock
 pydump
 
 # tensorflow related
-tensorflow
+tensorflow>=2.12.1
 # tf-models-official
 # tf-models-nightly
 # tf-nightly
@@ -26,13 +26,13 @@ tensorflow-datasets
 tensorflow-recommenders
 
 # pytorch related (run makefile first)
-torch
+torch>=2.2.0
 # torchvision
 # torchaudio
 # torchrec-nightly
 
 h5py
-keras
+keras>=2.13.1rc0
 seaborn
 scikit-learn
 
