@@ -56,12 +56,20 @@ if __name__ == "__main__":
     def websocket_con():
         app.run()
 
+    # # Run the app for 1 minute and then shut down
+    # def run_app_for_one_minute():
+    #     time.sleep(30)
+    #     app.disconnect()
+
+    # # Start the thread to run the app for 1 minute
+    # shutdown_thread = threading.Thread(target=run_app_for_one_minute, daemon=True)
+    # shutdown_thread.start()
+
     # app.connect("127.0.0.1", 7496, clientId=1)
     app.connect("127.0.0.1", 7497, clientId=0)
 
     con_thread = threading.Thread(target=websocket_con, daemon=True)
     con_thread.start()
-    time.sleep(1)
     
     contract = Contract()
     contract.symbol = "AAPL"
@@ -78,16 +86,13 @@ if __name__ == "__main__":
     #     useRTH=True,
     #     formatDate=1)
     
-    
     # Create a list to store historical data
     historical_data = []
-
 
     # Override the historicalData method to save data to the list
     def historicalData(self, reqId, bar):
         # print("HistoricalData. ReqId:", reqId, "BarData.", bar)
         historical_data.append(bar.__dict__)
-
 
     # Bind the new method to the class
     TradeApp.historicalData = historicalData
@@ -107,4 +112,4 @@ if __name__ == "__main__":
     time.sleep(5)  # Sleep interval to allow time for data retrieval
 
     # Save the historical data to a CSV file
-    save_to_csv(historical_data, f'data/finance/{contract.symbol}_historical_data.csv')
+    save_to_csv(historical_data, f'./py-notebook/data/finance/{contract.symbol}_historical_data.csv')
