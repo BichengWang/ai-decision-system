@@ -13,3 +13,4 @@ class TwoSum:
 
 if __name__ == "__main__":
     print(TwoSum().two_sum(nums=[2, 7, 11, 15], target=9))
+
