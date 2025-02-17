@@ -19,8 +19,8 @@ tensorflow>=2.12.1
 # tf-models-nightly
 # tf-nightly
 
-tensorflow-text
-tensorflow-text-nightly
+# tensorflow-text
+# tensorflow-text-nightly
 # tensorflow optional
 tensorflow-datasets
 tensorflow-recommenders
@@ -35,9 +35,6 @@ h5py
 keras>=2.13.1rc0
 seaborn
 scikit-learn
-
-# dependency
-grpcio
 
 # notebook
 jupyter
