@@ -74,7 +74,7 @@ entrypoints==0.3
     # via nbconvert
 exceptiongroup==1.0.1
     # via hypothesis
-fbgemm-gpu-nightly==2022.11.6
+fbgemm-gpu-nightly==2024.10.31
     # via torchrec-nightly
 filelock==3.8.0
     # via
@@ -367,7 +367,7 @@ pytz==2021.1
     # via
     #   pandas
     #   torchrec-nightly
-pyyaml==5.3.1
+pyyaml==6.0.2
     # via
     #   keras
     #   libcst
