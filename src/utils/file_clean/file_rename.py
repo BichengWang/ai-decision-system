@@ -48,7 +48,7 @@ def rename_files_in_folder(folder_path, dry_run=True):
 
 def process_folders_in_directory(root_path, dry_run=True, sleep_time=0.01):
     # Process only folders with names matching the pattern: digit, dot, digits, dot, then anything.
-    folder_pattern = re.compile(r'^[0-5]\.[0-5][0-9]\..*')
+    folder_pattern = re.compile(r'^[0-3]\.[0-5][0-9]\.')
     for entry in os.listdir(root_path):
         entry_path = os.path.join(root_path, entry)
         if os.path.isdir(entry_path) and folder_pattern.match(entry):
