@@ -56,3 +56,8 @@ matplotlib
 airllm
 # mlx
 absl-py
+
+# cv
+opencv-python
+face_recognition
+dlib
