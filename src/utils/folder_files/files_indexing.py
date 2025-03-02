@@ -20,15 +20,17 @@ def search_file(file_index, keyword):
 
 # Example usage
 if __name__ == "__main__":
-    root_directory = input("Enter root directory to index: ")
-    file_index = index_files(root_directory)
+    roots = ["D:/Downloads", "F:/", "G:/", "H:/recov", "I:/", "J:/", "Z:/"]
+    file_index = {}
+    for root_directory in roots:
+        file_index.update(index_files(root_directory))
 
-    keyword = input("Enter keyword to search: ")
-    search_results = search_file(file_index, keyword)
-
-    if search_results:
-        print("Found the following files:")
-        for name, path in search_results.items():
-            print(f"{name} -> {path}")
-    else:
-        print("No files found matching the keyword.")
+    while True:
+        keyword = input("Enter keyword to search: ")
+        search_results = search_file(file_index, keyword)
+        if search_results:
+            print("Found the following files:")
+            for name, path in search_results.items():
+                print(f"{name} -> {path}")
+        else:
+            print("No files found matching the keyword.")
