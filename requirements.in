@@ -2,6 +2,7 @@
 # For example you might add a line that looks like this:
 #
 # pytz>2016.3
+# pip-compile requirements.in
 memory-profiler
 numpy
 requests
@@ -14,12 +15,12 @@ mock
 pydump
 
 # tensorflow related
-tensorflow>=2.12.1
+tensorflow>=2.12.0
 # tf-models-official
 # tf-models-nightly
 # tf-nightly
 
-# tensorflow-text
+tensorflow-text
 # tensorflow-text-nightly
 # tensorflow optional
 tensorflow-datasets
@@ -27,8 +28,9 @@ tensorflow-recommenders
 
 # pytorch related (run makefile first)
 torch>=2.2.0
-# torchvision
-# torchaudio
+torchvision
+torchaudio
+torchrec
 # torchrec-nightly
 
 h5py
@@ -38,6 +40,8 @@ scikit-learn
 
 # notebook
 jupyter
+ipykernel
+
 
 # test
 pytest
@@ -53,6 +57,11 @@ tabulate
 matplotlib
 
 # llm
+transformers
+datasets
+tiktoken
+wandb
+tqdm
 airllm
 # mlx
 absl-py

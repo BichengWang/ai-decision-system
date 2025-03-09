@@ -74,7 +74,7 @@ entrypoints==0.3
     # via nbconvert
 exceptiongroup==1.0.1
     # via hypothesis
-fbgemm-gpu-nightly==2024.10.31
+# fbgemm-gpu-nightly==2024.10.31
     # via torchrec-nightly
 filelock==3.8.0
     # via
@@ -192,7 +192,7 @@ markupsafe==1.1.1
     # via
     #   jinja2
     #   torchrec-nightly
-matplotlib==3.4.1
+matplotlib==3.6.3
     # via seaborn
 mccabe==0.6.1
     # via flake8
@@ -228,7 +228,8 @@ notebook==6.3.0
     # via
     #   jupyter
     #   widgetsnbextension
-numpy==1.19.5
+# numpy==1.19.5
+numpy==1.26.4
     # via
     #   -r requirements.in
     #   h5py
@@ -254,7 +255,7 @@ nvidia-cuda-nvrtc-cu11==11.7.99
     # via torch
 nvidia-cuda-runtime-cu11==11.7.99
     # via torch
-nvidia-cudnn-cu11==8.5.0.96
+# nvidia-cudnn-cu11==8.5.0.96
     # via torch
 oauthlib==3.1.0
     # via requests-oauthlib
@@ -373,7 +374,7 @@ pyyaml==6.0.2
     #   libcst
     #   torchrec-nightly
     #   torchx-nightly
-pyzmq==22.0.3
+pyzmq==26.2.1
     # via
     #   jupyter-client
     #   notebook
@@ -396,9 +397,9 @@ rsa==4.7.2
     # via google-auth
 scikit-build==0.16.2
     # via torchrec-nightly
-scikit-learn==0.24.2
+# scikit-learn==0.24.2
     # via sklearn
-scipy==1.6.3
+scipy==1.6.1
     # via
     #   -r requirements.in
     #   keras
@@ -445,9 +446,9 @@ tensorboard-plugin-wit==1.8.0
     # via tensorboard
 tensorflow-estimator==2.4.0
     # via tensorflow-gpu
-tensorflow-gpu==2.4.1
+tensorflow==2.12.0
     # via -r requirements.in
-tensorflow-text
+tensorflow-text==2.12.0
 termcolor==1.1.0
     # via tensorflow-gpu
 terminado==0.9.4
