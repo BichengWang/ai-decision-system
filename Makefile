@@ -24,9 +24,7 @@ endif
 
 .PHONY: bootstrap
 bootstrap:
-	pip3 install pip-tools>=44.0.0
-	pip3 install wheel
-	pip3 install -U pip setuptools wheel pip-tools
+	pip3 install -U pip==25.0.1 setuptools==42.0.0 wheel pip-tools>=44.0.0
 	pip3 install --no-deps -r requirements.txt --no-cache-dir
 	pip3 install torch torchvision torchaudio --extra-index-url https://download.pytorch.org/whl/cu123
 
