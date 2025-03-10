@@ -61,6 +61,7 @@ matplotlib
 langchain
 faiss-gpu
 openai
+streamlit
 huggingface-hub
 charset-normalizer
 transformers
