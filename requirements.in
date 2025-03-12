@@ -42,7 +42,7 @@ scikit-learn
 # notebook
 jupyter
 ipykernel
-
+mkdocs
 
 # test
 pytest
