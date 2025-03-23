@@ -1,0 +1,13 @@
+{
+    "mcpServers": {
+      "bilibili": {
+        "command": "uv",
+        "args": [
+          "--directory",
+          "/mnt/d/codes/py-notebook/src/ml/llm/mcp",
+          "run",
+          "bilibili.py"
+        ]
+      }
+    }
+  }
