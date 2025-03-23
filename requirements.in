@@ -19,9 +19,9 @@ pydump
 tensorflow>=2.12.0
 # tf-models-official
 # tf-models-nightly
-# tf-nightly
-
-# tensorflow-text
+tf-nightly
+tensorflow-keras
+tensorflow-text
 # tensorflow-text-nightly
 # tensorflow optional
 tensorflow-datasets
@@ -59,7 +59,8 @@ matplotlib
 
 # llm
 langchain
-faiss-gpu
+# faiss-gpu
+faiss-cpu
 openai
 streamlit
 huggingface-hub
@@ -72,8 +73,12 @@ tqdm
 airllm
 # mlx
 absl-py
+mcp
 
 # cv
 opencv-python
 face_recognition
 dlib
+
+# other
+bilibili-api
