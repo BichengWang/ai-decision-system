@@ -163,3 +163,4 @@ dmypy.json
 
 # Pytorch files
 *.pth
+src/interview/openai/ted_hrlr_translate_pt_en_converter_extracted/
