@@ -82,3 +82,7 @@ dlib
 
 # other
 bilibili-api
+
+# YouTube search functionality
+google-api-python-client==2.108.0
+python-dotenv==1.0.0
