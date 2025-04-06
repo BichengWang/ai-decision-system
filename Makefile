@@ -24,9 +24,13 @@ endif
 
 .PHONY: bootstrap
 bootstrap:
-	pip3 install -U pip>=25.0.1 setuptools==72.0.0 wheel pip-tools>=44.0.0
+	pip3 install -U pip>=25.0.1 setuptools>=75.8.0 wheel pip-tools>=44.0.0
 	pip3 install --no-deps -r requirements.txt --no-cache-dir
 	pip3 install torch torchvision torchaudio --extra-index-url https://download.pytorch.org/whl/cu123
+
+.PHONY: compile
+compile:
+	pip-compile requirements.in
 
 .PHONY: env
 env:
