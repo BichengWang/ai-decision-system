@@ -9,5 +9,9 @@
           "bilibili.py"
         ]
       }
+    },
+    "weather": {
+      "command": "python",
+      "args": ["weather-server.py"]
     }
   }
