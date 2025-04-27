@@ -83,7 +83,10 @@ deepface
 
 # other
 bilibili-api
-
-# YouTube search functionality
 google-api-python-client
 python-dotenv
+
+# env
+ray[default]
+ray[data,train,tune,serve]
+ray[rllib]
