@@ -140,7 +140,7 @@ git config --global alias.dl '!git branch -D $1 && git push --delete origin $1'
 git config --global push.default current
 git config --global core.editor "vim"
 git config --global alias.amendpush '!git add . && git commit --amend --no-edit && git push --force origin'
-git config --global alias.pr '!git add . && git commit -am "$1" && git rebase origin/master && git push origin && gh pr create --label auto-merge --title "$1"'
+git config --global alias.pr '!f() { git add . && git commit -am "$1" && git rebase origin/master && git push origin && gh pr create --label auto-merge --title "$1"; }; f'
 ```
 
 Pull and rebase origin master
