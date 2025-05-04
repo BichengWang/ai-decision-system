@@ -62,6 +62,7 @@ matplotlib
 faiss-cpu
 openai
 openai-agents
+openai-agents[voice]
 streamlit
 huggingface-hub
 charset-normalizer
