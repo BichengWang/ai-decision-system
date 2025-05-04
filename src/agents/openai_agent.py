@@ -19,7 +19,7 @@ triage_agent = Agent(
 
 
 async def main():
-    result = await Runner.run(triage_agent, input="Hola, ¿cómo estás?")
+    result = await Runner.run(triage_agent, input="Hello? what's the weather today?")
     print(result.final_output)
     # ¡Hola! Estoy bien, gracias por preguntar. ¿Y tú, cómo estás?
 
