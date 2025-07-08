@@ -55,10 +55,10 @@ brew install --cask anaconda
 ### Create Conda Env
 
 ```shell
-conda remove -n python-notebook --all
+conda remove -n py-notebook --all
 conda create --name py-notebook python=3.12
 conda info --envs
-activate python-notebook
+activate py-notebook
 ```
 
 ### For M1 specific
