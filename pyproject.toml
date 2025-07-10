@@ -6,3 +6,7 @@ build-backend = "setuptools.build_meta"
 name = "py-notebook"
 version = "0.1.0"
 description = "A Python notebook"
+dependencies = [
+    "yfinance",
+    "numpy",
+]
