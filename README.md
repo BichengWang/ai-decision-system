@@ -46,6 +46,102 @@ Checking: check specific lib exist or not
 pip freeze | grep tensorflow-gpu
 ```
 
+## UV (Ultrafast Python Package Manager)
+
+UV is a fast Python package installer and resolver, written in Rust. It's designed to be a drop-in replacement for pip and virtualenv.
+
+### Installation
+
+```shell
+# Install uv
+curl -LsSf https://astral.sh/uv/install.sh | sh
+
+# Or using pip
+pip install uv
+```
+
+### Basic Usage
+
+```shell
+# Create a new project
+uv init my-project
+cd my-project
+
+# Create a virtual environment and install dependencies
+uv sync
+
+# Add a dependency
+uv add numpy pandas
+
+# Add development dependencies
+uv add --dev pytest black
+
+# Run a command in the virtual environment
+uv run python script.py
+
+# Activate the virtual environment
+source .venv/bin/activate  # On Unix/macOS
+.venv\Scripts\activate     # On Windows
+```
+
+### Working with pyproject.toml
+
+UV works seamlessly with pyproject.toml files:
+
+```shell
+# Install dependencies from pyproject.toml
+uv sync
+
+# Install in development mode
+uv sync --dev
+
+# Update dependencies
+uv sync --upgrade
+
+# Lock dependencies (creates uv.lock)
+uv lock
+```
+
+### Migration from pip
+
+```shell
+# Convert requirements.txt to pyproject.toml
+uv pip compile requirements.txt --pyproject
+
+# Or manually add to pyproject.toml dependencies section
+dependencies = [
+    "numpy",
+    "pandas",
+    "yfinance",
+]
+```
+
+### Performance Benefits
+
+- **Fast**: 10-100x faster than pip
+- **Reliable**: Deterministic dependency resolution
+- **Modern**: Native support for pyproject.toml
+- **Compatible**: Works with existing Python tooling
+
+### Advanced Features
+
+```shell
+# Install specific versions
+uv add "numpy>=1.21.0,<2.0.0"
+
+# Install from git
+uv add "git+https://github.com/user/repo.git"
+
+# Install with extras
+uv add "requests[security]"
+
+# Show dependency tree
+uv tree
+
+# Check for outdated packages
+uv sync --upgrade --dry-run
+```
+
 ## Conda
 
 ```shell
