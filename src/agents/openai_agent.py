@@ -1,4 +1,4 @@
-from agents import Agent, Runner
+from agent import Agent, Runner
 import asyncio
 
 spanish_agent = Agent(

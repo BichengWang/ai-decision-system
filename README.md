@@ -260,3 +260,13 @@ https://pytorch.org/get-started/locally/
 https://developer.apple.com/forums/thread/695963
 
 For test
+
+## Appendix
+
+### Switch master to main
+```shell
+git branch -m master main
+git fetch origin
+git branch -u origin/main main
+git remote set-head origin -a
+```
