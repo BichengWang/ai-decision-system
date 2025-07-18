@@ -237,6 +237,7 @@ git config --global push.default current
 git config --global core.editor "vim"
 git config --global alias.amendpush '!git add . && git commit --amend --no-edit && git push --force origin'
 git config --global alias.pr '!f() { git add .; git commit -am "$1"; git rb main && git push origin && gh pr create --title "$1" --body "" --label "auto-merge"; }; f'
+git config set advice.skippedCherryPicks false
 ```
 
 Pull and rebase origin master
