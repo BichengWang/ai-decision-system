@@ -233,12 +233,18 @@ git config --global alias.lg "log --oneline --graph --all --decorate"
 git config --global alias.rb "pull --rebase origin"
 git config --global alias.sq "rebase -i HEAD~10"
 git config --global push.default current
-git config --global core.editor "cursor"
+git config --global core.editor "cursor --wait"
 git config --global alias.dl '!git branch -D $1 && git push --delete origin $1'
 git config --global alias.pruning '!git remote prune origin && git gc --prune=now'
 git config --global alias.amendpush '!git add . && git commit --amend --no-edit && git push --force origin'
 git config --global alias.pr '!f() { git add .; git commit -am "$1"; git rb main && git push origin && gh pr create --title "$1" --body "" --label "auto-merge"; }; f'
 git config set advice.skippedCherryPicks false
+```
+
+```bash
+git config --global user.signingkey YOUR_GPG_KEY_ID
+git config --global commit.gpgsign true
+git config --global alias.sign '!f() { git rebase --exec "git commit --amend --no-edit -S" HEAD~"$1"; }; f'
 ```
 
 Pull and rebase origin master
