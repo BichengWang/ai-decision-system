@@ -1,12 +1,88 @@
 [build-system]
-requires = ["setuptools", "wheel"]
-build-backend = "setuptools.build_meta"
+requires = ["hatchling"]
+build-backend = "hatchling.build"
 
 [project]
 name = "py-notebook"
 version = "0.1.0"
 description = "A Python notebook"
+requires-python = ">=3.10"
 dependencies = [
+    # Core dependencies
+    "memory-profiler",
+    "numpy>=1.21.0",
+    "pandas>=1.3.0",
+    "requests",
+    "python-dateutil",
+    "scipy",
+    "seaborn",
+    "backoff",
+    "click",
+    "mock",
+    "pydump",
+    # TensorFlow related
+    "tensorflow>=2.10.0",
+    "tensorflow-keras",
+    "tensorflow-text",
+    "tensorflow-datasets",
+    "tensorflow-recommenders",
+    # PyTorch related (macOS compatible)
+    "torch>=2.0.0",
+    "torchvision",
+    "torchaudio",
+    # torchrec alternatives for macOS:
+    "torch-geometric", # For graph neural networks and recommendations
+    "pytorch-lightning", # For training infrastructure
+    # Data science
+    "h5py",
+    "keras>=2.13.1rc0",
+    "scikit-learn",
+    # Notebook & documentation
+    "jupyter",
+    "ipykernel",
+    "mkdocs",
+    # Testing
+    "pytest",
+    "pytest-custom-exit-code",
+    "pytest-cov",
+    # Code quality
+    "flake8",
+    # Finance
     "yfinance",
-    "numpy",
+    "tabulate",
+    "matplotlib",
+    # LLM & ML
+    "faiss-cpu",
+    "openai",
+    "streamlit",
+    "huggingface-hub",
+    "charset-normalizer",
+    "transformers",
+    "datasets",
+    "tiktoken", 
+    "tqdm",
+    # "wandb",  # Temporarily disabled due to PyYAML build issues
+    "airllm",
+    "absl-py",
+    # Computer vision (some may need system dependencies)
+    "opencv-python",
+    # Note: face_recognition, dlib, deepface may need compilation - add manually if needed
+    # Other utilities  
+    "google-api-python-client",
+    "python-dotenv",
+    # Note: bilibili-api, openai-agents, ray may need newer versions - add manually if needed
 ]
+
+[tool.uv]
+dev-dependencies = [
+    "pytest>=8.0.0",
+    "pytest-cov>=4.0.0",
+    "pytest-custom-exit-code>=0.3.0",
+    "flake8>=7.0.0",
+]
+
+[tool.hatch.build.targets.wheel]
+packages = ["src"]
+
+[tool.flake8]
+max-line-length = 160
