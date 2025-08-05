@@ -240,6 +240,7 @@ git config --global alias.amendpush '!git add . && git commit --amend --no-edit 
 git config --global alias.pr '!f() { git add .; git commit -am "$1"; git rb main && git push origin && gh pr create --title "$1" --body "" --label "auto-merge"; }; f'
 git config --global advice.skippedCherryPicks false
 git config --global alias.run '!./.git/hooks/pre-run'
+git config --global alias.files '!git --no-pager diff --name-only HEAD~1 HEAD'
 ```
 
 ```bash
