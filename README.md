@@ -241,12 +241,14 @@ git config --global alias.pr '!f() { git add .; git commit -am "$1"; git rb main
 git config --global advice.skippedCherryPicks false
 git config --global alias.run '!./.git/hooks/pre-run'
 git config --global alias.files '!git --no-pager diff --name-only HEAD~1 HEAD'
+
+git config --global commit.gpgsign true
+git config --global alias.sign '!f() { git rebase --exec "git commit --amend --no-edit -S" HEAD~"$1"; }; f'
+git config --global user.signingkey GPG_KEY_ID
+
 ```
 
 ```bash
-git config --global user.signingkey YOUR_GPG_KEY_ID
-git config --global commit.gpgsign true
-git config --global alias.sign '!f() { git rebase --exec "git commit --amend --no-edit -S" HEAD~"$1"; }; f'
 ```
 
 Pull and rebase origin master
