@@ -226,6 +226,7 @@ git global config for all general commands:
 ```shell
 git config --global alias.co checkout
 git config --global alias.br branch
+git config --global alias.amd '!git add -u && git commit --amend --no-edit'
 git config --global alias.ci commit
 git config --global alias.st status
 git config --global alias.ll "log --oneline"
@@ -241,41 +242,12 @@ git config --global alias.pr '!f() { git add .; git commit -am "$1"; git rb main
 git config --global advice.skippedCherryPicks false
 git config --global alias.run '!./.git/hooks/pre-run'
 git config --global alias.files '!git --no-pager diff --name-only HEAD~1 HEAD'
-
 git config --global commit.gpgsign true
 git config --global alias.sign '!f() { git rebase --exec "git commit --amend --no-edit -S" HEAD~"$1"; }; f'
 git config --global user.signingkey GPG_KEY_ID
-
-```
-
-```bash
-```
-
-Pull and rebase origin master
-
-```shell
-git pull --rebase origin master
 ```
 
 ## Appendix
-
-To test which python in path
-
-```shell
-import sys
-print(sys.path)
-```
-
-tensorflow & pytorch for M1
-https://caffeinedev.medium.com/how-to-install-tensorflow-on-m1-mac-8e9b91d93706
-https://pytorch.org/get-started/locally/
-https://developer.apple.com/forums/thread/695963
-
-For test
-
-## Appendix
-
-### Switch master to main
 ```shell
 git branch -m master main
 git fetch origin
