@@ -247,34 +247,7 @@ git config --global alias.sign '!f() { git rebase --exec "git commit --amend --n
 git config --global user.signingkey GPG_KEY_ID
 ```
 
-```bash
-```
-
-Pull and rebase origin master
-
-```shell
-git pull --rebase origin master
-```
-
 ## Appendix
-
-To test which python in path
-
-```shell
-import sys
-print(sys.path)
-```
-
-tensorflow & pytorch for M1
-https://caffeinedev.medium.com/how-to-install-tensorflow-on-m1-mac-8e9b91d93706
-https://pytorch.org/get-started/locally/
-https://developer.apple.com/forums/thread/695963
-
-For test
-
-## Appendix
-
-### Switch master to main
 ```shell
 git branch -m master main
 git fetch origin
