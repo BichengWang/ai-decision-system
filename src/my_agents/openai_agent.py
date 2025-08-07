@@ -1,4 +1,4 @@
-from agent import Agent, Runner
+from agents import Agent, Runner
 import asyncio
 from openai import OpenAI
 
