@@ -12,8 +12,12 @@ import argparse
 import math
 import random
 import statistics
+import base64
 from dataclasses import dataclass
-from typing import Dict, Iterable, List, Literal, Sequence, Tuple
+from datetime import datetime
+from email.message import EmailMessage
+from pathlib import Path
+from typing import Dict, List, Literal, Sequence
 
 
 BillingModel = Literal["hourly", "flat", "contingency"]
@@ -132,7 +136,7 @@ def simulate_many(config: DomainConfig, num_samples: int, seed: int | None = Non
 
 def summarize(samples: Sequence[float]) -> Dict[str, float]:
     if not samples:
-        return {"mean": 0.0, "p10": 0.0, "p50": 0.0, "p90": 0.0}
+        return {"mean": 0.0, "p10": 0.0, "p50": 0.0, "p90": 0.0, "p99": 0.0}
     sorted_vals = sorted(samples)
     n = len(sorted_vals)
 
@@ -153,6 +157,7 @@ def summarize(samples: Sequence[float]) -> Dict[str, float]:
         "p10": pct(0.10),
         "p50": pct(0.50),
         "p90": pct(0.90),
+        "p99": pct(0.99),
     }
 
 
@@ -168,6 +173,126 @@ def default_domain_configs() -> List[DomainConfig]:
             fixed_expense_mean=35000.0,
             fixed_expense_std=8000.0,
             variable_expense_pct_mean=0.22,
+            variable_expense_pct_std=0.05,
+        ),
+        DomainConfig(
+            name="Employment",
+            billing_model="hourly",
+            hourly_rate_mean=280.0,
+            hourly_rate_std=45.0,
+            utilization_mean=0.65,
+            utilization_std=0.07,
+            fixed_expense_mean=24000.0,
+            fixed_expense_std=6000.0,
+            variable_expense_pct_mean=0.18,
+            variable_expense_pct_std=0.05,
+        ),
+        DomainConfig(
+            name="Bankruptcy",
+            billing_model="flat",
+            flat_fee_mean=2500.0,
+            flat_fee_std=500.0,
+            cases_per_year_mean=60.0,
+            cases_per_year_std=12.0,
+            fixed_expense_mean=22000.0,
+            fixed_expense_std=5000.0,
+            variable_expense_pct_mean=0.15,
+            variable_expense_pct_std=0.04,
+        ),
+        DomainConfig(
+            name="Estate Planning",
+            billing_model="flat",
+            flat_fee_mean=3000.0,
+            flat_fee_std=700.0,
+            cases_per_year_mean=50.0,
+            cases_per_year_std=10.0,
+            fixed_expense_mean=20000.0,
+            fixed_expense_std=5000.0,
+            variable_expense_pct_mean=0.12,
+            variable_expense_pct_std=0.03,
+        ),
+        DomainConfig(
+            name="Civil Litigation",
+            billing_model="hourly",
+            hourly_rate_mean=310.0,
+            hourly_rate_std=55.0,
+            utilization_mean=0.62,
+            utilization_std=0.07,
+            fixed_expense_mean=40000.0,
+            fixed_expense_std=10000.0,
+            variable_expense_pct_mean=0.22,
+            variable_expense_pct_std=0.05,
+        ),
+        DomainConfig(
+            name="Elder Law",
+            billing_model="hourly",
+            hourly_rate_mean=240.0,
+            hourly_rate_std=40.0,
+            utilization_mean=0.60,
+            utilization_std=0.07,
+            fixed_expense_mean=18000.0,
+            fixed_expense_std=4000.0,
+            variable_expense_pct_mean=0.15,
+            variable_expense_pct_std=0.04,
+        ),
+        DomainConfig(
+            name="Environmental",
+            billing_model="hourly",
+            hourly_rate_mean=360.0,
+            hourly_rate_std=60.0,
+            utilization_mean=0.58,
+            utilization_std=0.06,
+            fixed_expense_mean=42000.0,
+            fixed_expense_std=12000.0,
+            variable_expense_pct_mean=0.24,
+            variable_expense_pct_std=0.06,
+        ),
+        DomainConfig(
+            name="Securities",
+            billing_model="hourly",
+            hourly_rate_mean=420.0,
+            hourly_rate_std=70.0,
+            utilization_mean=0.55,
+            utilization_std=0.06,
+            fixed_expense_mean=45000.0,
+            fixed_expense_std=13000.0,
+            variable_expense_pct_mean=0.25,
+            variable_expense_pct_std=0.06,
+        ),
+        DomainConfig(
+            name="Construction",
+            billing_model="hourly",
+            hourly_rate_mean=300.0,
+            hourly_rate_std=45.0,
+            utilization_mean=0.62,
+            utilization_std=0.07,
+            fixed_expense_mean=30000.0,
+            fixed_expense_std=8000.0,
+            variable_expense_pct_mean=0.20,
+            variable_expense_pct_std=0.05,
+        ),
+        DomainConfig(
+            name="Entertainment",
+            billing_model="hourly",
+            hourly_rate_mean=350.0,
+            hourly_rate_std=60.0,
+            utilization_mean=0.60,
+            utilization_std=0.07,
+            fixed_expense_mean=38000.0,
+            fixed_expense_std=9000.0,
+            variable_expense_pct_mean=0.22,
+            variable_expense_pct_std=0.05,
+        ),
+        DomainConfig(
+            name="Healthcare",
+            billing_model="hourly",
+            hourly_rate_mean=340.0,
+            hourly_rate_std=55.0,
+            utilization_mean=0.60,
+            utilization_std=0.07,
+            fixed_expense_mean=36000.0,
+            fixed_expense_std=9000.0,
+            variable_expense_pct_mean=0.21,
             variable_expense_pct_std=0.05,
         ),
         DomainConfig(
@@ -268,10 +393,14 @@ def format_currency(value: float) -> str:
 
 
 def print_summary_table(domain_to_stats: Dict[str, Dict[str, float]]) -> None:
+    print(render_summary_table(domain_to_stats))
+
+
+def render_summary_table(domain_to_stats: Dict[str, Dict[str, float]]) -> str:
     name_col = "Domain"
-    headers = [name_col, "Mean", "P10", "Median", "P90"]
+    headers = [name_col, "Mean", "P10", "Median", "P90", "P99"]
     col_widths = [max(len(name_col), max((len(n) for n in domain_to_stats), default=0))]
-    col_widths += [10, 10, 10, 10]
+    col_widths += [10, 10, 10, 10, 10]
 
     def hline() -> str:
         return "+" + "+".join("-" * w for w in col_widths) + "+"
@@ -279,9 +408,10 @@ def print_summary_table(domain_to_stats: Dict[str, Dict[str, float]]) -> None:
     def row(cols: Sequence[str]) -> str:
         return "|" + "|".join(c.ljust(w) for c, w in zip(cols, col_widths)) + "|"
 
-    print(hline())
-    print(row(headers))
-    print(hline())
+    lines: List[str] = []
+    lines.append(hline())
+    lines.append(row(headers))
+    lines.append(hline())
     for name, stats in domain_to_stats.items():
         cols = [
             name,
@@ -289,15 +419,35 @@ def print_summary_table(domain_to_stats: Dict[str, Dict[str, float]]) -> None:
             format_currency(stats["p10"]),
             format_currency(stats["p50"]),
             format_currency(stats["p90"]),
+            format_currency(stats["p99"]),
         ]
-        print(row(cols))
-    print(hline())
+        lines.append(row(cols))
+    lines.append(hline())
+    return "\n".join(lines)
 
 
 def parse_args(argv: Sequence[str] | None = None) -> argparse.Namespace:
     parser = argparse.ArgumentParser(description="Simulate lawyer income across domains")
     parser.add_argument("--samples", type=int, default=5000, help="Monte Carlo samples per domain")
     parser.add_argument("--seed", type=int, default=42, help="Random seed")
+    parser.add_argument(
+        "--send-email-to",
+        type=str,
+        default=None,
+        help="Email address to send results to using Gmail API",
+    )
+    parser.add_argument(
+        "--gmail-creds-path",
+        type=str,
+        default="/Users/bichengwang/codes/diary/.config/credential/gcp/gcp-oauth.keys.json",
+        help="Path to Google OAuth client secrets JSON",
+    )
+    parser.add_argument(
+        "--gmail-token-path",
+        type=str,
+        default="/Users/bichengwang/codes/diary/.config/credential/gcp/token.json",
+        help="Path to store OAuth token JSON (created on first run)",
+    )
     return parser.parse_args(argv)
 
 
@@ -308,10 +458,73 @@ def main(argv: Sequence[str] | None = None) -> None:
     for cfg in configs:
         samples = simulate_many(cfg, num_samples=args.samples, seed=args.seed)
         results[cfg.name] = summarize(samples)
-    print_summary_table(results)
+    table_text = render_summary_table(results)
+    print(table_text)
+
+    if args.send_email_to:
+        subject = (
+            f"Lawyer income simulation results (samples={args.samples}, seed={args.seed}) "
+            f"[{datetime.now().strftime('%Y-%m-%d %H:%M:%S')}]"
+        )
+        body = (
+            "Here are the simulation results.\n\n" + table_text + "\n\n"
+            "Generated by lawyer_income_simulation.py"
+        )
+        try:
+            service = _build_gmail_service(
+                credentials_path=args.gmail_creds_path, token_path=args.gmail_token_path
+            )
+            _send_email_via_gmail(service=service, to_address=args.send_email_to, subject=subject, body=body)
+            print(f"Email sent to {args.send_email_to}")
+        except Exception as exc:  # noqa: BLE001
+            print(
+                "Failed to send email via Gmail API. "
+                "Make sure required packages are installed and credentials are valid."
+            )
+            print(str(exc))
+
+
+def _build_gmail_service(*, credentials_path: str, token_path: str):
+    """Create an authenticated Gmail API service with OAuth user consent on first run."""
+    scopes = ["https://www.googleapis.com/auth/gmail.send"]
+    try:
+        from google.oauth2.credentials import Credentials  # type: ignore
+        from google_auth_oauthlib.flow import InstalledAppFlow  # type: ignore
+        from google.auth.transport.requests import Request  # type: ignore
+        from googleapiclient.discovery import build  # type: ignore
+    except Exception as e:  # type: ignore
+        raise RuntimeError(
+            "Missing Gmail dependencies. Install: "
+            "pip install --upgrade google-auth google-auth-oauthlib google-api-python-client"
+        ) from e
+
+    creds = None
+    token_file = Path(token_path)
+    if token_file.exists():
+        creds = Credentials.from_authorized_user_file(str(token_file), scopes)
+    if not creds or not creds.valid:
+        if creds and creds.expired and creds.refresh_token:
+            creds.refresh(Request())
+        else:
+            flow = InstalledAppFlow.from_client_secrets_file(credentials_path, scopes)
+            creds = flow.run_local_server(port=0)
+        token_file.parent.mkdir(parents=True, exist_ok=True)
+        with open(token_file, "w", encoding="utf-8") as f:
+            f.write(creds.to_json())
+
+    service = build("gmail", "v1", credentials=creds)
+    return service
+
+
+def _send_email_via_gmail(*, service, to_address: str, subject: str, body: str) -> None:
+    message = EmailMessage()
+    message["To"] = to_address
+    message["Subject"] = subject
+    message.set_content(body)
+
+    raw = base64.urlsafe_b64encode(message.as_bytes()).decode("utf-8")
+    service.users().messages().send(userId="me", body={"raw": raw}).execute()
 
 
 if __name__ == "__main__":
     main()
-
-
