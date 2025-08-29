@@ -238,7 +238,7 @@ git config --global core.editor "cursor --wait"
 git config --global alias.dl '!git branch -D $1 && git push --delete origin $1'
 git config --global alias.pruning '!git remote prune origin && git gc --prune=now'
 git config --global alias.amendpush '!git add . && git commit --amend --no-edit && git push --force origin'
-git config --global alias.pr '!f() { git add .; git commit -am "$1"; git rb main && git push origin && gh pr create --title "$1" --body "" --label "auto-merge"; }; f'
+git config --global alias.pr '!f() { git add .; git commit -am "$1"; git rb main && git push origin && gh pr create --title "$1" --body "" --label "auto-merge" --assignees @me; }; f'
 git config --global advice.skippedCherryPicks false
 git config --global alias.run '!./.git/hooks/pre-run'
 git config --global alias.files '!git --no-pager diff --name-only HEAD~1 HEAD'
