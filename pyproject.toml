@@ -60,7 +60,7 @@ dependencies = [
     "transformers>=4.54.0",
     "pyyaml>=6.0.0",
     "datasets",
-    "tiktoken", 
+    "tiktoken",
     "tqdm",
     # "wandb",  # Temporarily disabled due to PyYAML build issues
     "airllm",
@@ -68,10 +68,12 @@ dependencies = [
     # Computer vision (some may need system dependencies)
     "opencv-python",
     # Note: face_recognition, dlib, deepface may need compilation - add manually if needed
-    # Other utilities  
+    # Other utilities
     "google-api-python-client",
     "python-dotenv",
     # Note: bilibili-api, openai-agents, ray may need newer versions - add manually if needed
+    "ib-insync>=0.9.86",
+    "ibapi>=9.81.1.post1",
 ]
 
 [tool.uv]
