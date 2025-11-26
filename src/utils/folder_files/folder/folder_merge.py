@@ -37,7 +37,7 @@ def merge_folder(dir: str, dry_run: bool = True) -> None:
     
     for bk, bv in dedup_b_mapping.items():
         if bk in group_a or bk[:2] in group_a:
-            a = group_a[bk] if bk in group_a else group_a[bk[:2]]
+            a = bk if bk in group_a else bk[:2]
             b = bv
             src = os.path.join(dir, a)
             dst = os.path.join(dir, b)
