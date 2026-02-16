@@ -224,28 +224,34 @@ git remote prune origin
 git global config for all general commands:
 
 ```shell
-git config --global alias.co checkout
-git config --global alias.br branch
-git config --global alias.amd '!git add -u && git commit --amend --no-edit'
-git config --global alias.ci commit
-git config --global alias.st status
-git config --global alias.ll "log --oneline"
-git config --global alias.lg "log --oneline --graph --all --decorate"
-git config --global alias.rb "pull --rebase origin"
-git config --global alias.sq "rebase -i HEAD~10"
-git config --global push.default current
-git config --global core.editor "cursor --wait"
-git config --global alias.submodule "submodule update --init --recursive"
-git config --global alias.dl '!git branch -D $1 && git push --delete origin $1'
-git config --global alias.pruning '!git remote prune origin && git gc --prune=now'
-git config --global alias.amendpush '!git add . && git commit --amend --no-edit && git push --force origin'
-git config --global alias.pr '!f() { git add .; git commit -am "$1"; git rb main && git push origin && gh pr create --title "$1" --body "" --label "auto-merge" --assignees @me; }; f'
-git config --global advice.skippedCherryPicks false
-git config --global alias.run '!./.git/hooks/pre-run'
-git config --global alias.files '!git --no-pager diff --name-only HEAD~1 HEAD'
-git config --global commit.gpgsign true
-git config --global alias.sign '!f() { git rebase --exec "git commit --amend --no-edit -S" HEAD~"$1"; }; f'
-git config --global user.signingkey GPG_KEY_ID
+echo 'alias g=git' >> ~/.zshrc
+source ~/.zshrc
+g config --global alias.co checkout
+g config --global alias.br branch
+g config --global alias.amd '!git add -u && git commit --amend --no-edit'
+g config --global alias.ci commit
+g config --global alias.st status
+g config --global alias.ll "log --oneline"
+g config --global alias.lg "log --oneline --graph --all --decorate"
+g config --global alias.rb "pull --rebase origin"
+g config --global alias.sq "rebase -i HEAD~10"
+g config --global push.default current
+g config --global core.editor "cursor --wait"
+g config --global alias.submodule "submodule update --init --recursive"
+g config --global alias.dl '!git branch -D $1 && git push --delete origin $1'
+g config --global alias.pruning '!git remote prune origin && git gc --prune=now'
+g config --global alias.amendpush '!git add . && git commit --amend --no-edit && git push --force origin'
+g config --global alias.pr '!f() { git add .; git commit -am "$1"; git rb main && git push origin && gh pr create --title "$1" --body "" --label "auto-merge" --assignees @me; }; f'
+g config --global advice.skippedCherryPicks false
+g config --global alias.run '!./.git/hooks/pre-run'
+g config --global alias.files '!git --no-pager diff --name-only HEAD~1 HEAD'
+g config --global commit.gpgsign true
+g config --global alias.sign '!f() { git rebase --exec "git commit --amend --no-edit -S" HEAD~"$1"; }; f'
+g config --global user.signingkey GPG_KEY_ID
+```
+
+```shell
+echo "file" >> .git/info/exclude
 ```
 
 ## Appendix
