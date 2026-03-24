@@ -236,6 +236,7 @@ g config --global alias.lg "log --oneline --graph --all --decorate"
 g config --global alias.rb "pull --rebase origin"
 g config --global alias.sq "rebase -i HEAD~10"
 g config --global push.default current
+g config --global alias.p "push --force"
 g config --global core.editor "cursor --wait"
 g config --global alias.submodule "submodule update --init --recursive"
 g config --global alias.dl '!git branch -D $1 && git push --delete origin $1'
