@@ -157,7 +157,7 @@ def merge_folder(dir: str, dry_run: bool = True) -> None:
             shutil.move(str(src_path), str(unique_dst))
 
     remove_failures: list[str] = []
-    while True:
+    while True and not dry_run:
         group_a, group_b = _list_child_folders()
         b_index = _build_b_index(group_b)
         pairs = _find_merge_pairs(group_a, b_index)
