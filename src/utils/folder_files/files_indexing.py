@@ -20,7 +20,7 @@ def search_file(file_index, keyword):
 
 # Example usage
 if __name__ == "__main__":
-    roots = ["D:/Downloads", "F:/", "G:/", "H:/recov", "I:/", "J:/", "Z:/"]
+    roots = ["D:/"]
     file_index = {}
     for root_directory in roots:
         file_index.update(index_files(root_directory))
