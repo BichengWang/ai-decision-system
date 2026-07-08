@@ -2,6 +2,7 @@
 # as long as they are open and mergeable. It is triggered when a PR is labeled,
 # synchronized, or opened. The workflow checks if the PR meets the criteria and,
 # if so, uses the GitHub CLI to enable auto-merge with a squash commit.
+# Once a PR is merged, the head branch is deleted from the remote.
 
 name: Auto Merge
 
@@ -11,6 +12,7 @@ on:
       - labeled
       - synchronize
       - opened
+      - closed
 
 permissions:
   pull-requests: write
@@ -18,7 +20,7 @@ permissions:
 
 jobs:
   automerge:
-    if: github.event.pull_request.merged == false
+    if: github.event.action != 'closed' && github.event.pull_request.merged == false
     runs-on: ubuntu-latest
     steps:
       - name: Check if PR is mergeable and has "auto-merge" label
@@ -51,3 +53,35 @@ jobs:
         run: gh pr merge -R "${{ github.repository }}" --auto --squash ${{ github.event.pull_request.number }} --delete-branch
         env:
           GH_TOKEN: ${{ github.token }}
+
+  # `gh pr merge --auto --delete-branch` only deletes the branch when gh performs
+  # the merge itself; when GitHub completes the merge later, the branch survives.
+  # This job catches every merged PR and deletes its head branch.
+  delete-branch:
+    if: >
+      github.event.action == 'closed' &&
+      github.event.pull_request.merged == true &&
+      github.event.pull_request.head.repo.full_name == github.repository &&
+      github.event.pull_request.head.ref != github.event.repository.default_branch
+    runs-on: ubuntu-latest
+    steps:
+      - name: Delete head branch
+        uses: actions/github-script@v7
+        with:
+          script: |
+            const ref = `heads/${context.payload.pull_request.head.ref}`;
+            try {
+              await github.rest.git.deleteRef({
+                owner: context.repo.owner,
+                repo: context.repo.repo,
+                ref,
+              });
+              core.info(`Deleted ${ref}`);
+            } catch (e) {
+              // 422: ref already gone (e.g. deleted by gh or by hand) — nothing to do.
+              if (e.status === 422) {
+                core.info(`${ref} already deleted.`);
+              } else {
+                throw e;
+              }
+            }
