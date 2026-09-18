@@ -1,4 +1,6 @@
-# My Python Notebook
+# AI Decision System
+
+Research and experiment workspace for **AI-assisted decision making**: multi-agent reasoning, reinforcement learning, causal inference, and quantitative finance.
 
 ## Motto
 
@@ -8,13 +10,61 @@ Being Honest with Yourself.
 
 bichengwang17@gmail.com
 
+## Overview
+
+This repo collects models and notebooks that turn data into a decision:
+
+- **Agents** — scenario, policy, and investment agents that hand off a financial case
+- **RL** — bandits and policy learning for explore vs exploit
+- **ML** — TensorFlow / PyTorch models, recommenders, transformers, causal ML
+- **Finance** — Kelly sizing, portfolio math, broker data, tax and market sims
+- **Utils** — HTTP, crawl, OpenAI helpers, and data wrangling used by the loops above
+
+Start with `src/agents/` and `src/rl-system/` for decision flows; use `src/ml/` and `src/fin/` for models and market math.
+
 ## Recommend Env
 
-The recommended running env is conda env to avoid some windows crash or compile issue.
+The recommended running env is conda env to avoid some windows crash or compile issue. UV (`uv sync`) is the faster path once Python is available.
+
+Python **3.10+** (`pyproject.toml`). Apple Silicon TensorFlow still often needs **3.9** (see Conda / M1 below).
 
 ## Directory Structure
 
 In different directory, it would content specific readme file for different code tools.
+
+```text
+src/
+  agents/          Multi-agent decision: triage, Fed, government, investor
+  rl-system/       Epsilon-greedy bandit and RL demos
+  ml/              TensorFlow, PyTorch, causalml, MCP, recommenders, NLP
+  fin/             Kelly, portfolio, IB gateway, tax and strategy sims
+  utils/           Requests, crawl, OpenAI, pandas helpers
+  inter/           External study code (e.g. nanoGPT)
+  lc/              Algorithm practice (not the decision runtime)
+docs/              Env notes, GPU, GCP, planning
+```
+
+| Path | Role in the decision system |
+| --- | --- |
+| `src/agents/agent_financial_analysis.py` | Handoff agents for scenario → rate / spend / investment |
+| `src/agents/openai_agent.py` | Language triage agent |
+| `src/rl-system/main.py` | Multi-armed bandit (epsilon-greedy) |
+| `src/ml/causalml_exploration/` | Treatment-effect / causal decision |
+| `src/ml/pytorch_lr/strategy_optimization/` | Strategy and RL notebooks |
+| `src/fin/strategies/` | Kelly criterion and backtests |
+| `src/fin/broker_interact/` | Interactive Brokers / market data |
+
+## Quick start (decision loops)
+
+After env setup (Makefile, UV, or Conda below):
+
+```shell
+# Bandit: sequential explore / exploit
+python src/rl-system/main.py
+
+# Multi-agent financial scenario (needs OpenAI credentials)
+python src/agents/agent_financial_analysis.py
+```
 
 ## Makefile
 
@@ -44,11 +94,12 @@ Checking: check specific lib exist or not
 
 ```shell
 pip freeze | grep tensorflow-gpu
+pip freeze | grep causalml
 ```
 
 ## UV (Ultrafast Python Package Manager)
 
-UV is a fast Python package installer and resolver, written in Rust. It's designed to be a drop-in replacement for pip and virtualenv.
+UV is a fast Python package installer and resolver, written in Rust. It's designed to be a drop-in replacement for pip and virtualenv. This repo already has `pyproject.toml` and `uv.lock`.
 
 ### Installation
 
@@ -63,6 +114,11 @@ pip install uv
 ### Basic Usage
 
 ```shell
+# This project (preferred)
+cd ai-decision-system
+uv sync
+uv run python src/rl-system/main.py
+
 # Create a new project
 uv init my-project
 cd my-project
@@ -71,7 +127,7 @@ cd my-project
 uv sync
 
 # Add a dependency
-uv add numpy pandas
+uv add numpy pandas yfinance transformers
 
 # Add development dependencies
 uv add --dev pytest black
@@ -113,6 +169,10 @@ dependencies = [
     "numpy",
     "pandas",
     "yfinance",
+    "tensorflow",
+    "torch",
+    "transformers",
+    "openai",
 ]
 ```
 
@@ -143,6 +203,8 @@ uv sync --upgrade --dry-run
 ```
 
 ## Conda
+
+Use Conda when you need Apple Metal TensorFlow, `causalml`, or a pinned notebook env.
 
 ```shell
 brew install --cask anaconda
@@ -205,6 +267,8 @@ conda install pywin32
 
 ### Jupyter notebook
 
+Many decision experiments live in notebooks under `src/ml/` and `src/fin/`.
+
 #### lint
 
 ```shell
@@ -256,6 +320,7 @@ echo "file" >> .git/info/exclude
 ```
 
 ## Appendix
+
 ```shell
 git branch -m master main
 git fetch origin
