@@ -1,4 +1,4 @@
-# AI Decision System
+# Scalable AI Decision Systems
 
 Research and experiment workspace for **AI-assisted decision making**: multi-agent reasoning, reinforcement learning, causal inference, and quantitative finance.
 
