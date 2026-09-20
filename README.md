@@ -2,6 +2,34 @@
 
 Research and experiment workspace for **AI-assisted decision making**: multi-agent reasoning, reinforcement learning, causal inference, and quantitative finance.
 
+## Projects
+
+| Project | Scope | Status and environment |
+| --- | --- | --- |
+| [RELIA](projects/ai-decision-reliability-framework/README.md) | Reproducible evaluation and release controls for synthetic commerce offers and ranking | Unreleased candidate; independent Python environment and lockfile |
+| Existing `src/` research | Agents, RL, ML, finance, and study material | Research and experiments using the root environment |
+
+RELIA's [specification](projects/ai-decision-reliability-framework/docs/SPEC.md),
+[reproduction protocol](projects/ai-decision-reliability-framework/docs/REPRODUCE.md),
+and [limitations](projects/ai-decision-reliability-framework/docs/LIMITATIONS.md)
+define its bounded scope. Other projects are not validated RELIA integrations.
+Its development and release dates are recorded independently of this repository's history.
+
+```shell
+make relia-sync
+make relia-test
+make relia-reproduce RELIA_OUT=/absolute/new/run-directory
+```
+
+These commands use only the project's own environment. See the
+[release workflow](docs/RELIA_RELEASE.md) for project-only snapshots and their
+source identity. No accepted RELIA public release is claimed yet.
+
+The root MIT license applies to the existing research material it covers. RELIA
+has a separate [licensing status](projects/ai-decision-reliability-framework/LICENSE)
+and currently grants no license; its intended Apache-2.0 release remains subject
+to rights clearance.
+
 ## Motto
 
 Being Honest with Yourself.

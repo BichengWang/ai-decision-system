@@ -1,0 +1,133 @@
+name: RELIA release verification
+
+on:
+  workflow_dispatch:
+    inputs:
+      source_commit:
+        description: Recorded full monorepo source commit M
+        required: true
+        type: string
+      export_commit:
+        description: Already created full standalone export commit E
+        required: true
+        type: string
+      project_tree:
+        description: Recorded full project tree T
+        required: true
+        type: string
+
+permissions:
+  contents: read
+
+env:
+  OMP_NUM_THREADS: "1"
+  OPENBLAS_NUM_THREADS: "1"
+  MKL_NUM_THREADS: "1"
+  VECLIB_MAXIMUM_THREADS: "1"
+
+jobs:
+  verify:
+    if: github.ref == 'refs/heads/main'
+    runs-on: ubuntu-latest
+    timeout-minutes: 180
+    defaults:
+      run:
+        shell: bash
+    env:
+      SOURCE_COMMIT: ${{ inputs.source_commit }}
+      EXPORT_COMMIT: ${{ inputs.export_commit }}
+      PROJECT_TREE: ${{ inputs.project_tree }}
+    steps:
+      - name: Require exact recorded object IDs
+        run: |
+          for object_id in "$SOURCE_COMMIT" "$EXPORT_COMMIT" "$PROJECT_TREE"; do
+            [[ "$object_id" =~ ^([0-9a-f]{40}|[0-9a-f]{64})$ ]]
+          done
+      - name: Read the identified source commit
+        uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262 # v4.4.0
+        with:
+          ref: ${{ inputs.source_commit }}
+          path: source
+          persist-credentials: false
+      - name: Read the existing standalone export
+        uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262 # v4.4.0
+        with:
+          ref: ${{ inputs.export_commit }}
+          path: candidate
+          persist-credentials: false
+      - name: Verify source, export, and project tree identity
+        run: |
+          test "$(git -C source rev-parse HEAD)" = "$SOURCE_COMMIT"
+          test "$(git -C candidate rev-parse HEAD)" = "$EXPORT_COMMIT"
+          test "$(git -C source rev-parse HEAD:projects/ai-decision-reliability-framework)" = "$PROJECT_TREE"
+          test "$(git -C candidate rev-parse 'HEAD^{tree}')" = "$PROJECT_TREE"
+          mkdir -p "$RUNNER_TEMP/relia-release"
+          printf 'source_commit=%s\nexport_commit=%s\nproject_tree=%s\n' \
+            "$SOURCE_COMMIT" "$EXPORT_COMMIT" "$PROJECT_TREE" \
+            | tee "$RUNNER_TEMP/relia-release/identity.txt"
+      - uses: astral-sh/setup-uv@bec219d24cd3e171d82865faccec33120bb574f4 # v10.1.0
+        with:
+          version: "0.10.11"
+          working-directory: candidate
+          enable-cache: false
+      - name: Install only the standalone frozen project
+        working-directory: candidate
+        run: |
+          test "$(cat .python-version)" = "3.13.7"
+          uv sync --frozen 2>&1 | tee "$RUNNER_TEMP/relia-release/setup.log"
+          { uv --version; uv run --frozen python --version; sha256sum uv.lock; uv pip freeze; } \
+            | tee "$RUNNER_TEMP/relia-release/environment.log"
+          uv run --frozen python scripts/environment.py > "$RUNNER_TEMP/relia-release/environment.json" \
+            2>> "$RUNNER_TEMP/relia-release/environment.log"
+      - name: Run the complete candidate test suite
+        working-directory: candidate
+        run: |
+          uv run --frozen python -m pytest -q --basetemp "$RUNNER_TEMP/relia-release/tests" \
+            2>&1 | tee "$RUNNER_TEMP/relia-release/pytest.log"
+      - name: Execute two fresh standalone runs
+        working-directory: candidate
+        run: |
+          uv run --frozen python -m relia.run --out "$RUNNER_TEMP/relia-release/repro-a" \
+            2>&1 | tee "$RUNNER_TEMP/relia-release/repro-a.log"
+          uv run --frozen python -m relia.run --out "$RUNNER_TEMP/relia-release/repro-b" \
+            2>&1 | tee "$RUNNER_TEMP/relia-release/repro-b.log"
+      - name: Compare deterministic A/B outputs
+        run: |
+          cmp "$RUNNER_TEMP/relia-release/repro-a/results.json" "$RUNNER_TEMP/relia-release/repro-b/results.json"
+          cmp "$RUNNER_TEMP/relia-release/repro-a/MANIFEST.json" "$RUNNER_TEMP/relia-release/repro-b/MANIFEST.json"
+          sha256sum "$RUNNER_TEMP"/relia-release/repro-{a,b}/{results,MANIFEST}.json \
+            | tee "$RUNNER_TEMP/relia-release/checksums.txt"
+      - name: Compare reference decisions and exact metadata
+        working-directory: candidate
+        run: |
+          uv run --frozen python - <<'PY'
+          import json, os
+          from pathlib import Path
+          from relia.compare import leaves
+
+          reference = dict(leaves(json.loads(Path("results/results.json").read_text())))
+          actual = dict(leaves(json.loads((Path(os.environ["RUNNER_TEMP"]) / "relia-release/repro-a/results.json").read_text())))
+
+          assert reference.keys() == actual.keys(), "Result schema changed"
+          for path, (expected, exact) in reference.items():
+              observed = actual[path][0]
+              assert type(expected) is type(observed), f"{path}: type changed"
+              if type(expected) is not float or exact:
+                  assert expected == observed, f"{path}: {expected!r} != {observed!r}"
+          print("Exact schema, decisions, gate dispositions, exclusions, seeds, versions, counts, and dataset identity match.")
+          print("Floating-point metric tolerances were not evaluated by this CI step.")
+          PY
+      - name: Report automated verification scope
+        run: |
+          printf '%s\n' \
+            'Verified existing export identity, full tests, same-environment A/B equality, and exact reference metadata.' \
+            'This CI run is not an unaffiliated reproduction or release acceptance.' \
+            'Stored cross-platform metrics require the separately frozen comparison protocol.' \
+            >> "$GITHUB_STEP_SUMMARY"
+      - name: Retain identity, logs, and both complete outputs
+        if: always()
+        uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02 # v4.6.2
+        with:
+          name: relia-release-verification-${{ github.run_id }}-${{ github.run_attempt }}
+          path: ${{ runner.temp }}/relia-release
+          retention-days: 90
