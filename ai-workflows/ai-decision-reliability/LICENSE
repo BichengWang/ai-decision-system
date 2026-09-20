@@ -1,0 +1,9 @@
+Licensing status: unreleased candidate
+
+No license grant is made for this candidate. The MIT license at the development
+monorepo root does not apply to this project directory or its exported snapshots.
+
+Apache License 2.0 is the intended release license, subject to confirmation of
+ownership and publication rights. Before public release, replace this status
+notice with the cleared license text and align the package metadata. This notice
+does not establish ownership or publication clearance.
