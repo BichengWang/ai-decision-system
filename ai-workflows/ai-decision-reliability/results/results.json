@@ -1,0 +1,850 @@
+{
+  "alert_to_action": [
+    {
+      "action": "pause version; rollback; incident record",
+      "severity": "SEV1",
+      "signal": "prohibited_access_count > 0"
+    },
+    {
+      "action": "pause version; rollback; incident record",
+      "severity": "SEV1",
+      "signal": "constraint_check == fail"
+    },
+    {
+      "action": "pause; rollback; incident record",
+      "severity": "SEV1",
+      "signal": "critical case not routed to human"
+    },
+    {
+      "action": "human review; recalibrate candidate; rerun frozen gates",
+      "severity": "SEV2",
+      "signal": "weekly ECE > gate"
+    },
+    {
+      "action": "human review; guarded incremental update",
+      "severity": "SEV2",
+      "signal": "PSI >= 0.25 on score or monitored feature"
+    },
+    {
+      "action": "annotate weekly report; watch",
+      "severity": "SEV3",
+      "signal": "PSI in [0.10, 0.25)"
+    },
+    {
+      "action": "pause rollout; diagnose; rerun deployment-specific smoke/canary test when defined",
+      "severity": "SEV2",
+      "signal": "p95 latency or error-rate regression"
+    }
+  ],
+  "critical_review_fixture": {
+    "critical_cases": 12,
+    "misrouted_noncritical_cases": 0,
+    "noncritical_cases": 4,
+    "routed_critical_cases": 12,
+    "routing_rate": 1.0,
+    "total_cases": 16
+  },
+  "dataset_sha256": "c49c2a981d6f8e34fe310b185ee28279c5e3b6fc27f0c547ef822e31235d1abe",
+  "decision_log_schema": {
+    "authorized_fields_read": "list[str]",
+    "constraint_check": "pass|fail",
+    "decision_discount": "float",
+    "error": "str|null",
+    "expected_utility": "float",
+    "latency_ms": "float",
+    "model_version": "str",
+    "prohibited_access_count": "int",
+    "request_id": "str",
+    "review_route": "none|human",
+    "spec_version": "str",
+    "ts": "iso8601"
+  },
+  "gate_report": {
+    "comparator": "baseline",
+    "gates": [
+      {
+        "gate": "prohibited_field_access",
+        "pass": true,
+        "rule": "<= 0",
+        "value": 0.0
+      },
+      {
+        "gate": "constraint_violations",
+        "pass": true,
+        "rule": "<= 0",
+        "value": 0.0
+      },
+      {
+        "fixture_n": 12,
+        "gate": "critical_review_routing_rate",
+        "noncritical_misroutes": 0,
+        "pass": true,
+        "rule": ">= 1.0 and fixture_n >= 12 and noncritical_misroutes <= 0",
+        "value": 1.0
+      },
+      {
+        "comparator": "baseline",
+        "gate": "logloss_delta_vs_baseline",
+        "pass": true,
+        "rule": "<= 0.0",
+        "value": -0.00808
+      },
+      {
+        "comparator": "baseline",
+        "gate": "brier_delta_vs_baseline",
+        "pass": true,
+        "rule": "<= 0.0",
+        "value": -0.001705
+      },
+      {
+        "gate": "ece",
+        "pass": true,
+        "rule": "<= 0.03",
+        "value": 0.016152
+      },
+      {
+        "eligible_slices": 6,
+        "gate": "worst_slice_ece",
+        "pass": true,
+        "rule": "<= 0.05 and eligible_slices >= 1",
+        "value": 0.043802
+      },
+      {
+        "gate": "near_equivalent_input_stability",
+        "pass": true,
+        "rule": ">= 0.995",
+        "value": 0.999832
+      },
+      {
+        "comparator": "baseline",
+        "gate": "ranking_ndcg_gain_vs_baseline",
+        "pass": true,
+        "rule": ">= 0.0",
+        "value": 0.009535
+      }
+    ],
+    "release_decision": "PASS",
+    "thresholds": {
+      "ece_bins": 15,
+      "max_brier_degradation": 0.0,
+      "max_constraint_violations": 0,
+      "max_ece": 0.03,
+      "max_logloss_degradation": 0.0,
+      "max_noncritical_review_misroutes": 0,
+      "max_prohibited_access": 0,
+      "max_worst_slice_ece": 0.05,
+      "min_critical_review_fixture_n": 12,
+      "min_critical_review_routing": 1.0,
+      "min_ndcg_gain": 0.0,
+      "min_slice_n": 500,
+      "min_stability": 0.995,
+      "min_worst_slice_eligible_count": 1
+    }
+  },
+  "generator_seed": 20260917,
+  "incremental_cycle": {
+    "applicable_gate_count": 8,
+    "critical_review_fixture": {
+      "critical_cases": 12,
+      "misrouted_noncritical_cases": 0,
+      "noncritical_cases": 4,
+      "routed_critical_cases": 12,
+      "routing_rate": 1.0,
+      "total_cases": 16
+    },
+    "decision": "REJECT_UPDATE_KEEP_CURRENT_REFERENCE",
+    "excluded_gates": [
+      "ranking_ndcg_gain_vs_baseline"
+    ],
+    "gate_comparator": "current_reference",
+    "gates": [
+      {
+        "gate": "prohibited_field_access",
+        "pass": true,
+        "rule": "<= 0",
+        "value": 0.0
+      },
+      {
+        "gate": "constraint_violations",
+        "pass": true,
+        "rule": "<= 0",
+        "value": 0.0
+      },
+      {
+        "fixture_n": 12,
+        "gate": "critical_review_routing_rate",
+        "noncritical_misroutes": 0,
+        "pass": true,
+        "rule": ">= 1.0 and fixture_n >= 12 and noncritical_misroutes <= 0",
+        "value": 1.0
+      },
+      {
+        "comparator": "current_reference",
+        "gate": "logloss_delta_vs_current_reference",
+        "pass": false,
+        "rule": "<= 0.0",
+        "value": 0.002229
+      },
+      {
+        "comparator": "current_reference",
+        "gate": "brier_delta_vs_current_reference",
+        "pass": true,
+        "rule": "<= 0.0",
+        "value": -0.000323
+      },
+      {
+        "gate": "ece",
+        "pass": true,
+        "rule": "<= 0.03",
+        "value": 0.018806
+      },
+      {
+        "eligible_slices": 5,
+        "gate": "worst_slice_ece",
+        "pass": false,
+        "rule": "<= 0.05 and eligible_slices >= 1",
+        "value": 0.069241
+      },
+      {
+        "gate": "near_equivalent_input_stability",
+        "pass": true,
+        "rule": ">= 0.995",
+        "value": 0.999832
+      }
+    ],
+    "note": "Deltas compare each updated offer model with its seed-matched current reference. Ranking is the only excluded gate because this cycle does not change or reevaluate the separate ranking model.",
+    "partition_sizes": {
+      "calib": 5978,
+      "test": 5950,
+      "train": 53984
+    },
+    "per_seed": [
+      {
+        "current_reference": {
+          "brier": 0.1866804248451918,
+          "ece": 0.016044451906857233,
+          "log_loss": 0.5552535085081864
+        },
+        "decision_critical_cases": 0,
+        "gate_inputs": {
+          "brier_delta": -0.0010916806508650956,
+          "constraint_violations": 0,
+          "critical_review_fixture_n": 12,
+          "critical_review_noncritical_misroutes": 0,
+          "critical_review_routing": 1.0,
+          "ece": 0.017032698181783025,
+          "logloss_delta": -5.054731424680714e-05,
+          "prohibited_access": 0,
+          "stability": 1.0,
+          "worst_slice_ece": 0.05758780410652547,
+          "worst_slice_eligible_count": 5
+        },
+        "seed": 11,
+        "updated_candidate": {
+          "brier": 0.1855887441943267,
+          "ece": 0.017032698181783025,
+          "log_loss": 0.5552029611939396
+        },
+        "worst_slice_category": 0
+      },
+      {
+        "current_reference": {
+          "brier": 0.18617259506473127,
+          "ece": 0.01885474397486681,
+          "log_loss": 0.5535840648182404
+        },
+        "decision_critical_cases": 0,
+        "gate_inputs": {
+          "brier_delta": -0.0003227202285717712,
+          "constraint_violations": 0,
+          "critical_review_fixture_n": 12,
+          "critical_review_noncritical_misroutes": 0,
+          "critical_review_routing": 1.0,
+          "ece": 0.01598486186315876,
+          "logloss_delta": -0.0006657380374767152,
+          "prohibited_access": 0,
+          "stability": 1.0,
+          "worst_slice_ece": 0.0668756764343745,
+          "worst_slice_eligible_count": 5
+        },
+        "seed": 23,
+        "updated_candidate": {
+          "brier": 0.1858498748361595,
+          "ece": 0.01598486186315876,
+          "log_loss": 0.5529183267807637
+        },
+        "worst_slice_category": 0
+      },
+      {
+        "current_reference": {
+          "brier": 0.18615285412270557,
+          "ece": 0.01854774295189287,
+          "log_loss": 0.5539191910992227
+        },
+        "decision_critical_cases": 0,
+        "gate_inputs": {
+          "brier_delta": -0.0003669436486492539,
+          "constraint_violations": 0,
+          "critical_review_fixture_n": 12,
+          "critical_review_noncritical_misroutes": 0,
+          "critical_review_routing": 1.0,
+          "ece": 0.014638740988957904,
+          "logloss_delta": 0.0001199837475253096,
+          "prohibited_access": 0,
+          "stability": 0.9998319327731092,
+          "worst_slice_ece": 0.06924105828901782,
+          "worst_slice_eligible_count": 5
+        },
+        "seed": 37,
+        "updated_candidate": {
+          "brier": 0.18578591047405632,
+          "ece": 0.014638740988957904,
+          "log_loss": 0.554039174846748
+        },
+        "worst_slice_category": 0
+      },
+      {
+        "current_reference": {
+          "brier": 0.1862367184449619,
+          "ece": 0.014001362630831316,
+          "log_loss": 0.5530555392066524
+        },
+        "decision_critical_cases": 0,
+        "gate_inputs": {
+          "brier_delta": -0.00040159080951310266,
+          "constraint_violations": 0,
+          "critical_review_fixture_n": 12,
+          "critical_review_noncritical_misroutes": 0,
+          "critical_review_routing": 1.0,
+          "ece": 0.0188059312377161,
+          "logloss_delta": 0.0022289373226004328,
+          "prohibited_access": 0,
+          "stability": 0.9998319327731092,
+          "worst_slice_ece": 0.046922852868823084,
+          "worst_slice_eligible_count": 5
+        },
+        "seed": 41,
+        "updated_candidate": {
+          "brier": 0.1858351276354488,
+          "ece": 0.0188059312377161,
+          "log_loss": 0.5552844765292528
+        },
+        "worst_slice_category": 0
+      },
+      {
+        "current_reference": {
+          "brier": 0.18621590424620044,
+          "ece": 0.015234985656326087,
+          "log_loss": 0.5541977082986039
+        },
+        "decision_critical_cases": 0,
+        "gate_inputs": {
+          "brier_delta": -0.0008761715106582191,
+          "constraint_violations": 0,
+          "critical_review_fixture_n": 12,
+          "critical_review_noncritical_misroutes": 0,
+          "critical_review_routing": 1.0,
+          "ece": 0.011328701510872279,
+          "logloss_delta": -0.0016777208523577336,
+          "prohibited_access": 0,
+          "stability": 1.0,
+          "worst_slice_ece": 0.06465262949594318,
+          "worst_slice_eligible_count": 5
+        },
+        "seed": 53,
+        "updated_candidate": {
+          "brier": 0.18533973273554222,
+          "ece": 0.011328701510872279,
+          "log_loss": 0.5525199874462462
+        },
+        "worst_slice_category": 0
+      }
+    ],
+    "period_days_inclusive": [
+      120,
+      179
+    ],
+    "summary": {
+      "current_reference": {
+        "brier": {
+          "max": 0.1866804248451918,
+          "mean": 0.18629169934475817,
+          "min": 0.18615285412270557
+        },
+        "ece": {
+          "max": 0.01885474397486681,
+          "mean": 0.016536657424154864,
+          "min": 0.014001362630831316
+        },
+        "log_loss": {
+          "max": 0.5552535085081864,
+          "mean": 0.5540020023861812,
+          "min": 0.5530555392066524
+        }
+      },
+      "updated_candidate": {
+        "brier": {
+          "max": 0.1858498748361595,
+          "mean": 0.18567987797510668,
+          "min": 0.18533973273554222
+        },
+        "ece": {
+          "max": 0.0188059312377161,
+          "mean": 0.015558186756497616,
+          "min": 0.011328701510872279
+        },
+        "log_loss": {
+          "max": 0.5552844765292528,
+          "mean": 0.5539929853593901,
+          "min": 0.5525199874462462
+        }
+      }
+    },
+    "train_seeds": [
+      11,
+      23,
+      37,
+      41,
+      53
+    ],
+    "worst_seed_gate_inputs": {
+      "brier_delta": -0.0003227202285717712,
+      "constraint_violations": 0,
+      "critical_review_fixture_n": 12,
+      "critical_review_noncritical_misroutes": 0,
+      "critical_review_routing": 1.0,
+      "ece": 0.0188059312377161,
+      "logloss_delta": 0.0022289373226004328,
+      "prohibited_access": 0,
+      "stability": 0.9998319327731092,
+      "worst_slice_ece": 0.06924105828901782,
+      "worst_slice_eligible_count": 5
+    }
+  },
+  "package_version": "0.1.5",
+  "partition_sizes": {
+    "calib": 12005,
+    "test": 11927,
+    "train": 108228
+  },
+  "per_seed": [
+    {
+      "baseline": {
+        "brier": 0.1903880646904689,
+        "ece": 0.014759573737501006,
+        "log_loss": 0.5687865542985965
+      },
+      "brier_delta": -0.001834075555229575,
+      "candidate": {
+        "brier": 0.18855398913523932,
+        "ece": 0.015104293824314424,
+        "log_loss": 0.5604828088207878,
+        "murphy": {
+          "reliability": 0.00043083738790713,
+          "resolution": 0.02169994598093392,
+          "uncertainty": 0.20999664619448025
+        }
+      },
+      "constraint_violations": 0,
+      "critical_review_fixture": {
+        "critical_cases": 12,
+        "misrouted_noncritical_cases": 0,
+        "noncritical_cases": 4,
+        "routed_critical_cases": 12,
+        "routing_rate": 1.0,
+        "total_cases": 16
+      },
+      "critical_review_fixture_n": 12,
+      "critical_review_noncritical_misroutes": 0,
+      "critical_review_routing": 1.0,
+      "decision_critical_cases": 0,
+      "drift": {
+        "current_brier": 0.18855398913523932,
+        "current_ece": 0.015104293824314424,
+        "features": {
+          "basket_value": 0.058277518373872184,
+          "distance_km": 0.0005975628414086261,
+          "merchant_quality": 0.1339736648351448
+        },
+        "score_psi": 0.0046018188193732,
+        "status": "WARN"
+      },
+      "ece": 0.015104293824314424,
+      "logloss_delta": -0.008303745477808655,
+      "mean_discount": 0.0065858975433889504,
+      "ndcg_gain": 0.010271809933945053,
+      "offer_rate": 0.120482937872055,
+      "prohibited_access": 0,
+      "ranking": {
+        "baseline": {
+          "mrr": 0.9255575831305759,
+          "ndcg@10": 0.9105342017437479
+        },
+        "candidate": {
+          "mrr": 0.9319999613795233,
+          "ndcg@10": 0.9208060116776929
+        },
+        "dataset_sha256": "f7f42edc0092a6c7d3345a855119043968ba1b9006c976d8fd3bd3f1bec10926",
+        "n_test_queries": 822,
+        "ndcg_gain": 0.010271809933945053
+      },
+      "seed": 11,
+      "stability": 0.9998323132388698,
+      "worst_slice_category": 4,
+      "worst_slice_ece": 0.030080933539565452,
+      "worst_slice_eligible_count": 6
+    },
+    {
+      "baseline": {
+        "brier": 0.1903880646904689,
+        "ece": 0.014759573737501006,
+        "log_loss": 0.5687865542985965
+      },
+      "brier_delta": -0.0017050008030391195,
+      "candidate": {
+        "brier": 0.18868306388742978,
+        "ece": 0.015691939908662893,
+        "log_loss": 0.5606970247620869,
+        "murphy": {
+          "reliability": 0.00045142193684934373,
+          "resolution": 0.02159823945475882,
+          "uncertainty": 0.20999664619448025
+        }
+      },
+      "constraint_violations": 0,
+      "critical_review_fixture": {
+        "critical_cases": 12,
+        "misrouted_noncritical_cases": 0,
+        "noncritical_cases": 4,
+        "routed_critical_cases": 12,
+        "routing_rate": 1.0,
+        "total_cases": 16
+      },
+      "critical_review_fixture_n": 12,
+      "critical_review_noncritical_misroutes": 0,
+      "critical_review_routing": 1.0,
+      "decision_critical_cases": 0,
+      "drift": {
+        "current_brier": 0.18868306388742978,
+        "current_ece": 0.015691939908662893,
+        "features": {
+          "basket_value": 0.058277518373872184,
+          "distance_km": 0.0005975628414086261,
+          "merchant_quality": 0.1339736648351448
+        },
+        "score_psi": 0.004787962681752432,
+        "status": "WARN"
+      },
+      "ece": 0.015691939908662893,
+      "logloss_delta": -0.008089529536509543,
+      "mean_discount": 0.00525278779240379,
+      "ndcg_gain": 0.010210717979635464,
+      "offer_rate": 0.09482686341913306,
+      "prohibited_access": 0,
+      "ranking": {
+        "baseline": {
+          "mrr": 0.9255575831305759,
+          "ndcg@10": 0.9105342017437479
+        },
+        "candidate": {
+          "mrr": 0.9323330629899973,
+          "ndcg@10": 0.9207449197233833
+        },
+        "dataset_sha256": "f7f42edc0092a6c7d3345a855119043968ba1b9006c976d8fd3bd3f1bec10926",
+        "n_test_queries": 822,
+        "ndcg_gain": 0.010210717979635464
+      },
+      "seed": 23,
+      "stability": 0.9999161566194349,
+      "worst_slice_category": 0,
+      "worst_slice_ece": 0.03434051242376658,
+      "worst_slice_eligible_count": 6
+    },
+    {
+      "baseline": {
+        "brier": 0.1903880646904689,
+        "ece": 0.014759573737501006,
+        "log_loss": 0.5687865542985965
+      },
+      "brier_delta": -0.002018462026608381,
+      "candidate": {
+        "brier": 0.18836960266386052,
+        "ece": 0.014174625050746636,
+        "log_loss": 0.5599789933017241,
+        "murphy": {
+          "reliability": 0.0003641976604026775,
+          "resolution": 0.021948141420872827,
+          "uncertainty": 0.20999664619448025
+        }
+      },
+      "constraint_violations": 0,
+      "critical_review_fixture": {
+        "critical_cases": 12,
+        "misrouted_noncritical_cases": 0,
+        "noncritical_cases": 4,
+        "routed_critical_cases": 12,
+        "routing_rate": 1.0,
+        "total_cases": 16
+      },
+      "critical_review_fixture_n": 12,
+      "critical_review_noncritical_misroutes": 0,
+      "critical_review_routing": 1.0,
+      "decision_critical_cases": 0,
+      "drift": {
+        "current_brier": 0.18836960266386052,
+        "current_ece": 0.014174625050746636,
+        "features": {
+          "basket_value": 0.058277518373872184,
+          "distance_km": 0.0005975628414086261,
+          "merchant_quality": 0.1339736648351448
+        },
+        "score_psi": 0.004956577553090581,
+        "status": "WARN"
+      },
+      "ece": 0.014174625050746636,
+      "logloss_delta": -0.00880756099687241,
+      "mean_discount": 0.005106061876414858,
+      "ndcg_gain": 0.010495266916694557,
+      "offer_rate": 0.09658757441100026,
+      "prohibited_access": 0,
+      "ranking": {
+        "baseline": {
+          "mrr": 0.9255575831305759,
+          "ndcg@10": 0.9105342017437479
+        },
+        "candidate": {
+          "mrr": 0.933457884370293,
+          "ndcg@10": 0.9210294686604424
+        },
+        "dataset_sha256": "f7f42edc0092a6c7d3345a855119043968ba1b9006c976d8fd3bd3f1bec10926",
+        "n_test_queries": 822,
+        "ndcg_gain": 0.010495266916694557
+      },
+      "seed": 37,
+      "stability": 0.9999161566194349,
+      "worst_slice_category": 0,
+      "worst_slice_ece": 0.043802430597641995,
+      "worst_slice_eligible_count": 6
+    },
+    {
+      "baseline": {
+        "brier": 0.1903880646904689,
+        "ece": 0.014759573737501006,
+        "log_loss": 0.5687865542985965
+      },
+      "brier_delta": -0.0018488771136329907,
+      "candidate": {
+        "brier": 0.1885391875768359,
+        "ece": 0.014212984182805477,
+        "log_loss": 0.5601280006303677,
+        "murphy": {
+          "reliability": 0.0004204949440842961,
+          "resolution": 0.02166287842609308,
+          "uncertainty": 0.20999664619448025
+        }
+      },
+      "constraint_violations": 0,
+      "critical_review_fixture": {
+        "critical_cases": 12,
+        "misrouted_noncritical_cases": 0,
+        "noncritical_cases": 4,
+        "routed_critical_cases": 12,
+        "routing_rate": 1.0,
+        "total_cases": 16
+      },
+      "critical_review_fixture_n": 12,
+      "critical_review_noncritical_misroutes": 0,
+      "critical_review_routing": 1.0,
+      "decision_critical_cases": 0,
+      "drift": {
+        "current_brier": 0.1885391875768359,
+        "current_ece": 0.014212984182805477,
+        "features": {
+          "basket_value": 0.058277518373872184,
+          "distance_km": 0.0005975628414086261,
+          "merchant_quality": 0.1339736648351448
+        },
+        "score_psi": 0.0042056770045995374,
+        "status": "WARN"
+      },
+      "ece": 0.014212984182805477,
+      "logloss_delta": -0.008658553668228763,
+      "mean_discount": 0.005864844470529053,
+      "ndcg_gain": 0.009535310042492529,
+      "offer_rate": 0.10824180430954976,
+      "prohibited_access": 0,
+      "ranking": {
+        "baseline": {
+          "mrr": 0.9255575831305759,
+          "ndcg@10": 0.9105342017437479
+        },
+        "candidate": {
+          "mrr": 0.9313072065809291,
+          "ndcg@10": 0.9200695117862404
+        },
+        "dataset_sha256": "f7f42edc0092a6c7d3345a855119043968ba1b9006c976d8fd3bd3f1bec10926",
+        "n_test_queries": 822,
+        "ndcg_gain": 0.009535310042492529
+      },
+      "seed": 41,
+      "stability": 0.9999161566194349,
+      "worst_slice_category": 0,
+      "worst_slice_ece": 0.04115229227973178,
+      "worst_slice_eligible_count": 6
+    },
+    {
+      "baseline": {
+        "brier": 0.1903880646904689,
+        "ece": 0.014759573737501006,
+        "log_loss": 0.5687865542985965
+      },
+      "brier_delta": -0.0018803182312795708,
+      "candidate": {
+        "brier": 0.18850774645918933,
+        "ece": 0.016151695783538953,
+        "log_loss": 0.5607061932765367,
+        "murphy": {
+          "reliability": 0.0005715824743430182,
+          "resolution": 0.02172451604878676,
+          "uncertainty": 0.20999664619448025
+        }
+      },
+      "constraint_violations": 0,
+      "critical_review_fixture": {
+        "critical_cases": 12,
+        "misrouted_noncritical_cases": 0,
+        "noncritical_cases": 4,
+        "routed_critical_cases": 12,
+        "routing_rate": 1.0,
+        "total_cases": 16
+      },
+      "critical_review_fixture_n": 12,
+      "critical_review_noncritical_misroutes": 0,
+      "critical_review_routing": 1.0,
+      "decision_critical_cases": 0,
+      "drift": {
+        "current_brier": 0.18850774645918933,
+        "current_ece": 0.016151695783538953,
+        "features": {
+          "basket_value": 0.058277518373872184,
+          "distance_km": 0.0005975628414086261,
+          "merchant_quality": 0.1339736648351448
+        },
+        "score_psi": 0.003926377662351443,
+        "status": "WARN"
+      },
+      "ece": 0.016151695783538953,
+      "logloss_delta": -0.008080361022059779,
+      "mean_discount": 0.003680724406808083,
+      "ndcg_gain": 0.010670660995339754,
+      "offer_rate": 0.0630502221849585,
+      "prohibited_access": 0,
+      "ranking": {
+        "baseline": {
+          "mrr": 0.9255575831305759,
+          "ndcg@10": 0.9105342017437479
+        },
+        "candidate": {
+          "mrr": 0.9343485691113428,
+          "ndcg@10": 0.9212048627390876
+        },
+        "dataset_sha256": "f7f42edc0092a6c7d3345a855119043968ba1b9006c976d8fd3bd3f1bec10926",
+        "n_test_queries": 822,
+        "ndcg_gain": 0.010670660995339754
+      },
+      "seed": 53,
+      "stability": 1.0,
+      "worst_slice_category": 0,
+      "worst_slice_ece": 0.036400863723040744,
+      "worst_slice_eligible_count": 6
+    }
+  ],
+  "spec_version": "0.1.3",
+  "summary": {
+    "baseline_brier": {
+      "max": 0.1903880646904689,
+      "mean": 0.1903880646904689,
+      "min": 0.1903880646904689
+    },
+    "baseline_ece": {
+      "max": 0.014759573737501006,
+      "mean": 0.014759573737501006,
+      "min": 0.014759573737501006
+    },
+    "baseline_log_loss": {
+      "max": 0.5687865542985965,
+      "mean": 0.5687865542985965,
+      "min": 0.5687865542985965
+    },
+    "candidate_brier": {
+      "max": 0.18868306388742978,
+      "mean": 0.18853071794451096,
+      "min": 0.18836960266386052
+    },
+    "candidate_ece": {
+      "max": 0.016151695783538953,
+      "mean": 0.015067107750013676,
+      "min": 0.014174625050746636
+    },
+    "candidate_log_loss": {
+      "max": 0.5607061932765367,
+      "mean": 0.5603986041583007,
+      "min": 0.5599789933017241
+    },
+    "ranking_baseline_mrr": {
+      "max": 0.9255575831305759,
+      "mean": 0.9255575831305759,
+      "min": 0.9255575831305759
+    },
+    "ranking_baseline_ndcg@10": {
+      "max": 0.9105342017437479,
+      "mean": 0.9105342017437479,
+      "min": 0.9105342017437479
+    },
+    "ranking_candidate_mrr": {
+      "max": 0.9343485691113428,
+      "mean": 0.9326893368864171,
+      "min": 0.9313072065809291
+    },
+    "ranking_candidate_ndcg@10": {
+      "max": 0.9212048627390876,
+      "mean": 0.9207709549173693,
+      "min": 0.9200695117862404
+    },
+    "stability": {
+      "max": 1.0,
+      "mean": 0.9999161566194349,
+      "min": 0.9998323132388698
+    },
+    "worst_slice_ece": {
+      "max": 0.043802430597641995,
+      "mean": 0.03715540651274931,
+      "min": 0.030080933539565452
+    }
+  },
+  "time_boundaries_days": [
+    72,
+    96
+  ],
+  "train_seeds": [
+    11,
+    23,
+    37,
+    41,
+    53
+  ],
+  "worst_seed_gate_inputs": {
+    "brier_delta": -0.0017050008030391195,
+    "constraint_violations": 0,
+    "critical_review_fixture_n": 12,
+    "critical_review_noncritical_misroutes": 0,
+    "critical_review_routing": 1.0,
+    "ece": 0.016151695783538953,
+    "logloss_delta": -0.008080361022059779,
+    "ndcg_gain": 0.009535310042492529,
+    "prohibited_access": 0,
+    "stability": 0.9998323132388698,
+    "worst_slice_ece": 0.043802430597641995,
+    "worst_slice_eligible_count": 6
+  }
+}
