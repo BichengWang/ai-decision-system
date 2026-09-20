@@ -21,6 +21,28 @@ endif
 
 .DEFAULT_GOAL := test
 
+RELIA_DIR := projects/ai-decision-reliability-framework
+RELIA_OUT ?=
+RELIA_REF ?= HEAD
+
+.PHONY: relia-sync relia-test relia-reproduce relia-export relia-export-test
+relia-sync:
+	cd $(RELIA_DIR) && uv sync --frozen
+
+relia-test:
+	cd $(RELIA_DIR) && OMP_NUM_THREADS=$${OMP_NUM_THREADS:-1} OPENBLAS_NUM_THREADS=$${OPENBLAS_NUM_THREADS:-1} MKL_NUM_THREADS=$${MKL_NUM_THREADS:-1} VECLIB_MAXIMUM_THREADS=$${VECLIB_MAXIMUM_THREADS:-1} uv run --frozen python -m pytest -q
+
+relia-reproduce:
+	@test -n "$(RELIA_OUT)" || { echo "Set RELIA_OUT to a new absolute output directory"; exit 2; }
+	cd $(RELIA_DIR) && bash scripts/reproduce.sh "$(RELIA_OUT)"
+
+relia-export:
+	@test -n "$(RELIA_OUT)" || { echo "Set RELIA_OUT to a new absolute export directory"; exit 2; }
+	python3 scripts/export-relia.py --source-ref "$(RELIA_REF)" --output "$(RELIA_OUT)"
+
+relia-export-test:
+	python3 -m unittest discover -s scripts/tests -p 'test_export_relia.py' -v
+
 
 .PHONY: bootstrap
 bootstrap:

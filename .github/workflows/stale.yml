@@ -24,7 +24,8 @@ jobs:
           days-before-stale: 30
           days-before-close: 5
           days-before-issue-stale: -1
-          delete-branch: true
+          # This action has no branch-name exemption. The job below owns cleanup.
+          delete-branch: false
           operations-per-run: 200
 
   stale-branches:
@@ -35,5 +36,7 @@ jobs:
         with:
           operations-per-run: 500
           days-before-branch-stale: 30
+          exempt-branches-regex: "^(main|master|relia-release)$"
+          exempt-protected-branches: true
           ignore-unknown-authors: true
           default-recipient: "(Unknown author)"

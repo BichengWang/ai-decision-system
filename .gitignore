@@ -89,6 +89,7 @@ ipython_config.py
 
 # pyenv
 .python-version
+!/projects/ai-decision-reliability-framework/.python-version
 
 # pipenv
 #   According to pypa/pipenv#598, it is recommended to include Pipfile.lock in version control.

@@ -1,0 +1,123 @@
+name: RELIA CI
+
+on:
+  pull_request:
+    branches: [main]
+  push:
+    branches: [main]
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+env:
+  OMP_NUM_THREADS: "1"
+  OPENBLAS_NUM_THREADS: "1"
+  MKL_NUM_THREADS: "1"
+  VECLIB_MAXIMUM_THREADS: "1"
+
+jobs:
+  changes:
+    runs-on: ubuntu-latest
+    outputs:
+      relevant: ${{ steps.paths.outputs.relevant }}
+    steps:
+      - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262 # v4.4.0
+        with:
+          fetch-depth: 0
+          persist-credentials: false
+      - name: Detect project and integration changes
+        id: paths
+        shell: bash
+        run: |
+          python3 - <<'PY'
+          import json, os, subprocess
+          from pathlib import Path
+
+          event = json.loads(Path(os.environ["GITHUB_EVENT_PATH"]).read_text())
+          kind = os.environ["GITHUB_EVENT_NAME"]
+          relevant = True
+          if kind != "workflow_dispatch":
+              pr = event.get("pull_request")
+              base = pr["base"]["sha"] if pr else event["before"]
+              head = pr["head"]["sha"] if pr else event["after"]
+              if base.strip("0"):
+                  revision = f"{base}...{head}" if pr else f"{base}..{head}"
+                  paths = subprocess.check_output(
+                      ["git", "diff", "--name-only", "-z", revision]
+                  ).decode().split("\0")
+                  relevant = any(
+                      path.startswith("projects/ai-decision-reliability-framework/")
+                      or path.startswith("scripts/export-relia")
+                      or path.startswith("scripts/tests/test_export_relia")
+                      or path.startswith(".github/workflows/relia-")
+                      or path in {"Makefile", ".gitignore"}
+                      for path in paths
+                  )
+          with open(os.environ["GITHUB_OUTPUT"], "a") as output:
+              output.write(f"relevant={str(relevant).lower()}\n")
+          print(f"RELIA validation required: {relevant}")
+          PY
+
+  validate:
+    needs: changes
+    if: needs.changes.outputs.relevant == 'true'
+    runs-on: ubuntu-latest
+    timeout-minutes: 120
+    defaults:
+      run:
+        shell: bash
+        working-directory: projects/ai-decision-reliability-framework
+    steps:
+      - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262 # v4.4.0
+        with:
+          persist-credentials: false
+      - uses: astral-sh/setup-uv@bec219d24cd3e171d82865faccec33120bb574f4 # v10.1.0
+        with:
+          version: "0.10.11"
+          working-directory: projects/ai-decision-reliability-framework
+          enable-cache: false
+      - name: Install the independent frozen project
+        run: |
+          mkdir -p "$RUNNER_TEMP/relia-ci"
+          test "$(cat .python-version)" = "3.13.7"
+          uv sync --frozen 2>&1 | tee "$RUNNER_TEMP/relia-ci/setup.log"
+          { uv --version; uv run --frozen python --version; sha256sum uv.lock; uv pip freeze; } \
+            | tee "$RUNNER_TEMP/relia-ci/environment.log"
+          uv run --frozen python scripts/environment.py > "$RUNNER_TEMP/relia-ci/environment.json" \
+            2>> "$RUNNER_TEMP/relia-ci/environment.log"
+      - name: Test local export isolation
+        working-directory: .
+        run: python3 -m unittest discover -s scripts/tests -p test_export_relia.py -v
+      - name: Run the full project suite, including benchmark runs
+        run: |
+          uv run --frozen python -m pytest -q --basetemp "$RUNNER_TEMP/relia-ci/tests" \
+            2>&1 | tee "$RUNNER_TEMP/relia-ci/pytest.log"
+      - name: Retain validation logs and test outputs
+        if: always()
+        uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02 # v4.6.2
+        with:
+          name: relia-ci-${{ github.run_id }}-${{ github.run_attempt }}
+          path: ${{ runner.temp }}/relia-ci
+          retention-days: 30
+
+  required:
+    name: RELIA required
+    needs: [changes, validate]
+    if: always()
+    runs-on: ubuntu-latest
+    steps:
+      - name: Require successful validation or a verified unrelated change
+        env:
+          CHANGES_RESULT: ${{ needs.changes.result }}
+          RELEVANT: ${{ needs.changes.outputs.relevant }}
+          VALIDATE_RESULT: ${{ needs.validate.result }}
+        shell: bash
+        run: |
+          test "$CHANGES_RESULT" = success
+          if [[ "$RELEVANT" == true ]]; then
+            test "$VALIDATE_RESULT" = success
+          else
+            test "$RELEVANT" = false
+            test "$VALIDATE_RESULT" = skipped
+          fi
