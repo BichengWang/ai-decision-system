@@ -1,6 +1,6 @@
 # RELIA local export and release identity
 
-Develop RELIA in `projects/ai-decision-reliability-framework/`. The first standalone
+Develop RELIA in `ai-workflows/ai-decision-reliability/`. The first standalone
 candidate is exported to a local `relia-release` branch, with exactly the project tree
 at its root. The intended annotated release tag is `relia/v<package-version>`.
 The export command does not freeze the development checkout, accept a candidate,
@@ -46,7 +46,7 @@ The script transfers the project tree and its file objects, creates one root
 commit, verifies a fresh clone of the bundle, and checks:
 
 ```text
-SOURCE_COMMIT:projects/ai-decision-reliability-framework == EXPORT_COMMIT^{tree}
+SOURCE_COMMIT:ai-workflows/ai-decision-reliability == EXPORT_COMMIT^{tree}
 ```
 
 No monorepo parent commit or sibling project enters the export repository or bundle.
@@ -54,7 +54,7 @@ Tracked file bytes and modes are preserved, including files marked `export-ignor
 The identity record remains outside the candidate so recording its commit identifier
 does not change that commit. It includes SHA-256 for every exported file, including
 the lock and stored result/manifest files when present. Retain the record with the
-completed project [release record](../projects/ai-decision-reliability-framework/templates/release-record.md).
+completed project [release record](../ai-workflows/ai-decision-reliability/templates/release-record.md).
 
 This implementation supports the first release only. It refuses locally known
 `relia-release` branches (including remote-tracking refs) and `relia/v*` tags. It does
@@ -67,7 +67,7 @@ force-push a newly orphaned candidate over an existing release line.
 
 Provide the bundle and independently recorded SHA-256, export commit, and tree
 to the reviewer. Follow the full project
-[reproduction protocol](../projects/ai-decision-reliability-framework/docs/REPRODUCE.md)
+[reproduction protocol](../ai-workflows/ai-decision-reliability/docs/REPRODUCE.md)
 from the standalone clone's root. A local export or successful fixture test is not
 a completed reproduction or release acceptance.
 

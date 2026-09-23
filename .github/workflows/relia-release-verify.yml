@@ -59,7 +59,7 @@ jobs:
         run: |
           test "$(git -C source rev-parse HEAD)" = "$SOURCE_COMMIT"
           test "$(git -C candidate rev-parse HEAD)" = "$EXPORT_COMMIT"
-          test "$(git -C source rev-parse HEAD:projects/ai-decision-reliability-framework)" = "$PROJECT_TREE"
+          test "$(git -C source rev-parse HEAD:ai-workflows/ai-decision-reliability)" = "$PROJECT_TREE"
           test "$(git -C candidate rev-parse 'HEAD^{tree}')" = "$PROJECT_TREE"
           mkdir -p "$RUNNER_TEMP/relia-release"
           printf 'source_commit=%s\nexport_commit=%s\nproject_tree=%s\n' \

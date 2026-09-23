@@ -120,7 +120,7 @@ comparison. Each named metric must satisfy its own frozen tolerance; do not assu
 stored hash will match. See [`REPRODUCE.md`](REPRODUCE.md) for the executable protocol.
 
 Package candidate 0.1.5 is an unreleased integration of specification 0.1.3. Its canonical
-development path is `projects/ai-decision-reliability-framework/` in
+development path is `ai-workflows/ai-decision-reliability/` in
 `BichengWang/ai-decision-system`. Publication is planned through a generated `relia-release`
 branch with the project at its root and an annotated `relia/v<version>` tag. No accepted
 standalone release commit or tag is claimed. After provenance, rights, review, and acceptance

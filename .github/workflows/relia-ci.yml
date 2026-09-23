@@ -47,7 +47,7 @@ jobs:
                       ["git", "diff", "--name-only", "-z", revision]
                   ).decode().split("\0")
                   relevant = any(
-                      path.startswith("projects/ai-decision-reliability-framework/")
+                      path.startswith("ai-workflows/ai-decision-reliability/")
                       or path.startswith("scripts/export-relia")
                       or path.startswith("scripts/tests/test_export_relia")
                       or path.startswith(".github/workflows/relia-")
@@ -67,7 +67,7 @@ jobs:
     defaults:
       run:
         shell: bash
-        working-directory: projects/ai-decision-reliability-framework
+        working-directory: ai-workflows/ai-decision-reliability
     steps:
       - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262 # v4.4.0
         with:
@@ -75,7 +75,7 @@ jobs:
       - uses: astral-sh/setup-uv@bec219d24cd3e171d82865faccec33120bb574f4 # v10.1.0
         with:
           version: "0.10.11"
-          working-directory: projects/ai-decision-reliability-framework
+          working-directory: ai-workflows/ai-decision-reliability
           enable-cache: false
       - name: Install the independent frozen project
         run: |

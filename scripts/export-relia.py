@@ -12,7 +12,7 @@ import subprocess
 import tempfile
 
 
-PROJECT = "projects/ai-decision-reliability-framework"
+PROJECT = "ai-workflows/ai-decision-reliability"
 BRANCH = "relia-release"
 GENERATED_DIRS = {".venv", ".pytest_cache", "review-run", "repro-a", "repro-b"}
 

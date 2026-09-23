@@ -20,7 +20,7 @@ decisions) rather than expanding into a general-purpose automation framework.
 
 ## What is in package candidate 0.1.5 (specification 0.1.3)
 
-Development belongs in `projects/ai-decision-reliability-framework/` on the `main` branch of
+Development belongs in `ai-workflows/ai-decision-reliability/` on the `main` branch of
 [`BichengWang/ai-decision-system`](https://github.com/BichengWang/ai-decision-system).
 The project keeps its own Python environment and lockfile. Candidate 0.1.5 adds monorepo
 integration, comparison tooling, and publication records while retaining specification
@@ -44,7 +44,7 @@ integration, comparison tooling, and publication records while retaining specifi
 ## Quick start
 
 On the monorepo's development branch, first enter
-`projects/ai-decision-reliability-framework/`. In a future standalone release clone, run
+`ai-workflows/ai-decision-reliability/`. In a future standalone release clone, run
 these commands from the clone root. Python 3.13 is the declared series, with 3.13.7 pinned
 for candidate reproduction; the monorepo's root research environment is not required.
 
