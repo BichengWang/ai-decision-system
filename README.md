@@ -6,12 +6,12 @@ Research and experiment workspace for **AI-assisted decision making**: multi-age
 
 | Project | Scope | Status and environment |
 | --- | --- | --- |
-| [RELIA](projects/ai-decision-reliability-framework/README.md) | Reproducible evaluation and release controls for synthetic commerce offers and ranking | Unreleased candidate; independent Python environment and lockfile |
+| [RELIA](ai-workflows/ai-decision-reliability/README.md) | Reproducible evaluation and release controls for synthetic commerce offers and ranking | Unreleased candidate; independent Python environment and lockfile |
 | Existing `src/` research | Agents, RL, ML, finance, and study material | Research and experiments using the root environment |
 
-RELIA's [specification](projects/ai-decision-reliability-framework/docs/SPEC.md),
-[reproduction protocol](projects/ai-decision-reliability-framework/docs/REPRODUCE.md),
-and [limitations](projects/ai-decision-reliability-framework/docs/LIMITATIONS.md)
+RELIA's [specification](ai-workflows/ai-decision-reliability/docs/SPEC.md),
+[reproduction protocol](ai-workflows/ai-decision-reliability/docs/REPRODUCE.md),
+and [limitations](ai-workflows/ai-decision-reliability/docs/LIMITATIONS.md)
 define its bounded scope. Other projects are not validated RELIA integrations.
 Its development and release dates are recorded independently of this repository's history.
 
@@ -26,7 +26,7 @@ These commands use only the project's own environment. See the
 source identity. No accepted RELIA public release is claimed yet.
 
 The root MIT license applies to the existing research material it covers. RELIA
-has a separate [licensing status](projects/ai-decision-reliability-framework/LICENSE)
+has a separate [licensing status](ai-workflows/ai-decision-reliability/LICENSE)
 and currently grants no license; its intended Apache-2.0 release remains subject
 to rights clearance.
 

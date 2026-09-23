@@ -15,7 +15,7 @@ identified person; never publish signatures or confidential employment or rights
 |---|---|
 | Candidate version; specification version | |
 | Reviewed monorepo source commit M | |
-| Project path (projects/ai-decision-reliability-framework) | |
+| Project path (ai-workflows/ai-decision-reliability) | |
 | Project tree T at source M | |
 | Standalone prepublication export commit E | |
 | Export root tree; evidence it equals T | |
