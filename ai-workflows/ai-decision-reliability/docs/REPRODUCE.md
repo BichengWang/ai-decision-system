@@ -30,7 +30,7 @@ environment uses a comparison protocol fixed before execution, as specified belo
 
 ## Source layout and release identity
 
-Development is in `projects/ai-decision-reliability-framework/` on `main` in
+Development is in `ai-workflows/ai-decision-reliability/` on `main` in
 [`BichengWang/ai-decision-system`](https://github.com/BichengWang/ai-decision-system).
 Enter that project directory before running `uv`; the root research environment is separate.
 The planned `relia-release` branch contains a generated standalone project at its root.
@@ -42,7 +42,7 @@ The external release record identifies reviewed monorepo commit **M**, its proje
 the root tree of E:
 
 ```text
-git rev-parse M:projects/ai-decision-reliability-framework
+git rev-parse M:ai-workflows/ai-decision-reliability
     == git rev-parse E^{tree}
 ```
 

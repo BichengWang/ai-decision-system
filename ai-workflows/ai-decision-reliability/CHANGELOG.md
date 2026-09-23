@@ -5,7 +5,7 @@ historical snapshots.
 
 ## 0.1.5 candidate — 2026-09-19 (unreleased)
 
-- Integrated the project into `BichengWang/ai-decision-system` at `projects/ai-decision-reliability-framework/`, retaining its independent environment and lockfile and targeting the Python 3.13 series with the existing 3.13.7 reproduction pin.
+- Integrated the project into `BichengWang/ai-decision-system` at `ai-workflows/ai-decision-reliability/`, retaining its independent environment and lockfile and targeting the Python 3.13 series with the existing 3.13.7 reproduction pin.
 - Defined a project-only `relia-release` export and annotated `relia/v<version>` tag scheme. The reviewed monorepo commit and standalone export commit are distinct; their project/root trees must match, and the accepted export commit must survive publication unchanged.
 - Aligned frozen execution, clean-machine/account disclosures, per-field comparison requirements, and external release records with that layout. Added a comparison helper and regression coverage; record the actual suite count and outcome for this candidate rather than inheriting 0.1.4's count.
 - Added a technical report and explicit project license scope. Rights clearance, license grant, maintainer acceptance, unaffiliated reproduction, and public release remain pending.

@@ -21,7 +21,7 @@ endif
 
 .DEFAULT_GOAL := test
 
-RELIA_DIR := projects/ai-decision-reliability-framework
+RELIA_DIR := ai-workflows/ai-decision-reliability
 RELIA_OUT ?=
 RELIA_REF ?= HEAD
 
