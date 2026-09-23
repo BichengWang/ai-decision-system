@@ -1,6 +1,6 @@
 # Synthetic data card
 
-- **Candidate:** pre-release package 0.1.5 using specification 0.1.3, developed under `projects/ai-decision-reliability-framework/` in `BichengWang/ai-decision-system`. The generator and benchmark semantics are unchanged from 0.1.4. No accepted public project release, annotated release tag, deployment, or adoption is claimed.
+- **Candidate:** pre-release package 0.1.5 using specification 0.1.3, developed under `ai-workflows/ai-decision-reliability/` in `BichengWang/ai-decision-system`. The generator and benchmark semantics are unchanged from 0.1.4. No accepted public project release, annotated release tag, deployment, or adoption is claimed.
 - **Source:** `relia/generator.py`, seed 20260917. No real persons, customers, merchants, employers, or transactions are represented.
 - **Offer task:** 120 simulated days x 2,500 sessions; 240 synthetic merchants in 6 categories. Logged discounts are randomized within the policy constraints, so response labels are unconfounded by design.
 - **Ground truth:** a known response function with deliberate non-linear structure (saturating discount response for large baskets, a distance threshold, and an hour-by-category interaction). Because the truth is known, `true_p` is stored for diagnostics and is never used for fitting.

@@ -11,7 +11,7 @@ import unittest
 
 
 SCRIPT = Path(__file__).resolve().parents[1] / "export-relia.py"
-PROJECT = "projects/ai-decision-reliability-framework"
+PROJECT = "ai-workflows/ai-decision-reliability"
 
 
 class ExportTests(unittest.TestCase):
