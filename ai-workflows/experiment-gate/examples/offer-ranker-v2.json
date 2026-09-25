@@ -1,0 +1,29 @@
+{
+  "experiment": "offer-ranker-v2",
+  "description": "Hand-written example of the aggregate summary an experimentation platform exports.",
+  "assignment": {"expected_treatment_share": 0.5},
+  "policy": {"alpha": 0.05, "srm_alpha": 0.001},
+  "metrics": {
+    "conversion": {"type": "proportion", "role": "primary", "direction": "increase"},
+    "refund_rate": {"type": "proportion", "role": "guardrail", "direction": "decrease", "margin": 0.003},
+    "latency_ms": {"type": "mean", "role": "guardrail", "direction": "decrease", "margin": 2.0}
+  },
+  "arms": {
+    "control": {
+      "units": 50210,
+      "metrics": {
+        "conversion": {"successes": 5121},
+        "refund_rate": {"successes": 1004},
+        "latency_ms": {"mean": 41.8, "sd": 13.1}
+      }
+    },
+    "treatment": {
+      "units": 49874,
+      "metrics": {
+        "conversion": {"successes": 5486},
+        "refund_rate": {"successes": 982},
+        "latency_ms": {"mean": 42.3, "sd": 13.4}
+      }
+    }
+  }
+}

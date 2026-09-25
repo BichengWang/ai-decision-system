@@ -10,13 +10,16 @@ commands, but a project must remain runnable from its own directory.
 | Project | Purpose | Run from |
 | --- | --- | --- |
 | [`ai-decision-reliability`](ai-decision-reliability/README.md) | Synthetic-data reliability evaluation and release controls (RELIA) | `ai-workflows/ai-decision-reliability/` |
+| [`experiment-gate`](experiment-gate/README.md) | Ship / hold / rollback decisions for online A/B tests of decision models, with guardrails and sample-ratio checks | `ai-workflows/experiment-gate/` |
 
-Root convenience targets for RELIA (see the root `Makefile`):
+Root convenience targets (see the root `Makefile`):
 
 ```bash
 make relia-sync        # uv sync --frozen in the project directory
 make relia-test        # run the project test suite single-threaded
 make relia-reproduce RELIA_OUT=/abs/new/dir
+make expgate-test       # experiment-gate unit tests (standard library only)
+make expgate-run EXPGATE_OUT=/abs/new/dir
 ```
 
 ## Boundary rules

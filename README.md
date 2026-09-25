@@ -7,6 +7,7 @@ Research and experiment workspace for **AI-assisted decision making**: multi-age
 | Project | Scope | Status and environment |
 | --- | --- | --- |
 | [RELIA](ai-workflows/ai-decision-reliability/README.md) | Reproducible evaluation and release controls for synthetic commerce offers and ranking | Unreleased candidate; independent Python environment and lockfile |
+| [Experiment gate](ai-workflows/experiment-gate/README.md) | Ship / hold / rollback decisions for online A/B tests of decision models | Standard library only; no lockfile |
 | Existing `src/` research | Agents, RL, ML, finance, and study material | Research and experiments using the root environment |
 
 RELIA's [specification](ai-workflows/ai-decision-reliability/docs/SPEC.md),
