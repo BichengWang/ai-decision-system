@@ -1,0 +1,9 @@
+[project]
+name = "expgate"
+version = "0.1.0"
+description = "Ship / hold / rollback gates for online experiments of real-time decision models (standard library only)"
+requires-python = ">=3.11"
+dependencies = []
+
+[tool.pytest.ini_options]
+testpaths = ["tests"]

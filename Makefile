@@ -43,6 +43,17 @@ relia-export:
 relia-export-test:
 	python3 -m unittest discover -s scripts/tests -p 'test_export_relia.py' -v
 
+EXPGATE_DIR := ai-workflows/experiment-gate
+EXPGATE_OUT ?=
+
+.PHONY: expgate-test expgate-run
+expgate-test:
+	cd $(EXPGATE_DIR) && python3 -m unittest discover -s tests -v
+
+expgate-run:
+	@test -n "$(EXPGATE_OUT)" || { echo "Set EXPGATE_OUT to a new absolute output directory"; exit 2; }
+	cd $(EXPGATE_DIR) && python3 -m expgate.run --all-scenarios --out "$(EXPGATE_OUT)"
+
 
 .PHONY: bootstrap
 bootstrap:
