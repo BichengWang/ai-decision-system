@@ -4,6 +4,8 @@ Research and experiment workspace for **AI-assisted decision making**: multi-age
 
 ## Projects
 
+Run the commands below from the repository root. The [workspace guide](ai-workflows/README.md) lists the independent projects and their own run directories.
+
 | Project | Scope | Status and environment |
 | --- | --- | --- |
 | [RELIA](ai-workflows/ai-decision-reliability/README.md) | Reproducible evaluation and release controls for synthetic commerce offers and ranking | Unreleased candidate; independent Python environment and lockfile |
@@ -109,7 +111,7 @@ pip install -r requirements.txt
 ### Refresh Dependencies
 
 ```shell
-pip install pip-tools>=4.2.0
+pip install "pip-tools>=4.2.0"
 pip-compile --no-emit-index-url requirements.in
 ```
 
@@ -143,8 +145,7 @@ pip install uv
 ### Basic Usage
 
 ```shell
-# This project (preferred)
-cd ai-decision-system
+# From this repository root
 uv sync
 uv run python src/rl-system/main.py
 
@@ -162,7 +163,7 @@ uv add numpy pandas yfinance transformers
 uv add --dev pytest black
 
 # Run a command in the virtual environment
-uv run python script.py
+uv run python src/rl-system/main.py
 
 # Activate the virtual environment
 source .venv/bin/activate  # On Unix/macOS
@@ -245,7 +246,7 @@ brew install --cask anaconda
 conda remove -n py-notebook --all
 conda create --name py-notebook python=3.12
 conda info --envs
-activate py-notebook
+conda activate py-notebook
 ```
 
 ### For M1 specific

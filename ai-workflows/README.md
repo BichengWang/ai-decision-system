@@ -12,7 +12,7 @@ commands, but a project must remain runnable from its own directory.
 | [`ai-decision-reliability`](ai-decision-reliability/README.md) | Synthetic-data reliability evaluation and release controls (RELIA) | `ai-workflows/ai-decision-reliability/` |
 | [`experiment-gate`](experiment-gate/README.md) | Ship / hold / rollback decisions for online A/B tests of decision models, with guardrails and sample-ratio checks | `ai-workflows/experiment-gate/` |
 
-Root convenience targets (see the root `Makefile`):
+From the repository root, use the convenience targets in the [root Makefile](../Makefile):
 
 ```bash
 make relia-sync        # uv sync --frozen in the project directory
