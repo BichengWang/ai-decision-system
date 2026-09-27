@@ -162,8 +162,8 @@ uv add numpy pandas yfinance transformers
 # Add development dependencies
 uv add --dev pytest black
 
-# Run a command in the virtual environment
-uv run python src/rl-system/main.py
+# Run a command in the new project
+uv run python -c 'print("hello")'
 
 # Activate the virtual environment
 source .venv/bin/activate  # On Unix/macOS
