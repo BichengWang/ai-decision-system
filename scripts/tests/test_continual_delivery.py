@@ -20,7 +20,7 @@ SHA = "a" * 40
 def pr(**changes):
     result = {
         "state": "OPEN", "isDraft": False, "baseRefName": "main",
-        "headRefName": "automation/issue-42", "headRefOid": SHA,
+        "headRefName": "automation/issue-42", "headRefOid": SHA, "title": "Improve feature",
         "mergeStateStatus": "CLEAN", "body": "Closes #42\n\nImplementation run: implement-42",
         "labels": [{"name": delivery.MANAGED}],
         "files": [{"path": "src/utils/general/example.py"}],
@@ -100,6 +100,18 @@ class EvaluationTests(unittest.TestCase):
         self.assertTrue(any("description" in item for item in failures))
         commit = {"commit": {"author": {"name": "Codex", "email": "x@y"}, "message": "change"}}
         self.assertTrue(any("author" in item for item in delivery.evaluate(pr(), [receipt()], [commit])))
+
+    def test_new_git_naming_rule_covers_branch_title_and_commit(self):
+        self.assertTrue(any("branch name" in item for item in delivery.evaluate(
+            pr(headRefName="codex/issue-42"), [receipt()], [])))
+        self.assertTrue(any("PR title" in item for item in delivery.evaluate(
+            pr(title="Codex change"), [receipt()], [])))
+        commit = {"commit": {"author": {"name": "Bicheng Wang", "email": "b@example.com"},
+                             "committer": {"name": "Codex", "email": "c@example.com"},
+                             "message": "Update code with Codex"}}
+        failures = delivery.evaluate(pr(), [receipt()], [commit])
+        self.assertTrue(any("committer" in item for item in failures))
+        self.assertTrue(any("message" in item for item in failures))
 
     def test_daily_cap_uses_los_angeles_date(self):
         now = datetime(2026, 9, 26, 0, 20, tzinfo=ZoneInfo("America/Los_Angeles"))

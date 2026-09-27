@@ -175,6 +175,10 @@ def evaluate(pr, comments, commits, trusted_login="BichengWang"):
         failures.append("PR is closed or draft")
     if pr.get("baseRefName") != "main" or pr.get("headRefName") == "relia-release":
         failures.append("wrong base or release branch")
+    if ATTRIBUTION_RE.search(pr.get("headRefName") or ""):
+        failures.append("branch name contains forbidden attribution")
+    if ATTRIBUTION_RE.search(pr.get("title") or ""):
+        failures.append("PR title contains forbidden attribution")
     if MANAGED not in labels(pr):
         failures.append("PR is not managed")
     if pr.get("mergeStateStatus") != "CLEAN":
@@ -188,11 +192,14 @@ def evaluate(pr, comments, commits, trusted_login="BichengWang"):
         failures.append("PR must identify its implementation run")
     for commit in commits:
         author = commit.get("commit", {}).get("author") or {}
+        committer = commit.get("commit", {}).get("committer") or {}
         message = commit.get("commit", {}).get("message", "")
         if any(ATTRIBUTION_RE.search(author.get(key) or "") for key in ("name", "email")):
             failures.append("commit author contains forbidden attribution")
-        if re.search(r"^Co-authored-by:.*codex", message, re.I | re.M):
-            failures.append("commit trailer contains forbidden attribution")
+        if any(ATTRIBUTION_RE.search(committer.get(key) or "") for key in ("name", "email")):
+            failures.append("commit committer contains forbidden attribution")
+        if ATTRIBUTION_RE.search(message):
+            failures.append("commit message contains forbidden attribution")
     checks = {}
     for check in pr.get("statusCheckRollup") or []:
         name = check.get("name") or check.get("context")
@@ -215,7 +222,7 @@ def evaluate(pr, comments, commits, trusted_login="BichengWang"):
 def pr_data(repo, number):
     pr = gh_json(
         "pr", "view", str(number), "--json",
-        "number,body,state,isDraft,headRefOid,headRefName,baseRefName,mergeStateStatus,files,statusCheckRollup,labels",
+        "number,title,body,state,isDraft,headRefOid,headRefName,baseRefName,mergeStateStatus,files,statusCheckRollup,labels",
     )
     comments = gh_pages(f"repos/{repo}/issues/{number}/comments?per_page=100")
     commits = gh_pages(f"repos/{repo}/pulls/{number}/commits?per_page=100")
