@@ -106,7 +106,7 @@ def snapshot():
     active_ids = {
         int(match.group(1))
         for pr in managed
-        for match in [re.search(r"^codex/issue-(\d+)(?:-|$)", pr["headRefName"])]
+        for match in [re.search(r"^automation/issue-(\d+)(?:-|$)", pr["headRefName"])]
         if match
     }
     queue = sorted(

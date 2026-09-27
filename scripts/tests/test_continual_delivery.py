@@ -20,7 +20,7 @@ SHA = "a" * 40
 def pr(**changes):
     result = {
         "state": "OPEN", "isDraft": False, "baseRefName": "main",
-        "headRefName": "codex/issue-42", "headRefOid": SHA,
+        "headRefName": "automation/issue-42", "headRefOid": SHA,
         "mergeStateStatus": "CLEAN", "body": "Closes #42\n\nImplementation run: implement-42",
         "labels": [{"name": delivery.MANAGED}],
         "files": [{"path": "src/utils/general/example.py"}],
@@ -111,7 +111,7 @@ class EvaluationTests(unittest.TestCase):
 
     def test_snapshot_reconciles_active_issue_and_three_pr_limit(self):
         prs = [
-            {"number": i, "title": "x", "headRefName": f"codex/issue-{i}",
+            {"number": i, "title": "x", "headRefName": f"automation/issue-{i}",
              "labels": [{"name": delivery.MANAGED}], "url": "https://example.test"}
             for i in (1, 2, 3)
         ]
