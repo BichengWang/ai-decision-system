@@ -35,7 +35,8 @@ def receipt(sha=SHA, verdict="PASS", findings=0):
         "head_sha": sha, "verdict": verdict,
         "blocking_findings": findings, "reviewer_run": "separate-review-1",
     }
-    return {"body": f"{delivery.REVIEW_PREFIX}{json.dumps(data)} -->"}
+    return {"body": f"{delivery.REVIEW_PREFIX}{json.dumps(data)} -->",
+            "user": {"login": "BichengWang"}}
 
 
 class EvaluationTests(unittest.TestCase):
@@ -48,6 +49,16 @@ class EvaluationTests(unittest.TestCase):
 
     def test_later_blocking_review_wins(self):
         failures = delivery.evaluate(pr(), [receipt(), receipt(verdict="BLOCK", findings=1)], [])
+        self.assertTrue(any("review" in item for item in failures))
+
+    def test_earlier_block_cannot_be_overridden_without_new_head(self):
+        failures = delivery.evaluate(pr(), [receipt(verdict="BLOCK", findings=1), receipt()], [])
+        self.assertTrue(any("review" in item for item in failures))
+
+    def test_public_commenter_cannot_forge_pass(self):
+        forged = receipt()
+        forged["user"]["login"] = "another-user"
+        failures = delivery.evaluate(pr(), [forged], [])
         self.assertTrue(any("review" in item for item in failures))
 
     def test_self_review_receipt_does_not_pass(self):

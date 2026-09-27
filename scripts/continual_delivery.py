@@ -144,9 +144,11 @@ def required_checks(paths):
     return required
 
 
-def review_result(comments, sha, implementation_run):
+def review_result(comments, sha, implementation_run, trusted_login):
     verdict = None
     for comment in comments:
+        if (comment.get("user") or {}).get("login") != trusted_login:
+            continue
         body = comment.get("body", "")
         for line in body.splitlines():
             if line.startswith(REVIEW_PREFIX) and line.endswith(" -->"):
@@ -157,11 +159,13 @@ def review_result(comments, sha, implementation_run):
                 if (record.get("head_sha") == sha
                         and record.get("reviewer_run")
                         and record["reviewer_run"] != implementation_run):
+                    if record.get("verdict") == "BLOCK" or record.get("blocking_findings") != 0:
+                        return record
                     verdict = record
     return verdict
 
 
-def evaluate(pr, comments, commits):
+def evaluate(pr, comments, commits, trusted_login="BichengWang"):
     failures = []
     sha = pr.get("headRefOid", "")
     paths = {item["path"] for item in pr.get("files", [])}
@@ -202,7 +206,7 @@ def evaluate(pr, comments, commits):
             for check in matching
         ):
             failures.append(f"required check {name} is missing, failing, or from the wrong workflow")
-    review = review_result(comments, sha, implementation.group(1) if implementation else "")
+    review = review_result(comments, sha, implementation.group(1) if implementation else "", trusted_login)
     if not review or review.get("verdict") != "PASS" or review.get("blocking_findings") != 0:
         failures.append("independent review has no passing receipt for head SHA")
     return failures
@@ -234,7 +238,7 @@ def branch_rules(repo):
 
 def gate(repo, number):
     pr, comments, commits = pr_data(repo, number)
-    failures = evaluate(pr, comments, commits)
+    failures = evaluate(pr, comments, commits, repo.split("/", 1)[0])
     if failures:
         raise Blocked("; ".join(failures))
     branch_rules(repo)
