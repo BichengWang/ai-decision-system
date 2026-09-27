@@ -149,23 +149,7 @@ pip install uv
 uv sync
 uv run python src/rl-system/main.py
 
-# Create a new project
-uv init my-project
-cd my-project
-
-# Create a virtual environment and install dependencies
-uv sync
-
-# Add a dependency
-uv add numpy pandas yfinance transformers
-
-# Add development dependencies
-uv add --dev pytest black
-
-# Run a command in the new project
-uv run python -c 'print("hello")'
-
-# Activate the virtual environment
+# Activate this repository's virtual environment, if needed
 source .venv/bin/activate  # On Unix/macOS
 .venv\Scripts\activate     # On Windows
 ```
@@ -186,24 +170,6 @@ uv sync --upgrade
 
 # Lock dependencies (creates uv.lock)
 uv lock
-```
-
-### Migration from pip
-
-```shell
-# Convert requirements.txt to pyproject.toml
-uv pip compile requirements.txt --pyproject
-
-# Or manually add to pyproject.toml dependencies section
-dependencies = [
-    "numpy",
-    "pandas",
-    "yfinance",
-    "tensorflow",
-    "torch",
-    "transformers",
-    "openai",
-]
 ```
 
 ### Performance Benefits
