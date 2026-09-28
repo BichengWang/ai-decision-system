@@ -36,7 +36,9 @@ airllm==2.11.0
 altair==5.5.0
     # via streamlit
 annotated-doc==0.0.5
-    # via fastapi
+    # via
+    #   fastapi
+    #   typer
 annotated-types==0.7.0
     # via pydantic
 anyio==4.14.2
@@ -106,6 +108,7 @@ click==8.5.0
     #   -r requirements.in
     #   face-recognition
     #   flask
+    #   huggingface-hub
     #   mkdocs
     #   ray
     #   streamlit
@@ -188,7 +191,6 @@ filelock==4.0.4
     #   python-discovery
     #   ray
     #   torch
-    #   transformers
     #   virtualenv
 fire==0.7.0
     # via deepface
@@ -276,6 +278,8 @@ h5py==3.13.0
     #   keras-nightly
     #   tensorflow
     #   tf-nightly
+hf-xet==1.6.0
+    # via huggingface-hub
 httpcore==1.0.7
     # via httpx
 httplib2==0.22.0
@@ -288,9 +292,10 @@ httptools==0.8.0
     #   uvicorn
 httpx==0.28.1
     # via
+    #   huggingface-hub
     #   jupyterlab
     #   openai
-huggingface-hub==0.30.1
+huggingface-hub==1.33.0
     # via
     #   -r requirements.in
     #   accelerate
@@ -864,7 +869,7 @@ referencing==0.36.2
     #   jsonschema
     #   jsonschema-specifications
     #   jupyter-events
-regex==2024.11.6
+regex==2026.9.10
     # via
     #   tiktoken
     #   transformers
@@ -876,7 +881,6 @@ requests==2.32.3
     #   deepface
     #   gdown
     #   google-api-core
-    #   huggingface-hub
     #   jupyterlab-server
     #   openai-agents
     #   ray
@@ -885,7 +889,6 @@ requests==2.32.3
     #   tensorflow-datasets
     #   tf-nightly
     #   tiktoken
-    #   transformers
     #   wandb
     #   yfinance
 retina-face==0.0.17
@@ -902,6 +905,7 @@ rich==14.0.0
     # via
     #   keras
     #   keras-nightly
+    #   typer
 rpds-py==0.24.0
     # via
     #   jsonschema
@@ -932,6 +936,8 @@ setuptools==84.0.0
     #   tb-nightly
     #   tensorflow
     #   tf-nightly
+shellingham==1.5.4
+    # via typer
 six==1.17.0
     # via
     #   astunparse
@@ -1002,7 +1008,7 @@ tiktoken==0.9.0
     # via -r requirements.in
 tinycss2==1.4.0
     # via bleach
-tokenizers==0.21.1
+tokenizers==0.22.2
     # via transformers
 toml==0.10.2
     # via
@@ -1011,6 +1017,7 @@ toml==0.10.2
 tomli==2.2.1
     # via
     #   coverage
+    #   huggingface-hub
     #   jupyterlab
     #   pytest
 torch==2.6.0
@@ -1068,13 +1075,15 @@ traitlets==5.14.3
     #   nbclient
     #   nbconvert
     #   nbformat
-transformers==4.51.0
+transformers==5.10.1
     # via
     #   -r requirements.in
     #   airllm
     #   optimum
 triton==3.2.0
     # via torch
+typer==0.27.2
+    # via transformers
 types-python-dateutil==2.9.0.20241206
     # via arrow
 types-requests==2.33.0.20260906
