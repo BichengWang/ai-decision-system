@@ -50,6 +50,12 @@ one metric has `"role": "primary"`; every other metric is a `"guardrail"` with a
 non-negative `margin` in the metric's own units. `direction` states which way is
 better (`increase` or `decrease`). `policy` and `assignment` are optional.
 
+The summary is validated before any statistic is computed: counts must be
+integers within range, means, standard deviations and margins must be finite,
+and `alpha`, `srm_alpha` and `expected_treatment_share` must lie in (0, 1).
+Any violation exits 2 with the offending field named, so malformed input is
+never mistaken for a `--require-ship` refusal (exit 1).
+
 ## Synthetic scenarios
 
 `--scenario` / `--all-scenarios` simulate an offer-ranking model with a fixed
