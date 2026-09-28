@@ -12,27 +12,31 @@ absl-py==2.2.2
     #   keras
     #   keras-nightly
     #   tb-nightly
-    #   tensorboard
     #   tensorflow
     #   tensorflow-datasets
-    #   tensorflow-metadata
     #   tensorflow-recommenders
     #   tf-nightly
 accelerate==1.6.0
     # via airllm
 aiohappyeyeballs==2.6.1
     # via aiohttp
-aiohttp==3.11.16
+aiohttp==3.14.3
     # via
+    #   aiohttp-cors
     #   bilibili-api
     #   datasets
     #   fsspec
-aiosignal==1.3.2
+    #   ray
+aiohttp-cors==0.8.1
+    # via ray
+aiosignal==1.4.0
     # via aiohttp
 airllm==2.11.0
     # via -r requirements.in
 altair==5.5.0
     # via streamlit
+annotated-doc==0.0.5
+    # via fastapi
 annotated-types==0.7.0
     # via pydantic
 anyio==4.9.0
@@ -40,6 +44,9 @@ anyio==4.9.0
     #   httpx
     #   jupyter-server
     #   openai
+    #   starlette
+    #   streamlit
+    #   watchfiles
 argon2-cffi==23.1.0
     # via jupyter-server
 argon2-cffi-bindings==21.2.0
@@ -57,9 +64,7 @@ astunparse==1.6.3
 async-lru==2.0.5
     # via jupyterlab
 async-timeout==4.0.3
-    # via
-    #   aiohttp
-    #   langchain
+    # via aiohttp
 attrs==25.3.0
     # via
     #   aiohttp
@@ -77,44 +82,47 @@ beautifulsoup4==4.13.3
     #   yfinance
 bilibili-api==4.1.0
     # via -r requirements.in
-bleach[css]==6.2.0
+bleach==6.2.0
     # via nbconvert
 blinker==1.9.0
-    # via
-    #   flask
-    #   streamlit
+    # via flask
 cachetools==5.5.2
-    # via
-    #   google-auth
-    #   streamlit
+    # via google-auth
 certifi==2025.1.31
     # via
     #   httpcore
     #   httpx
     #   requests
-    #   sentry-sdk
 cffi==1.17.1
     # via argon2-cffi-bindings
 charset-normalizer==3.4.1
     # via
     #   -r requirements.in
     #   requests
-click==8.1.8
+click==8.5.0
     # via
     #   -r requirements.in
     #   face-recognition
     #   flask
     #   mkdocs
+    #   ray
     #   streamlit
     #   tensorflow-datasets
+    #   uvicorn
     #   wandb
+cloudpickle==3.1.2
+    # via gymnasium
+colorama==0.4.6
+    # via griffe
+colorful==0.5.8
+    # via ray
 comm==0.2.2
     # via
     #   ipykernel
     #   ipywidgets
 contourpy==1.3.0
     # via matplotlib
-coverage[toml]==7.8.0
+coverage==7.8.0
     # via pytest-cov
 cssutils==2.11.1
     # via bilibili-api
@@ -134,6 +142,8 @@ dill==0.3.8
     # via
     #   datasets
     #   multiprocess
+distlib==0.4.3
+    # via virtualenv
 distro==1.9.0
     # via openai
 dlib==19.24.6
@@ -141,15 +151,13 @@ dlib==19.24.6
     #   -r requirements.in
     #   face-recognition
 dm-tree==0.1.8
-    # via tensorflow-datasets
-docker-pycreds==0.4.0
-    # via wandb
-etils[array-types,enp,epath,epy,etqdm,etree]==1.5.2
+    # via
+    #   ray
+    #   tensorflow-datasets
+etils==1.5.2
     # via
     #   array-record
     #   tensorflow-datasets
-eval-type-backport==0.2.2
-    # via wandb
 exceptiongroup==1.2.2
     # via
     #   anyio
@@ -163,17 +171,24 @@ face-recognition-models==0.3.0
     # via face-recognition
 faiss-cpu==1.10.0
     # via -r requirements.in
+farama-notifications==0.0.6
+    # via gymnasium
+fastapi==0.141.1
+    # via ray
 fastjsonschema==2.21.1
     # via nbformat
 fbgemm-gpu==1.1.0
     # via torchrec
-filelock==3.18.0
+filelock==4.0.4
     # via
     #   datasets
     #   gdown
     #   huggingface-hub
+    #   python-discovery
+    #   ray
     #   torch
     #   transformers
+    #   virtualenv
 fire==0.7.0
     # via deepface
 flake8==7.2.0
@@ -184,7 +199,7 @@ flask==3.1.0
     #   flask-cors
 flask-cors==5.0.1
     # via deepface
-flatbuffers==25.2.10
+flatbuffers==25.12.19
     # via
     #   tensorflow
     #   tf-nightly
@@ -198,11 +213,12 @@ frozenlist==1.5.0
     # via
     #   aiohttp
     #   aiosignal
-fsspec[http]==2024.12.0
+fsspec==2024.12.0
     # via
     #   datasets
     #   etils
     #   huggingface-hub
+    #   ray
     #   torch
 gast==0.6.0
     # via
@@ -214,14 +230,10 @@ gdown==5.2.0
     #   retina-face
 ghp-import==2.1.0
     # via mkdocs
-gitdb==4.0.12
-    # via gitpython
-gitpython==3.1.44
+google-api-core==2.30.3
     # via
-    #   streamlit
-    #   wandb
-google-api-core==2.24.2
-    # via google-api-python-client
+    #   google-api-python-client
+    #   opencensus
 google-api-python-client==2.166.0
     # via -r requirements.in
 google-auth==2.38.0
@@ -235,20 +247,27 @@ google-pasta==0.2.0
     # via
     #   tensorflow
     #   tf-nightly
-googleapis-common-protos==1.69.2
-    # via google-api-core
-greenlet==3.1.1
-    # via sqlalchemy
+googleapis-common-protos==1.75.4
+    # via
+    #   google-api-core
+    #   opentelemetry-exporter-otlp-proto-http
+    #   tensorflow-metadata
+griffe==1.15.0
+    # via openai-agents
 grpcio==1.71.0
     # via
+    #   ray
     #   tb-nightly
-    #   tensorboard
     #   tensorflow
     #   tf-nightly
 gunicorn==23.0.0
     # via deepface
+gymnasium==1.2.2
+    # via ray
 h11==0.14.0
-    # via httpcore
+    # via
+    #   httpcore
+    #   uvicorn
 h5py==3.13.0
     # via
     #   -r requirements.in
@@ -262,10 +281,13 @@ httplib2==0.22.0
     # via
     #   google-api-python-client
     #   google-auth-httplib2
+httptools==0.8.0
+    # via
+    #   streamlit
+    #   uvicorn
 httpx==0.28.1
     # via
     #   jupyterlab
-    #   langsmith
     #   openai
 huggingface-hub==0.30.1
     # via
@@ -283,21 +305,8 @@ idna==3.10
     #   jsonschema
     #   requests
     #   yarl
-importlib-metadata==8.6.1
-    # via
-    #   flask
-    #   jupyter-client
-    #   jupyter-lsp
-    #   jupyterlab
-    #   jupyterlab-server
-    #   markdown
-    #   mkdocs
-    #   mkdocs-get-deps
-    #   nbconvert
 importlib-resources==6.5.2
-    # via
-    #   etils
-    #   matplotlib
+    # via etils
 iniconfig==2.1.0
     # via pytest
 iopath==0.1.10
@@ -318,7 +327,9 @@ ipywidgets==8.1.5
 isoduration==20.11.0
     # via jsonschema
 itsdangerous==2.2.0
-    # via flask
+    # via
+    #   flask
+    #   streamlit
 jedi==0.19.2
     # via ipython
 jinja2==3.1.6
@@ -338,18 +349,15 @@ joblib==1.4.2
     # via scikit-learn
 json5==0.12.0
     # via jupyterlab-server
-jsonpatch==1.33
-    # via langchain-core
 jsonpointer==3.0.0
-    # via
-    #   jsonpatch
-    #   jsonschema
-jsonschema[format-nongpl]==4.23.0
+    # via jsonschema
+jsonschema==4.23.0
     # via
     #   altair
     #   jupyter-events
     #   jupyterlab-server
     #   nbformat
+    #   ray
 jsonschema-specifications==2024.10.1
     # via jsonschema
 jupyter==1.1.1
@@ -397,39 +405,28 @@ jupyterlab-server==2.27.3
     #   notebook
 jupyterlab-widgets==3.0.13
     # via ipywidgets
-keras==3.9.2
+keras==3.12.4
     # via
     #   -r requirements.in
     #   deepface
     #   mtcnn
     #   tensorflow
-keras-nightly==3.9.0.dev2025032003
+keras-nightly==3.12.0.dev2025100703
     # via tf-nightly
 kiwisolver==1.4.7
     # via matplotlib
-langchain==0.3.23
-    # via -r requirements.in
-langchain-core==0.3.51
-    # via
-    #   langchain
-    #   langchain-text-splitters
-langchain-text-splitters==0.3.8
-    # via langchain
-langsmith==0.3.24
-    # via
-    #   langchain
-    #   langchain-core
 libclang==18.1.1
     # via
     #   tensorflow
     #   tf-nightly
 lightning-utilities==0.14.3
     # via torchmetrics
+lz4==4.4.5
+    # via ray
 markdown==3.7
     # via
     #   mkdocs
     #   tb-nightly
-    #   tensorboard
 markdown-it-py==3.0.0
     # via rich
 markupsafe==3.0.2
@@ -474,6 +471,8 @@ more-itertools==10.6.0
     # via cssutils
 mpmath==1.3.0
     # via sympy
+msgpack==1.2.2
+    # via ray
 mtcnn==0.1.1
     # via deepface
 multidict==6.3.2
@@ -524,6 +523,7 @@ numpy==1.26.4
     #   face-recognition
     #   faiss-cpu
     #   fbgemm-gpu
+    #   gymnasium
     #   h5py
     #   keras
     #   keras-nightly
@@ -533,13 +533,14 @@ numpy==1.26.4
     #   optimum
     #   pandas
     #   pydeck
+    #   ray
     #   retina-face
     #   scikit-learn
     #   scipy
     #   seaborn
     #   streamlit
     #   tb-nightly
-    #   tensorboard
+    #   tensorboardx
     #   tensorflow
     #   tensorflow-datasets
     #   tf-nightly
@@ -582,13 +583,53 @@ nvidia-nvjitlink-cu12==12.4.127
 nvidia-nvtx-cu12==12.4.127
     # via torch
 openai==1.70.0
+    # via
+    #   -r requirements.in
+    #   openai-agents
+openai-agents==0.0.5
     # via -r requirements.in
+opencensus==0.11.4
+    # via ray
+opencensus-context==0.1.3
+    # via opencensus
 opencv-python==4.11.0.86
     # via
     #   -r requirements.in
     #   deepface
     #   mtcnn
     #   retina-face
+opentelemetry-api==1.45.0
+    # via
+    #   opentelemetry-exporter-http-transport
+    #   opentelemetry-exporter-otlp-proto-http
+    #   opentelemetry-exporter-prometheus
+    #   opentelemetry-sdk
+    #   opentelemetry-semantic-conventions
+    #   wandb
+opentelemetry-exporter-http-transport==0.66b0
+    # via opentelemetry-exporter-otlp-proto-http
+opentelemetry-exporter-otlp-common==0.66b0
+    # via opentelemetry-exporter-otlp-proto-http
+opentelemetry-exporter-otlp-proto-common==1.45.0
+    # via opentelemetry-exporter-otlp-proto-http
+opentelemetry-exporter-otlp-proto-http==1.45.0
+    # via wandb
+opentelemetry-exporter-prometheus==0.66b0
+    # via ray
+opentelemetry-proto==1.45.0
+    # via
+    #   opentelemetry-exporter-otlp-proto-common
+    #   opentelemetry-exporter-otlp-proto-http
+    #   ray
+opentelemetry-sdk==1.45.0
+    # via
+    #   opentelemetry-exporter-otlp-common
+    #   opentelemetry-exporter-otlp-proto-http
+    #   opentelemetry-exporter-prometheus
+    #   ray
+    #   wandb
+opentelemetry-semantic-conventions==0.66b0
+    # via opentelemetry-sdk
 opt-einsum==3.4.0
     # via
     #   tensorflow
@@ -599,8 +640,8 @@ optree==0.15.0
     # via
     #   keras
     #   keras-nightly
-orjson==3.10.16
-    # via langsmith
+ormsgpack==1.12.2
+    # via ray
 overrides==7.7.0
     # via jupyter-server
 packaging==24.2
@@ -618,26 +659,27 @@ packaging==24.2
     #   jupyterlab-server
     #   keras
     #   keras-nightly
-    #   langchain-core
-    #   langsmith
     #   lightning-utilities
     #   matplotlib
     #   mkdocs
     #   nbconvert
     #   optimum
     #   pytest
+    #   ray
     #   streamlit
     #   tb-nightly
-    #   tensorboard
+    #   tensorboardx
     #   tensorflow
     #   tf-nightly
     #   torchmetrics
     #   transformers
+    #   wandb
 pandas==1.5.3
     # via
     #   -r requirements.in
     #   datasets
     #   deepface
+    #   ray
     #   seaborn
     #   streamlit
     #   yfinance
@@ -658,11 +700,13 @@ pillow==11.1.0
     #   matplotlib
     #   retina-face
     #   streamlit
+    #   tb-nightly
     #   torchvision
 platformdirs==4.3.7
     # via
     #   jupyter-core
     #   mkdocs-get-deps
+    #   virtualenv
     #   wandb
     #   yfinance
 pluggy==1.5.0
@@ -670,7 +714,10 @@ pluggy==1.5.0
 portalocker==3.1.1
     # via iopath
 prometheus-client==0.21.1
-    # via jupyter-server
+    # via
+    #   jupyter-server
+    #   opentelemetry-exporter-prometheus
+    #   ray
 promise==2.3
     # via tensorflow-datasets
 prompt-toolkit==3.0.50
@@ -681,19 +728,20 @@ propcache==0.3.1
     # via
     #   aiohttp
     #   yarl
-proto-plus==1.26.1
+proto-plus==1.28.4
     # via google-api-core
-protobuf==4.21.12
+protobuf==7.36.2
     # via
     #   google-api-core
     #   googleapis-common-protos
+    #   opentelemetry-proto
     #   proto-plus
+    #   ray
     #   streamlit
     #   tb-nightly
-    #   tensorboard
+    #   tensorboardx
     #   tensorflow
     #   tensorflow-datasets
-    #   tensorflow-metadata
     #   tf-nightly
     #   wandb
 psutil==7.0.0
@@ -702,16 +750,18 @@ psutil==7.0.0
     #   ipykernel
     #   memory-profiler
     #   tensorflow-datasets
-    #   wandb
 ptyprocess==0.7.0
     # via
     #   pexpect
     #   terminado
 pure-eval==0.2.3
     # via stack-data
+py-spy==0.4.2
+    # via ray
 pyarrow==19.0.1
     # via
     #   datasets
+    #   ray
     #   streamlit
 pyasn1==0.6.1
     # via
@@ -723,14 +773,14 @@ pycodestyle==2.13.0
     # via flake8
 pycparser==2.22
     # via cffi
-pydantic==2.11.2
+pydantic==2.13.5
     # via
-    #   langchain
-    #   langchain-core
-    #   langsmith
+    #   fastapi
     #   openai
+    #   openai-agents
+    #   ray
     #   wandb
-pydantic-core==2.33.1
+pydantic-core==2.46.5
     # via pydantic
 pydeck==0.9.1
     # via streamlit
@@ -769,10 +819,16 @@ python-dateutil==2.9.0.post0
     #   jupyter-client
     #   matplotlib
     #   pandas
+python-discovery==1.6.1
+    # via virtualenv
 python-dotenv==1.1.0
-    # via -r requirements.in
+    # via
+    #   -r requirements.in
+    #   uvicorn
 python-json-logger==3.3.0
     # via jupyter-events
+python-multipart==0.0.32
+    # via streamlit
 pytz==2025.2
     # via
     #   pandas
@@ -783,12 +839,12 @@ pyyaml==6.0.2
     #   datasets
     #   huggingface-hub
     #   jupyter-events
-    #   langchain
-    #   langchain-core
     #   mkdocs
     #   mkdocs-get-deps
     #   pyyaml-env-tag
+    #   ray
     #   transformers
+    #   uvicorn
     #   wandb
 pyyaml-env-tag==0.1
     # via mkdocs
@@ -798,6 +854,8 @@ pyzmq==26.4.0
     #   jupyter-client
     #   jupyter-console
     #   jupyter-server
+ray==2.55.1
+    # via -r requirements.in
 referencing==0.36.2
     # via
     #   jsonschema
@@ -807,7 +865,7 @@ regex==2024.11.6
     # via
     #   tiktoken
     #   transformers
-requests[socks]==2.32.3
+requests==2.32.3
     # via
     #   -r requirements.in
     #   bilibili-api
@@ -817,9 +875,8 @@ requests[socks]==2.32.3
     #   google-api-core
     #   huggingface-hub
     #   jupyterlab-server
-    #   langchain
-    #   langsmith
-    #   requests-toolbelt
+    #   openai-agents
+    #   ray
     #   streamlit
     #   tensorflow
     #   tensorflow-datasets
@@ -828,8 +885,6 @@ requests[socks]==2.32.3
     #   transformers
     #   wandb
     #   yfinance
-requests-toolbelt==1.0.0
-    # via langsmith
 retina-face==0.0.17
     # via deepface
 rfc3339-validator==0.1.4
@@ -861,58 +916,57 @@ scipy==1.13.1
     # via
     #   -r requirements.in
     #   airllm
+    #   ray
     #   scikit-learn
 seaborn==0.13.2
     # via -r requirements.in
 send2trash==1.8.3
     # via jupyter-server
-sentry-sdk==2.25.1
-    # via wandb
-setproctitle==1.3.5
-    # via wandb
+setuptools==84.0.0
+    # via
+    #   jupyterlab
+    #   lightning-utilities
+    #   tb-nightly
+    #   tensorflow
+    #   tf-nightly
 six==1.17.0
     # via
     #   astunparse
-    #   docker-pycreds
     #   google-pasta
+    #   opencensus
     #   promise
     #   python-dateutil
     #   rfc3339-validator
-    #   tb-nightly
-    #   tensorboard
     #   tensorflow
     #   tf-nightly
-smmap==5.0.2
-    # via gitdb
+smart-open==8.0.1
+    # via ray
 sniffio==1.3.1
     # via
     #   anyio
     #   openai
-soupsieve==2.6
+soupsieve==2.9
     # via beautifulsoup4
-sqlalchemy==2.0.40
-    # via langchain
 stack-data==0.6.3
     # via ipython
-streamlit==1.44.1
+starlette==1.7.0
+    # via
+    #   fastapi
+    #   ray
+    #   streamlit
+streamlit==1.64.0
     # via -r requirements.in
 sympy==1.13.1
     # via torch
 tabulate==0.9.0
     # via -r requirements.in
-tb-nightly==2.19.0a20250218
+tb-nightly==2.20.0a20250717
     # via tf-nightly
-tenacity==9.1.2
-    # via
-    #   langchain-core
-    #   streamlit
-tensorboard==2.19.0
-    # via tensorflow
 tensorboard-data-server==0.7.2
-    # via
-    #   tb-nightly
-    #   tensorboard
-tensorflow==2.19.0
+    # via tb-nightly
+tensorboardx==2.6.5
+    # via ray
+tensorflow==2.21.0
     # via
     #   -r requirements.in
     #   deepface
@@ -921,15 +975,13 @@ tensorflow==2.19.0
     #   tensorflow-text
 tensorflow-datasets==4.9.3
     # via -r requirements.in
-tensorflow-io-gcs-filesystem==0.37.1
-    # via tensorflow
 tensorflow-keras==0.1
     # via -r requirements.in
-tensorflow-metadata==1.17.0
+tensorflow-metadata==0.5.0
     # via tensorflow-datasets
 tensorflow-recommenders==0.7.3
     # via -r requirements.in
-tensorflow-text==2.19.0
+tensorflow-text==2.21.1
     # via -r requirements.in
 termcolor==3.0.1
     # via
@@ -941,7 +993,7 @@ terminado==0.18.1
     # via
     #   jupyter-server
     #   jupyter-server-terminals
-tf-nightly==2.20.0.dev20250405
+tf-nightly==2.22.0.dev20260302
     # via -r requirements.in
 threadpoolctl==3.6.0
     # via scikit-learn
@@ -984,7 +1036,6 @@ tornado==6.4.2
     #   jupyter-server
     #   jupyterlab
     #   notebook
-    #   streamlit
     #   terminado
 tqdm==4.67.1
     # via
@@ -1025,54 +1076,79 @@ triton==3.2.0
     # via torch
 types-python-dateutil==2.9.0.20241206
     # via arrow
-typing-extensions==4.13.1
+types-requests==2.33.0.20260906
+    # via openai-agents
+typing-extensions==4.16.0
     # via
+    #   aiohttp
+    #   aiosignal
     #   altair
     #   anyio
     #   async-lru
     #   beautifulsoup4
     #   etils
+    #   fastapi
+    #   gymnasium
     #   huggingface-hub
     #   iopath
-    #   ipython
-    #   langchain-core
     #   lightning-utilities
     #   mistune
     #   multidict
     #   openai
+    #   openai-agents
+    #   opentelemetry-api
+    #   opentelemetry-exporter-otlp-proto-http
+    #   opentelemetry-sdk
+    #   opentelemetry-semantic-conventions
     #   optree
     #   pydantic
     #   pydantic-core
     #   pyre-extensions
-    #   python-json-logger
     #   referencing
     #   rich
-    #   sqlalchemy
+    #   starlette
     #   streamlit
     #   tensorflow
     #   tf-nightly
     #   torch
     #   typing-inspect
     #   typing-inspection
+    #   uvicorn
+    #   virtualenv
     #   wandb
 typing-inspect==0.9.0
     # via pyre-extensions
-typing-inspection==0.4.0
-    # via pydantic
+typing-inspection==0.4.4
+    # via
+    #   fastapi
+    #   pydantic
 uri-template==1.3.0
     # via jsonschema
 uritemplate==4.1.1
     # via google-api-python-client
 urllib3==2.3.0
     # via
+    #   opentelemetry-exporter-http-transport
     #   requests
-    #   sentry-sdk
-wandb==0.19.9
+    #   types-requests
+uvicorn==0.54.0
+    # via
+    #   ray
+    #   streamlit
+uvloop==0.22.1
+    # via uvicorn
+virtualenv==21.13.0
+    # via ray
+wandb==0.30.0
     # via -r requirements.in
 watchdog==6.0.0
     # via
     #   mkdocs
     #   streamlit
+watchfiles==1.3.0
+    # via
+    #   ray
+    #   uvicorn
 wcwidth==0.2.13
     # via prompt-toolkit
 webcolors==24.11.1
@@ -1084,35 +1160,32 @@ webencodings==0.5.1
 websocket-client==1.8.0
     # via jupyter-server
 websockets==15.0.1
-    # via bilibili-api
+    # via
+    #   bilibili-api
+    #   streamlit
+    #   uvicorn
 werkzeug==3.1.3
     # via
     #   flask
     #   flask-cors
     #   tb-nightly
-    #   tensorboard
 wheel==0.45.1
     # via astunparse
 widgetsnbextension==4.0.13
     # via ipywidgets
 wrapt==1.17.2
     # via
+    #   smart-open
     #   tensorflow
     #   tensorflow-datasets
     #   tf-nightly
 xxhash==3.5.0
-    # via datasets
+    # via
+    #   datasets
+    #   wandb
 yarl==1.19.0
     # via aiohttp
 yfinance==0.2.55
     # via -r requirements.in
 zipp==3.21.0
-    # via
-    #   etils
-    #   importlib-metadata
-    #   importlib-resources
-zstandard==0.23.0
-    # via langsmith
-
-# The following packages are considered to be unsafe in a requirements file:
-# setuptools
+    # via etils
