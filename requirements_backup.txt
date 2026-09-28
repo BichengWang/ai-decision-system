@@ -477,7 +477,7 @@ torchvision==0.14.0
     # via -r requirements.in
 torchx-nightly==2022.11.6
     # via torchrec-nightly
-tornado==6.1
+tornado==6.5.8
     # via
     #   ipykernel
     #   jupyter-client
