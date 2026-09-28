@@ -16,10 +16,13 @@ primary metric uses a one-sided test at ``alpha``.
 """
 from __future__ import annotations
 
+import math
+
 from . import stats
 
 DECISIONS = ("SHIP", "HOLD", "ROLLBACK", "INVALID")
 _DIRECTIONS = {"increase": 1.0, "decrease": -1.0}
+_TYPES = ("proportion", "mean")
 
 
 def _effect(spec: dict, control: dict, treatment: dict, name: str) -> stats.Effect:
@@ -31,22 +34,73 @@ def _effect(spec: dict, control: dict, treatment: dict, name: str) -> stats.Effe
     raise ValueError(f"metric {name!r}: unknown type {spec['type']!r}")
 
 
+def _object(value, where: str) -> dict:
+    if not isinstance(value, dict):
+        raise ValueError(f"{where} must be a JSON object")
+    return value
+
+
+def _number(value, where: str) -> float:
+    # bool is an int subclass; JSON true/false is never a valid measurement.
+    if isinstance(value, bool) or not isinstance(value, (int, float)) or not math.isfinite(value):
+        raise ValueError(f"{where} must be a finite number")
+    return value
+
+
+def _count(value, where: str) -> int:
+    if isinstance(value, bool) or not isinstance(value, int):
+        raise ValueError(f"{where} must be an integer")
+    return value
+
+
 def _validate(summary: dict) -> None:
-    metrics = summary.get("metrics") or {}
+    _object(summary, "experiment summary")
+    metrics = _object(summary.get("metrics"), "'metrics'")
+    for name, spec in metrics.items():
+        _object(spec, f"metric {name!r}")
     primaries = [n for n, s in metrics.items() if s.get("role") == "primary"]
     if len(primaries) != 1:
         raise ValueError("exactly one metric must have role 'primary'")
     for name, spec in metrics.items():
         if spec.get("role") not in ("primary", "guardrail"):
             raise ValueError(f"metric {name!r}: role must be 'primary' or 'guardrail'")
+        if spec.get("type") not in _TYPES:
+            raise ValueError(f"metric {name!r}: type must be 'proportion' or 'mean'")
         if spec.get("direction") not in _DIRECTIONS:
             raise ValueError(f"metric {name!r}: direction must be 'increase' or 'decrease'")
-        if spec["role"] == "guardrail" and not spec.get("margin", -1) >= 0:
-            raise ValueError(f"guardrail {name!r} needs a non-negative 'margin'")
-    for arm in ("control", "treatment"):
-        missing = set(metrics) - set(summary["arms"][arm]["metrics"])
+        if spec["role"] == "guardrail":
+            if "margin" not in spec or _number(spec["margin"], f"guardrail {name!r} margin") < 0:
+                raise ValueError(f"guardrail {name!r} needs a non-negative 'margin'")
+
+    for key in ("alpha", "srm_alpha"):
+        value = _object(summary.get("policy", {}), "'policy'").get(key)
+        if value is not None and not 0 < _number(value, f"policy {key}") < 1:
+            raise ValueError(f"policy {key} must be in (0, 1)")
+    share = _object(summary.get("assignment", {}), "'assignment'").get("expected_treatment_share")
+    if share is not None and not 0 < _number(share, "expected_treatment_share") < 1:
+        raise ValueError("expected_treatment_share must be in (0, 1)")
+
+    arms = _object(summary.get("arms"), "'arms'")
+    for arm_name in ("control", "treatment"):
+        arm = _object(arms.get(arm_name), f"arm {arm_name!r}")
+        units = _count(arm.get("units"), f"arm {arm_name!r} units")
+        if units < 1:
+            raise ValueError(f"arm {arm_name!r} units must be at least 1")
+        observed = _object(arm.get("metrics"), f"arm {arm_name!r} metrics")
+        missing = set(metrics) - set(observed)
         if missing:
-            raise ValueError(f"arm {arm!r} is missing metrics {sorted(missing)}")
+            raise ValueError(f"arm {arm_name!r} is missing metrics {sorted(missing)}")
+        for name, spec in metrics.items():
+            where = f"arm {arm_name!r} metric {name!r}"
+            stat = _object(observed[name], where)
+            if spec["type"] == "proportion":
+                successes = _count(stat.get("successes"), f"{where} successes")
+                if not 0 <= successes <= units:
+                    raise ValueError(f"{where} successes must be between 0 and units")
+            else:
+                _number(stat.get("mean"), f"{where} mean")
+                if _number(stat.get("sd"), f"{where} sd") < 0:
+                    raise ValueError(f"{where} sd must be non-negative")
 
 
 def evaluate(summary: dict) -> dict:
