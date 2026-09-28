@@ -1030,7 +1030,7 @@ torchrec==1.1.0
     # via -r requirements.in
 torchvision==0.21.0
     # via -r requirements.in
-tornado==6.4.2
+tornado==6.5.8
     # via
     #   ipykernel
     #   jupyter-client
