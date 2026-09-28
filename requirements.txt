@@ -72,6 +72,8 @@ attrs==25.3.0
     #   referencing
 babel==2.17.0
     # via jupyterlab-server
+backcall==0.2.0
+    # via ipython
 backoff==2.2.1
     # via -r requirements.in
 beautifulsoup4==4.13.3
@@ -161,7 +163,6 @@ etils==1.5.2
 exceptiongroup==1.2.2
     # via
     #   anyio
-    #   ipython
     #   pytest
 executing==2.2.0
     # via stack-data
@@ -317,7 +318,7 @@ ipykernel==6.29.5
     #   jupyter
     #   jupyter-console
     #   jupyterlab
-ipython==8.18.1
+ipython==8.10.0
     # via
     #   ipykernel
     #   ipywidgets
@@ -692,6 +693,8 @@ pathspec==0.12.1
 peewee==3.17.9
     # via yfinance
 pexpect==4.9.0
+    # via ipython
+pickleshare==0.7.5
     # via ipython
 pillow==11.1.0
     # via
