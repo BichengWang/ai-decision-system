@@ -178,7 +178,7 @@ jupyterlab-pygments==0.1.2
     # via nbconvert
 jupyterlab-widgets==1.0.0
     # via ipywidgets
-keras==2.4.3
+keras==3.12.4
     # via -r requirements.in
 keras-preprocessing==1.1.2
     # via tensorflow-gpu
