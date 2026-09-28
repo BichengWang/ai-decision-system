@@ -132,7 +132,7 @@ ipykernel==5.5.3
     #   jupyter-console
     #   notebook
     #   qtconsole
-ipython==7.22.0
+ipython==8.10.0
     # via
     #   ipykernel
     #   ipywidgets
@@ -178,7 +178,7 @@ jupyterlab-pygments==0.1.2
     # via nbconvert
 jupyterlab-widgets==1.0.0
     # via ipywidgets
-keras==2.4.3
+keras==3.12.4
     # via -r requirements.in
 keras-preprocessing==1.1.2
     # via tensorflow-gpu
@@ -477,7 +477,7 @@ torchvision==0.14.0
     # via -r requirements.in
 torchx-nightly==2022.11.6
     # via torchrec-nightly
-tornado==6.1
+tornado==6.5.8
     # via
     #   ipykernel
     #   jupyter-client
@@ -535,7 +535,7 @@ websocket-client==1.4.2
     # via
     #   docker
     #   torchrec-nightly
-werkzeug==1.0.1
+werkzeug==3.1.6
     # via tensorboard
 wheel==0.36.2
     # via
