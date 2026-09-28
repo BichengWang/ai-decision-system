@@ -132,7 +132,7 @@ ipykernel==5.5.3
     #   jupyter-console
     #   notebook
     #   qtconsole
-ipython==7.22.0
+ipython==8.10.0
     # via
     #   ipykernel
     #   ipywidgets
