@@ -535,7 +535,7 @@ websocket-client==1.4.2
     # via
     #   docker
     #   torchrec-nightly
-werkzeug==1.0.1
+werkzeug==3.1.6
     # via tensorboard
 wheel==0.36.2
     # via
