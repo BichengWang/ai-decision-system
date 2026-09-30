@@ -814,6 +814,7 @@ pygments==2.19.1
     #   ipython
     #   jupyter-console
     #   nbconvert
+    #   pytest
     #   rich
 pyparsing==3.2.3
     # via
@@ -823,7 +824,7 @@ pyre-extensions==0.0.32
     # via torchrec
 pysocks==1.7.1
     # via requests
-pytest==8.3.5
+pytest==9.1.1
     # via
     #   -r requirements.in
     #   pytest-cov
