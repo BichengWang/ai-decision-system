@@ -5,9 +5,9 @@ class TwoSum:
     def two_sum(self, nums: List[int], target: int) -> List[int]:
         nums_dict = dict()
         for i, num in enumerate(nums):
-            nums_dict[num] = i
             if target - num in nums_dict:
                 return [nums_dict[target - num], i]
+            nums_dict[num] = i
         return [-1, -1]
 
 

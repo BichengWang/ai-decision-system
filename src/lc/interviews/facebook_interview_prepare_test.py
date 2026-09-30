@@ -1,14 +1,14 @@
 from unittest import TestCase
 
-from src.leetcode.interviews import facebook_interview_prepare
-from src.leetcode.interviews.facebook_interview_prepare import lowestCommonAncestor
+from src.lc.interviews import robinhood_interviews
+from src.lc.interviews.facebook_interview_prepare import lowestCommonAncestor
 
 
 class Test(TestCase):
     def test_exact_match(self):
         self.assertEqual(
             (['FB,B,0100,UUID1'], ['FB,S,0100,UUID1']),
-            facebook_interview_prepare.delete1([
+            robinhood_interviews.delete1([
                 "AAPL,B,0100,UUID1",
                 "FB,B,0100,UUID1",
             ], [

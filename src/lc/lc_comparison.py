@@ -1,4 +1,4 @@
-from src.leetcode.lc_recorder import LCRecorder
+from src.lc.lc_recorder import LCRecorder
 from src.utils.general import pd_utils
 from datetime import date
 import logging
