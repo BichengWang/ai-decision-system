@@ -44,13 +44,13 @@ jobs:
             [[ "$object_id" =~ ^([0-9a-f]{40}|[0-9a-f]{64})$ ]]
           done
       - name: Read the identified source commit
-        uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262 # v4.4.0
+        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
         with:
           ref: ${{ inputs.source_commit }}
           path: source
           persist-credentials: false
       - name: Read the existing standalone export
-        uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262 # v4.4.0
+        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
         with:
           ref: ${{ inputs.export_commit }}
           path: candidate
