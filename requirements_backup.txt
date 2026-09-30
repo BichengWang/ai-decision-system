@@ -461,7 +461,7 @@ toml==0.10.2
     # via
     #   pytest
     #   usort
-torch==1.13.0
+torch==2.14.0
     # via
     #   -r requirements.in
     #   torchaudio
