@@ -520,7 +520,7 @@ typing-inspect==0.8.0
     #   libcst
     #   pyre-extensions
     #   torchrec-nightly
-urllib3==1.26.4
+urllib3==2.8.0
     # via
     #   docker
     #   requests
