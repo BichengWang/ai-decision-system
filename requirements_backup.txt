@@ -257,7 +257,7 @@ nvidia-cuda-runtime-cu11==11.7.99
     # via torch
 # nvidia-cudnn-cu11==8.5.0.96
     # via torch
-oauthlib==3.1.0
+oauthlib==4.0.0
     # via requests-oauthlib
 opt-einsum==3.3.0
     # via tensorflow-gpu
