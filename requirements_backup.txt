@@ -279,7 +279,7 @@ parso==0.8.2
     # via jedi
 pathspec==0.10.1
     # via trailrunner
-pexpect==4.8.0
+pexpect==4.9.0
     # via ipython
 pickleshare==0.7.5
     # via ipython
