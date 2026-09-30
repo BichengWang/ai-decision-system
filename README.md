@@ -32,3 +32,6 @@ The root MIT license applies to the existing research material it covers. RELIA
 has a separate [licensing status](ai-workflows/ai-decision-reliability/LICENSE)
 and currently grants no license; its intended Apache-2.0 release remains subject
 to rights clearance.
+
+Setup, environments, the directory layout and the decision-loop quick start for the
+`src/` research material are in the [setup guide](scripts/README.md).
