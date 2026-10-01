@@ -1,6 +1,6 @@
 from unittest import TestCase
 
-from src.leetcode.interviews import robinhood_interviews
+from src.lc.interviews import robinhood_interviews
 
 
 class Test(TestCase):
@@ -39,4 +39,3 @@ class Test(TestCase):
                 "FB,S,0100,UUID1",
             ]),
         )
-

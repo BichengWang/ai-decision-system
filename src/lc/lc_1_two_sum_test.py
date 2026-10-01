@@ -1,5 +1,6 @@
 import unittest
-from src.leetcode.lc_1_two_sum import TwoSum
+from src.lc.lc_1_two_sum import TwoSum
+
 
 class TestTwoSum(unittest.TestCase):
     def setUp(self):
@@ -32,11 +33,11 @@ class TestTwoSum(unittest.TestCase):
 
     def test_large_input(self):
         nums = list(range(10**6))
-        target = 2 * (10**6)
+        target = 2 * (10**6) - 3  # (10**6 - 2) + (10**6 - 1)
         self.assertEqual(self.ts.two_sum(nums, target), [10**6 - 2, 10**6 - 1])
 
+
 # Run the test suite from the root project folder like this:
-# $ python3 -m unittest src/leetcode/lc_1_two_sum_test.py
+# $ python3 -m unittest src/lc/lc_1_two_sum_test.py
 if __name__ == "__main__":
     unittest.main()
-

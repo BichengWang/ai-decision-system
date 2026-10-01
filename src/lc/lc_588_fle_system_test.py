@@ -1,6 +1,6 @@
 from unittest import TestCase
 
-from src.leetcode import lc_588_file_system
+from src.lc import lc_588_file_system
 
 
 class TestFileSystem(TestCase):

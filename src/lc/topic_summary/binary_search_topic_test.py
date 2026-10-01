@@ -1,6 +1,6 @@
 from unittest import TestCase
 
-from src.leetcode.topic_summary.binary_search_topic import BinarySearch
+from src.lc.topic_summary.binary_search_topic import BinarySearch
 
 
 class TestBinary1(TestCase):
