@@ -185,7 +185,7 @@ farama-notifications==0.0.6
     # via gymnasium
 fastapi==0.141.1
     # via ray
-fastjsonschema==2.21.1
+fastjsonschema==2.22.2
     # via nbformat
 fbgemm-gpu==1.1.0
     # via torchrec
