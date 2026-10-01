@@ -48,7 +48,7 @@ exceptiongroup==1.2.2
 executing==2.1.0
 fastapi==0.115.0
 fastjsonschema==2.20.0
-fbgemm_gpu==0.8.0+cu124
+fbgemm_gpu==1.9.0
 filelock==3.16.1
 flake8==7.1.1
 flatbuffers==24.3.25
