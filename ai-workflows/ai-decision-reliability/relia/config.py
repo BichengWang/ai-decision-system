@@ -30,6 +30,9 @@ PROHIBITED_FIELDS = ("zip_income_proxy", "device_price_tier", "inferred_age_band
 SPLIT_FRACTIONS = (0.60, 0.20, 0.20)   # train / calibration / test by simulated time
 
 # Ranking task
+# The ranker may read only these record fields. `qid` and `day` (identifier, time) and `relevance`
+# (the label) are read by evaluation code, never by the feature builder.
+RANKING_AUTHORIZED_FEATURES = ("sim", "pop", "fresh", "q_intent", "c_type")
 N_RANK_QUERIES = 4000
 RANK_CANDIDATES = 20
 RANK_K = 10

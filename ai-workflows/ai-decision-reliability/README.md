@@ -72,7 +72,7 @@ artifacts and [`docs/TECHNICAL_REPORT.md`](docs/TECHNICAL_REPORT.md) for their i
 Local validation of candidate 0.1.5 records a primary nine-gate pass and
 `REJECT_UPDATE_KEEP_CURRENT_REFERENCE` for the guarded update: the worst-of-five-seed
 log-loss-delta and worst-slice-ECE gates fail against seed-matched current references.
-Ranking is explicitly excluded from that offer-only update. The full 35-test suite passed,
+Ranking is explicitly excluded from that offer-only update. The full 38-test suite passed,
 and two explicit fresh local runs produced identical result and manifest bytes. These are
 development checks, not unaffiliated reproduction or release acceptance. The first development run was blocked;
 its preserved historical summary is in [`docs/dev-runs/`](docs/dev-runs/).
