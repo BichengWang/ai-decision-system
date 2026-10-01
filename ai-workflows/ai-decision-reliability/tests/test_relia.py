@@ -3,11 +3,11 @@ from pathlib import Path
 
 import numpy as np
 import pytest
-from relia import config as C, policy
+from relia import config as C, pipeline, policy
 from relia import run as run_module
-from relia.generator import generate_sessions, dataset_hash
+from relia.generator import generate_sessions, generate_ranking, dataset_hash
 from relia.splits import time_group_split, assert_no_leakage
-from relia.guards import GuardedRecords, build_features
+from relia.guards import GuardedRecords, build_features, build_ranking_features
 from relia.metrics import ece, brier, log_loss, psi, ndcg_at_k, worst_slice_ece
 from relia.gates import evaluate_gates
 from relia.policy import allowed_mask, count_constraint_violations, critical_review_fixture_report
@@ -37,6 +37,36 @@ def test_guard_counts_any_unauthorized_read_and_features_never_touch_them():
     for key in ("true_p", "response", "session_id"):
         _ = rec[key]
     assert rec.prohibited_access_count == 4
+
+
+def test_ranking_guard_counts_unauthorized_reads_and_features_never_touch_them():
+    r = generate_ranking(n_queries=40)
+    assert not {"qid", "day", "relevance"} & set(C.RANKING_AUTHORIZED_FEATURES)
+    rec = GuardedRecords(r, authorized=C.RANKING_AUTHORIZED_FEATURES)
+    X = build_ranking_features(rec)
+    assert X.shape == (len(r["qid"]), 6)
+    assert rec.prohibited_access_count == 0
+    for key in ("relevance", "qid", "day"):
+        _ = rec[key]
+    assert rec.prohibited_access_count == 3
+
+
+def test_guarded_ranking_features_equal_the_pre_guard_matrix():
+    r = generate_ranking(n_queries=40)
+    expected = np.column_stack([r["sim"], r["pop"], r["fresh"], (r["q_intent"] == r["c_type"]).astype(float),
+                               r["q_intent"], r["c_type"]])
+    got = build_ranking_features(GuardedRecords(r, authorized=C.RANKING_AUTHORIZED_FEATURES))
+    assert got.dtype == expected.dtype and np.array_equal(got, expected)
+
+
+def test_ranking_eval_stops_when_the_feature_builder_reads_the_label(monkeypatch):
+    def leaky(records):
+        X = build_ranking_features(records)
+        return np.column_stack([X, np.asarray(records["relevance"], dtype=float)])
+
+    monkeypatch.setattr(pipeline, "build_ranking_features", leaky)
+    with pytest.raises(RuntimeError, match="relevance"):
+        pipeline._ranking_eval(C.TRAIN_SEEDS[0])
 
 
 def test_logged_policy_respects_constraints():
