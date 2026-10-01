@@ -44,6 +44,12 @@ def render_markdown(report: dict, digest: str) -> str:
                  f"{m['status']} |")
     L.append("\nImprovement is signed so that positive values are desirable. Guardrail bounds are "
              "one-sided and Bonferroni-adjusted across guardrails.")
+    for m in report["metrics"]:
+        if "adjustment" in m:
+            a = m["adjustment"]
+            L.append(f"\nCUPED on `{m['metric']}`: theta {_fmt(a['theta'])}; unadjusted difference {_fmt(a['raw_diff'])} "
+                     f"(SE {_fmt(a['raw_se'])}), adjusted {_fmt(m['diff'])} (SE {_fmt(m['se'])}); "
+                     f"variance reduction {a['variance_reduction']:.1%}.")
     return "\n".join(L) + "\n"
 
 

@@ -13,6 +13,10 @@ Rules, applied in order:
 
 Guardrail bounds are one-sided and Bonferroni-adjusted across guardrails; the
 primary metric uses a one-sided test at ``alpha``.
+
+A metric may carry a pre-experiment ``covariate`` summary in both arms. It is then
+estimated with CUPED regression adjustment (see :func:`expgate.stats.cuped_effect`),
+which narrows the interval without moving the decision rules above.
 """
 from __future__ import annotations
 
@@ -25,12 +29,28 @@ _DIRECTIONS = {"increase": 1.0, "decrease": -1.0}
 _TYPES = ("proportion", "mean")
 
 
-def _effect(spec: dict, control: dict, treatment: dict, name: str) -> stats.Effect:
+def _covariate(stat: dict) -> stats.Covariate:
+    cov = stat["covariate"]
+    return stats.Covariate(cov["mean"], cov["sd"], cov["corr"])
+
+
+def _effect(spec: dict, control: dict, treatment: dict, name: str):
+    """Return ``(Effect, adjustment)``; ``adjustment`` is None unless a covariate was supplied."""
     c, t = control["metrics"][name], treatment["metrics"][name]
+    adjusted = "covariate" in c
     if spec["type"] == "proportion":
-        return stats.proportion_effect(c["successes"], control["units"], t["successes"], treatment["units"])
+        if adjusted:
+            return stats.cuped_effect(
+                c["successes"] / control["units"], stats.proportion_variance(c["successes"], control["units"]),
+                control["units"], _covariate(c),
+                t["successes"] / treatment["units"], stats.proportion_variance(t["successes"], treatment["units"]),
+                treatment["units"], _covariate(t))
+        return stats.proportion_effect(c["successes"], control["units"], t["successes"], treatment["units"]), None
     if spec["type"] == "mean":
-        return stats.mean_effect(c["mean"], c["sd"], control["units"], t["mean"], t["sd"], treatment["units"])
+        if adjusted:
+            return stats.cuped_effect(c["mean"], c["sd"] ** 2, control["units"], _covariate(c),
+                                      t["mean"], t["sd"] ** 2, treatment["units"], _covariate(t))
+        return stats.mean_effect(c["mean"], c["sd"], control["units"], t["mean"], t["sd"], treatment["units"]), None
     raise ValueError(f"metric {name!r}: unknown type {spec['type']!r}")
 
 
@@ -101,6 +121,19 @@ def _validate(summary: dict) -> None:
                 _number(stat.get("mean"), f"{where} mean")
                 if _number(stat.get("sd"), f"{where} sd") < 0:
                     raise ValueError(f"{where} sd must be non-negative")
+            if "covariate" in stat:
+                cov = _object(stat["covariate"], f"{where} covariate")
+                _number(cov.get("mean"), f"{where} covariate mean")
+                if _number(cov.get("sd"), f"{where} covariate sd") <= 0:
+                    raise ValueError(f"{where} covariate sd must be positive")
+                if not -1 <= _number(cov.get("corr"), f"{where} covariate corr") <= 1:
+                    raise ValueError(f"{where} covariate corr must be in [-1, 1]")
+                if units < 2:
+                    raise ValueError(f"{where} needs at least 2 units for a covariate adjustment")
+    for name in metrics:
+        have = ["covariate" in arms[a]["metrics"][name] for a in ("control", "treatment")]
+        if have[0] != have[1]:
+            raise ValueError(f"metric {name!r}: supply the covariate in both arms or in neither")
 
 
 def evaluate(summary: dict) -> dict:
@@ -123,7 +156,7 @@ def evaluate(summary: dict) -> dict:
     primary_status = None
     guard_status = {}
     for name, spec in sorted(summary["metrics"].items(), key=lambda kv: (kv[1]["role"] != "primary", kv[0])):
-        eff = _effect(spec, control, treatment, name)
+        eff, adjustment = _effect(spec, control, treatment, name)
         sign = _DIRECTIONS[spec["direction"]]
         # "improvement" is positive when treatment moves the metric the desired way.
         improvement = sign * eff.diff
@@ -132,6 +165,8 @@ def evaluate(summary: dict) -> dict:
         row = {"metric": name, "role": spec["role"], "type": spec["type"], "direction": spec["direction"],
                "control": eff.control, "treatment": eff.treatment, "diff": eff.diff, "se": eff.se,
                "improvement": improvement, "improvement_bounds": [lo, hi], "z": z}
+        if adjustment is not None:
+            row["adjustment"] = adjustment
         if spec["role"] == "primary":
             status = "IMPROVED" if lo > 0 else ("DEGRADED" if hi < 0 else "INCONCLUSIVE")
             primary_status = status
