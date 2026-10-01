@@ -69,9 +69,19 @@ compile:
 env:
 	python3 -m venv venv
 
+# Lint only what the baseline covers; the wider src/ tree has ~1300 legacy findings.
+baseline_lint := tests $(wildcard src/lc/*_test.py src/lc/*/*_test.py)
+
+.PHONY: lint
+lint:
+	python3 -m flake8 $(baseline_lint)
+
+# Baseline check for the research workbench (see [tool.pytest.ini_options] in pyproject.toml).
+# Needs: pip install -c requirements.txt pytest pytest-custom-exit-code flake8 pandas tabulate
+# FILE_NAME=<file> runs one file under tests/ instead of the whole baseline.
 .PHONY: test
 test: clean lint
-	SIM_TEST_MODE=true $(pytest) -k "not personal_transport_e2e" tests/$(file_name) $(pytest_extra_args)
+	SIM_TEST_MODE=true $(pytest) -k "not personal_transport_e2e" $(if $(FILE_NAME),tests/$(FILE_NAME),) $(pytest_extra_args)
 
 .PHONY: all_test
 all_test: test

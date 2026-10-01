@@ -90,3 +90,14 @@ packages = ["src"]
 
 [tool.flake8]
 max-line-length = 160
+
+[tool.pytest.ini_options]
+# Baseline for the legacy research workbench: tests that run on a clean checkout with no
+# credentials, network, browser or GPU. Deliberately NOT collected (they need a service):
+#   src/fin/broker_interact/   Interactive Brokers gateway (ib_insync / ibapi)
+#   src/utils/web/chrome_driver/   Selenium and a Chrome install
+#   src/ml/env_test/   torch / torchvision / transformers environment probes
+# ai-workflows/* projects have their own environments and CI.
+testpaths = ["tests", "src/lc"]
+# py.test (used by `make test`) does not put the repo root on sys.path; `python -m pytest` does.
+pythonpath = ["."]

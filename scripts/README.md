@@ -97,6 +97,24 @@ python src/rl-system/main.py
 python src/agents/agent_financial_analysis.py
 ```
 
+## Baseline check
+
+```shell
+pip install -c requirements.txt pytest pytest-custom-exit-code flake8 pandas tabulate
+make test
+```
+
+`make test` lints and runs the tests that need no credentials, network, browser or GPU:
+`tests/` and `src/lc/`. Use Python 3.11: the pinned pandas 1.5.3 has no wheels for 3.12+.
+`FILE_NAME=<file> make test` runs one file under `tests/`. CI runs the same command
+(workflow `Research baseline`) on pull requests that touch `src/`, `tests/` or the
+dependency files.
+
+Not collected, because they need a service; run them by path when you have it:
+
+- `src/fin/broker_interact/` needs an Interactive Brokers gateway.
+- `src/utils/web/chrome_driver/` needs Selenium and Chrome.
+- `src/ml/env_test/` probes a torch / GPU environment.
 ## Makefile
 
 ```shell
