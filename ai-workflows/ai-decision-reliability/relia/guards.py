@@ -29,6 +29,14 @@ class GuardedRecords:
         return len(next(iter(self._data.values())))
 
 
+def build_ranking_features(records):
+    """Ranker feature matrix: sim, pop, fresh, intent-match, q_intent, c_type.
+
+    Reads only C.RANKING_AUTHORIZED_FEATURES through `records`, so a guarded view counts any other read."""
+    sim, pop, fresh, q_intent, c_type = (np.asarray(records[k], dtype=float) for k in C.RANKING_AUTHORIZED_FEATURES)
+    return np.column_stack([sim, pop, fresh, (q_intent == c_type).astype(float), q_intent, c_type])
+
+
 def build_features(records, idx=None, discount_override=None):
     cols = []
     for name in C.AUTHORIZED_FEATURES:

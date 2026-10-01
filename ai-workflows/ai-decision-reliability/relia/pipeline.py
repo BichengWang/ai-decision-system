@@ -5,7 +5,7 @@ import numpy as np
 
 from . import config as C
 from .generator import generate_sessions, generate_ranking, dataset_hash
-from .guards import GuardedRecords, build_features
+from .guards import GuardedRecords, build_features, build_ranking_features
 from .metrics import log_loss, brier, ece, worst_slice_ece, murphy_decomposition, ndcg_at_k, mrr
 from .models import CalibratedModel, make_baseline, make_candidate, make_ranker
 from .monitoring import drift_report
@@ -33,8 +33,12 @@ def _ranking_eval(seed):
     qday = r["day"]
     t1, t2 = np.quantile(qday, [0.6, 0.8])
     tr, te = qday < t1, qday >= t2
-    X = np.column_stack([r["sim"], r["pop"], r["fresh"], (r["q_intent"] == r["c_type"]).astype(float),
-                         r["q_intent"], r["c_type"]])
+    rec = GuardedRecords(r, authorized=C.RANKING_AUTHORIZED_FEATURES)
+    X = build_ranking_features(rec)
+    if rec.prohibited_access_count:
+        # Not a release-gate input (that would change specification 0.1.3's results); fail closed instead.
+        bad = sorted({k for k in rec.access_log if k not in C.RANKING_AUTHORIZED_FEATURES})
+        raise RuntimeError(f"ranking feature builder read unauthorized fields: {bad}")
     out = {}
     for kind in ("baseline", "candidate"):
         m = make_ranker(kind, seed).fit(X[tr], r["relevance"][tr])
