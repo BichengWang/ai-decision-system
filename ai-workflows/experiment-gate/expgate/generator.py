@@ -9,6 +9,7 @@ from __future__ import annotations
 
 import random
 from dataclasses import dataclass
+from math import sqrt
 
 SEED = 20260924
 
@@ -23,6 +24,10 @@ class Scenario:
     refund: tuple[float, float] = (0.020, 0.020)
     latency_ms: tuple[float, float] = (40.0, 40.0)
     latency_sd: float = 12.0
+    # Set to simulate a revenue experiment whose summary carries a pre-experiment covariate.
+    covariate_corr: float | None = None
+    revenue: tuple[float, float] = (20.0, 20.0)
+    revenue_sd: float = 8.0
 
 
 SCENARIOS = {
@@ -36,6 +41,10 @@ SCENARIOS = {
                            conversion=(0.100, 0.088)),
     "srm": Scenario("Assignment bug sends 53% of traffic to treatment",
                     conversion=(0.100, 0.112), observed_treatment_share=0.53),
+    # Lift 0.4 is sized so the adjusted analysis has about 80% power (unadjusted: about 47%). At this
+    # fixed seed the treatment arm's pre-period covariate happens to run high, which inflates the raw lift.
+    "cuped": Scenario("Real revenue lift of 0.4; a chance covariate imbalance inflates the raw estimate",
+                      units=4_000, covariate_corr=0.8, revenue=(20.0, 20.4)),
 }
 
 METRICS = {
@@ -43,6 +52,27 @@ METRICS = {
     "refund_rate": {"type": "proportion", "role": "guardrail", "direction": "decrease", "margin": 0.003},
     "latency_ms": {"type": "mean", "role": "guardrail", "direction": "decrease", "margin": 2.0},
 }
+
+
+METRICS_REVENUE = {
+    "revenue_per_user": {"type": "mean", "role": "primary", "direction": "increase"},
+}
+
+
+def _arm_revenue(rng: random.Random, n: int, mean: float, sd: float, corr: float) -> dict:
+    """Revenue per user with a pre-period covariate (same mean and sd) correlated ``corr`` with it."""
+    sx = sxx = sy = syy = sxy = 0.0
+    for _ in range(n):
+        x = rng.gauss(20.0, sd)
+        y = mean + corr * (x - 20.0) + sqrt(1 - corr ** 2) * sd * rng.gauss(0, 1)
+        sx, sxx, sy, syy, sxy = sx + x, sxx + x * x, sy + y, syy + y * y, sxy + x * y
+    mx, my = sx / n, sy / n
+    vx, vy = (sxx - n * mx * mx) / (n - 1), (syy - n * my * my) / (n - 1)
+    cov = (sxy - n * mx * my) / (n - 1)
+    return {"units": n, "metrics": {"revenue_per_user": {
+        "mean": round(my, 6), "sd": round(sqrt(vy), 6),
+        "covariate": {"mean": round(mx, 6), "sd": round(sqrt(vx), 6), "corr": round(cov / sqrt(vx * vy), 6)},
+    }}}
 
 
 def _arm(rng: random.Random, n: int, conv: float, refund: float, lat: float, lat_sd: float) -> dict:
@@ -73,6 +103,18 @@ def generate(name: str, seed: int = SEED) -> dict:
     share = s.treatment_share if s.observed_treatment_share is None else s.observed_treatment_share
     n_t = round(s.units * share)
     n_c = s.units - n_t
+    if s.covariate_corr is not None:
+        return {
+            "experiment": name,
+            "description": s.description,
+            "seed": seed,
+            "assignment": {"expected_treatment_share": s.treatment_share},
+            "metrics": METRICS_REVENUE,
+            "arms": {
+                "control": _arm_revenue(rng, n_c, s.revenue[0], s.revenue_sd, s.covariate_corr),
+                "treatment": _arm_revenue(rng, n_t, s.revenue[1], s.revenue_sd, s.covariate_corr),
+            },
+        }
     return {
         "experiment": name,
         "description": s.description,
