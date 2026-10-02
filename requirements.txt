@@ -185,9 +185,9 @@ farama-notifications==0.0.6
     # via gymnasium
 fastapi==0.141.1
     # via ray
-fastjsonschema==2.21.1
+fastjsonschema==2.22.2
     # via nbformat
-fbgemm-gpu==1.1.0
+fbgemm-gpu==1.9.0
     # via torchrec
 filelock==4.0.4
     # via
@@ -1051,7 +1051,7 @@ torchrec==1.1.0
     # via -r requirements.in
 torchvision==0.29.0
     # via -r requirements.in
-tornado==6.5.8
+tornado==6.5.10
     # via
     #   ipykernel
     #   jupyter-client
@@ -1177,7 +1177,7 @@ wcwidth==0.2.13
     # via prompt-toolkit
 webcolors==24.11.1
     # via jsonschema
-webencodings==0.5.1
+webencodings==0.6.1
     # via
     #   bleach
     #   tinycss2
