@@ -50,7 +50,9 @@ anyio==4.14.2
     #   streamlit
     #   watchfiles
 argon2-cffi==23.1.0
-    # via jupyter-server
+    # via
+    #   jupyter-server
+    #   notebook
 argon2-cffi-bindings==21.2.0
     # via argon2-cffi
 array-record==0.5.1
@@ -329,11 +331,14 @@ ipykernel==6.29.5
     #   jupyter
     #   jupyter-console
     #   jupyterlab
+    #   notebook
 ipython==8.10.0
     # via
     #   ipykernel
     #   ipywidgets
     #   jupyter-console
+ipython-genutils==0.2.0
+    # via notebook
 ipywidgets==8.1.5
     # via jupyter
 isoduration==20.11.0
@@ -353,6 +358,7 @@ jinja2==3.1.6
     #   jupyterlab-server
     #   mkdocs
     #   nbconvert
+    #   notebook
     #   pydeck
     #   torch
 jiter==0.9.0
@@ -380,6 +386,7 @@ jupyter-client==8.6.3
     #   jupyter-console
     #   jupyter-server
     #   nbclient
+    #   notebook
 jupyter-console==6.6.3
     # via jupyter
 jupyter-core==5.7.2
@@ -392,6 +399,7 @@ jupyter-core==5.7.2
     #   nbclient
     #   nbconvert
     #   nbformat
+    #   notebook
 jupyter-events==0.12.0
     # via jupyter-server
 jupyter-lsp==2.2.5
@@ -401,20 +409,15 @@ jupyter-server==2.15.0
     #   jupyter-lsp
     #   jupyterlab
     #   jupyterlab-server
-    #   notebook
     #   notebook-shim
 jupyter-server-terminals==0.5.3
     # via jupyter-server
 jupyterlab==4.5.11
-    # via
-    #   jupyter
-    #   notebook
+    # via jupyter
 jupyterlab-pygments==0.3.0
     # via nbconvert
 jupyterlab-server==2.28.1
-    # via
-    #   jupyterlab
-    #   notebook
+    # via jupyterlab
 jupyterlab-widgets==3.0.13
     # via ipywidgets
 keras==3.12.4
@@ -509,21 +512,23 @@ nbconvert==7.16.6
     # via
     #   jupyter
     #   jupyter-server
+    #   notebook
 nbformat==5.10.4
     # via
     #   jupyter-server
     #   nbclient
     #   nbconvert
+    #   notebook
 nest-asyncio==1.6.0
-    # via ipykernel
+    # via
+    #   ipykernel
+    #   notebook
 networkx==3.2.1
     # via torch
-notebook==7.5.7
+notebook==6.4.12
     # via jupyter
 notebook-shim==0.2.4
-    # via
-    #   jupyterlab
-    #   notebook
+    # via jupyterlab
 numpy==1.26.4
     # via
     #   -r requirements.in
@@ -737,6 +742,7 @@ portalocker==3.1.1
 prometheus-client==0.21.1
     # via
     #   jupyter-server
+    #   notebook
     #   opentelemetry-exporter-prometheus
     #   ray
 promise==2.3
@@ -876,6 +882,7 @@ pyzmq==26.4.0
     #   jupyter-client
     #   jupyter-console
     #   jupyter-server
+    #   notebook
 ray==2.55.1
     # via -r requirements.in
 referencing==0.36.2
@@ -942,7 +949,9 @@ scipy==1.13.1
 seaborn==0.13.2
     # via -r requirements.in
 send2trash==1.8.3
-    # via jupyter-server
+    # via
+    #   jupyter-server
+    #   notebook
 setuptools==84.0.0
     # via
     #   jupyterlab
@@ -1015,6 +1024,7 @@ terminado==0.18.1
     # via
     #   jupyter-server
     #   jupyter-server-terminals
+    #   notebook
 tf-nightly==2.22.0.dev20260302
     # via -r requirements.in
 threadpoolctl==3.6.0
@@ -1089,6 +1099,7 @@ traitlets==5.14.3
     #   nbclient
     #   nbconvert
     #   nbformat
+    #   notebook
 transformers==5.10.1
     # via
     #   -r requirements.in
