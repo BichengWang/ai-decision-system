@@ -28,6 +28,7 @@ IMPLEMENTATION_RE = re.compile(r"^Implementation run: ([A-Za-z0-9._/-]+)$", re.M
 CHECK_WORKFLOWS = {
     "Delivery policy": "Delivery policy",
     "RELIA required": "RELIA CI",
+    "src baseline": "Research baseline",
     "test (3.11)": "Experiment gate CI",
     "test (3.13)": "Experiment gate CI",
 }
@@ -141,6 +142,17 @@ def required_checks(paths):
         for path in paths
     ):
         required.update({"test (3.11)", "test (3.13)"})
+    # Keep this aligned with the path filters in src-baseline.yml. Root setup
+    # changes affect the research environment even when no src/ file changes.
+    if any(
+        path.startswith(("src/", "tests/"))
+        or path in {
+            "pyproject.toml", "requirements.txt", "setup.cfg", "Makefile",
+            ".github/workflows/src-baseline.yml",
+        }
+        for path in paths
+    ):
+        required.add("src baseline")
     return required
 
 

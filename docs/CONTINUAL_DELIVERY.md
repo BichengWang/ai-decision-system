@@ -5,8 +5,13 @@ The recurring Codex task attached to this repository wakes every 30 minutes. It 
 ## First-run prerequisites
 
 1. Restore `gh auth login -h github.com` and verify `gh auth status` and `gh repo view` from this checkout. Keep credentials in the normal GitHub CLI store; do not place tokens in the repository or the scheduled prompt.
-2. Confirm `main` branch protection requires `Delivery policy` and `RELIA required`, requires branches up to date, and applies to administrators. The controller queries these settings before any merge. Confirm the experiment-gate check names are `test (3.11)` and `test (3.13)` on a PR that changes that project.
+2. Confirm `main` branch protection requires `Delivery policy` and `RELIA required`, requires branches up to date, and applies to administrators. The controller queries these settings before any merge. Confirm the experiment-gate check names are `test (3.11)` and `test (3.13)` on a PR that changes that project, and `src baseline` from `Research baseline` on a PR that changes the research workbench.
 3. Merge P-001 under the existing human process first. Pilot the new loop on P-002 and P-003, inspect their review receipts and CI results, and only then let the task pursue the full daily target. A schedule may run before these prerequisites, but it must report the blocker and make no merge.
+
+The controller requires `src baseline` for PRs touching `src/`, root `tests/`,
+`pyproject.toml`, `requirements.txt`, `setup.cfg`, `Makefile`, or
+`.github/workflows/src-baseline.yml`, matching that workflow's path filters.
+Missing, skipped, pending, failed, or wrongly attributed baseline checks block merging.
 
 ## Each wakeup
 

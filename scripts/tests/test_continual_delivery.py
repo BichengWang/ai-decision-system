@@ -24,7 +24,10 @@ def pr(**changes):
         "mergeStateStatus": "CLEAN", "body": "Closes #42\n\nImplementation run: implement-42",
         "labels": [{"name": delivery.MANAGED}],
         "files": [{"path": "src/utils/general/example.py"}],
-        "statusCheckRollup": [{"name": "Delivery policy", "conclusion": "SUCCESS", "workflowName": "Delivery policy"}],
+        "statusCheckRollup": [
+            {"name": "Delivery policy", "conclusion": "SUCCESS", "workflowName": "Delivery policy"},
+            {"name": "src baseline", "conclusion": "SUCCESS", "workflowName": "Research baseline"},
+        ],
     }
     result.update(changes)
     return result
@@ -68,16 +71,25 @@ class EvaluationTests(unittest.TestCase):
         self.assertTrue(any("review" in item for item in delivery.evaluate(pr(), [own], [])))
 
     def test_failed_and_missing_checks_block(self):
-        self.assertTrue(delivery.evaluate(pr(statusCheckRollup=[]), [receipt()], []))
-        failed = pr(statusCheckRollup=[{"name": "Delivery policy", "conclusion": "FAILURE"}])
-        self.assertTrue(delivery.evaluate(failed, [receipt()], []))
+        missing = pr()
+        missing["statusCheckRollup"].pop(0)
+        failed = pr()
+        failed["statusCheckRollup"][0]["conclusion"] = "FAILURE"
+        for changed in (missing, failed):
+            self.assertEqual(delivery.evaluate(changed, [receipt()], []), [
+                "required check Delivery policy is missing, failing, or from the wrong workflow",
+            ])
 
     def test_duplicate_or_wrong_workflow_check_blocks(self):
         good = {"name": "Delivery policy", "conclusion": "SUCCESS", "workflowName": "Delivery policy"}
         bad = {"name": "Delivery policy", "conclusion": "FAILURE", "workflowName": "Delivery policy"}
         wrong = {"name": "Delivery policy", "conclusion": "SUCCESS", "workflowName": "untrusted"}
-        self.assertTrue(delivery.evaluate(pr(statusCheckRollup=[good, bad]), [receipt()], []))
-        self.assertTrue(delivery.evaluate(pr(statusCheckRollup=[wrong]), [receipt()], []))
+        for checks in ([good, bad], [wrong]):
+            changed = pr()
+            changed["statusCheckRollup"] = checks + changed["statusCheckRollup"][1:]
+            self.assertEqual(delivery.evaluate(changed, [receipt()], []), [
+                "required check Delivery policy is missing, failing, or from the wrong workflow",
+            ])
 
     def test_merge_conflict_and_behind_block(self):
         for state in ("DIRTY", "BEHIND", "BLOCKED", "UNKNOWN"):
@@ -93,6 +105,56 @@ class EvaluationTests(unittest.TestCase):
         failures = delivery.evaluate(changed, [receipt()], [])
         self.assertTrue(any("test (3.11)" in item for item in failures))
         self.assertTrue(any("test (3.13)" in item for item in failures))
+
+    def test_research_changes_require_baseline(self):
+        paths = (
+            "src/utils/general/example.py", "tests/test_example.py", "pyproject.toml",
+            "requirements.txt", "setup.cfg", "Makefile", ".github/workflows/src-baseline.yml",
+        )
+        for path in paths:
+            with self.subTest(path=path):
+                changed = pr(files=[{"path": path}], statusCheckRollup=[
+                    {"name": "Delivery policy", "conclusion": "SUCCESS", "workflowName": "Delivery policy"},
+                    {"name": "RELIA required", "conclusion": "SUCCESS", "workflowName": "RELIA CI"},
+                ])
+                self.assertEqual(delivery.evaluate(changed, [receipt()], []), [
+                    "required check src baseline is missing, failing, or from the wrong workflow",
+                ])
+                changed["statusCheckRollup"].append({
+                    "name": "src baseline", "conclusion": "SUCCESS", "workflowName": "Research baseline",
+                })
+                self.assertEqual(delivery.evaluate(changed, [receipt()], []), [])
+
+    def test_research_baseline_must_succeed_in_its_own_workflow(self):
+        cases = (
+            {"conclusion": "FAILURE", "workflowName": "Research baseline"},
+            {"conclusion": "SKIPPED", "workflowName": "Research baseline"},
+            {"conclusion": None, "status": "IN_PROGRESS", "workflowName": "Research baseline"},
+            {"conclusion": "SUCCESS", "workflowName": "untrusted"},
+            {"state": "SUCCESS"},  # A status context does not identify the workflow.
+        )
+        for check in cases:
+            with self.subTest(check=check):
+                changed = pr()
+                changed["statusCheckRollup"][1] = {"name": "src baseline", **check}
+                self.assertTrue(any("src baseline" in failure for failure in
+                                    delivery.evaluate(changed, [receipt()], [])))
+        changed = pr()
+        changed["statusCheckRollup"].append({
+            "name": "src baseline", "conclusion": "FAILURE", "workflowName": "Research baseline",
+        })
+        self.assertTrue(any("src baseline" in failure for failure in
+                            delivery.evaluate(changed, [receipt()], [])))
+
+    def test_unrelated_changes_do_not_require_research_baseline(self):
+        for path in ("docs/PROJECT_PLAN.md", "scripts/continual_delivery.py",
+                     "ai-workflows/ai-decision-reliability/pyproject.toml"):
+            with self.subTest(path=path):
+                changed = pr(files=[{"path": path}], statusCheckRollup=[
+                    {"name": "Delivery policy", "conclusion": "SUCCESS", "workflowName": "Delivery policy"},
+                    {"name": "RELIA required", "conclusion": "SUCCESS", "workflowName": "RELIA CI"},
+                ])
+                self.assertEqual(delivery.evaluate(changed, [receipt()], []), [])
 
     def test_attribution_rule(self):
         changed = pr(body="Co-authored-by: Codex")
