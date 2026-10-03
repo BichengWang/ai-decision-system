@@ -24,7 +24,6 @@ aiohttp==3.14.3
     # via
     #   aiohttp-cors
     #   bilibili-api
-    #   datasets
     #   fsspec
     #   ray
 aiohttp-cors==0.8.1
@@ -141,7 +140,7 @@ cuda-toolkit==13.0.3.0
     # via torch
 cycler==0.12.1
     # via matplotlib
-datasets==3.5.0
+datasets==5.0.1
     # via -r requirements.in
 debugpy==1.8.13
     # via ipykernel
@@ -300,6 +299,7 @@ httptools==0.8.0
     #   uvicorn
 httpx==0.28.1
     # via
+    #   datasets
     #   huggingface-hub
     #   jupyterlab
     #   openai
@@ -785,7 +785,7 @@ pure-eval==0.2.3
     # via stack-data
 py-spy==0.4.2
     # via ray
-pyarrow==19.0.1
+pyarrow==25.0.1
     # via
     #   datasets
     #   ray
