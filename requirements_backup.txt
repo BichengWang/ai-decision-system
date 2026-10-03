@@ -224,7 +224,7 @@ nest-asyncio==1.5.1
     # via nbclient
 ninja==1.11.1
     # via torchrec-nightly
-notebook==6.3.0
+notebook==6.4.12
     # via
     #   jupyter
     #   widgetsnbextension
