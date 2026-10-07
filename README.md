@@ -10,6 +10,7 @@ Run the commands below from the repository root. The [workspace guide](ai-workfl
 | --- | --- | --- |
 | [RELIA](ai-workflows/ai-decision-reliability/README.md) | Reproducible evaluation and release controls for synthetic commerce offers and ranking | Unreleased candidate; independent Python environment and lockfile |
 | [Experiment gate](ai-workflows/experiment-gate/README.md) | Ship / hold / rollback decisions for online A/B tests of decision models | Standard library only; no lockfile |
+| [Jev decision model](ai-workflows/jev-decision/README.md) | Core decision model: typed decisions from Jev, or from the OpenAI Decisions API | Standard library only; no lockfile |
 | Existing `src/` research | Agents, RL, ML, finance, and study material | Research and experiments using the root environment |
 
 [`workspace.json`](workspace.json) registers these components with their paths,

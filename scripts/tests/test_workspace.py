@@ -169,14 +169,25 @@ class RepositoryManifestTests(unittest.TestCase):
                 {"Delivery policy", "RELIA required"},
             # The manifest routes every component, so a change to it runs every check.
             "workspace.json":
-                {"Delivery policy", "RELIA required", "src baseline", "test (3.11)", "test (3.13)"},
+                {"Delivery policy", "RELIA required", "src baseline", "test (3.11)", "test (3.13)",
+                 "jev-decision (3.11)", "jev-decision (3.13)"},
+        }
+        # Components registered after the hardcoded controller add their own checks.
+        added = {
+            ("ai-workflows/jev-decision/", ".github/workflows/jev-decision-ci.yml"):
+                {"jev-decision (3.11)", "jev-decision (3.13)"},
         }
         loaded = workspace.load_manifest(ROOT)
         paths = sorted(set(workspace.tracked_files(ROOT)) | set(intentional) | {
             "src/new.py", "tests/new.py", "docs/new.md", "new-root-file", "scripts/workspace.py"})
         for path in paths:
             with self.subTest(path=path):
-                expected = intentional.get(path, legacy_required_checks([path]))
+                expected = intentional.get(path)
+                if expected is None:
+                    expected = legacy_required_checks([path])
+                    for prefixes, checks in added.items():
+                        if path.startswith(prefixes):
+                            expected = expected | checks
                 self.assertEqual(workspace.required_checks(loaded, [path]), expected)
 
     def test_check_names_map_to_their_workflows(self):
@@ -186,6 +197,8 @@ class RepositoryManifestTests(unittest.TestCase):
             "src baseline": "Research baseline",
             "test (3.11)": "Experiment gate CI",
             "test (3.13)": "Experiment gate CI",
+            "jev-decision (3.11)": "Jev decision CI",
+            "jev-decision (3.13)": "Jev decision CI",
         })
 
 

@@ -1,0 +1,49 @@
+name: Jev decision CI
+
+on:
+  pull_request:
+    branches: [main]
+    paths:
+      - "ai-workflows/jev-decision/**"
+      - ".github/workflows/jev-decision-ci.yml"
+      - "workspace.json"
+  push:
+    branches: [main]
+    paths:
+      - "ai-workflows/jev-decision/**"
+      - ".github/workflows/jev-decision-ci.yml"
+      - "workspace.json"
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  test:
+    name: jev-decision (${{ matrix.python-version }})
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    strategy:
+      fail-fast: false
+      matrix:
+        python-version: ["3.11", "3.13"]
+    defaults:
+      run:
+        shell: bash
+        working-directory: ai-workflows/jev-decision
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          persist-credentials: false
+      - uses: actions/setup-python@5fda3b95a4ea91299a34e894583c3862153e4b97 # v7.0.0
+        with:
+          python-version: ${{ matrix.python-version }}
+      - name: Unit tests
+        run: python -m unittest discover -s tests -v
+      - name: Build example requests for both backends
+        run: |
+          for backend in jev openai; do
+            python -m jevdecision --questions examples/support-ticket.json \
+              --state "Help! My payouts have been failing for 3 days." \
+              --backend "$backend" --dry-run
+          done
