@@ -23,7 +23,7 @@ questions and answers once and talks to either provider:
 from .answers import ChoiceAnswer, Decision, NoulAnswer, ScoreAnswer
 from .backends import JevBackend, OpenAIDecisionsBackend, create_backend
 from .core import DecisionModel
-from .errors import APIError, DecisionError, QuestionError, ResponseError
+from .errors import APIError, DatasetError, DecisionError, QuestionError, ResponseError
 from .questions import Choice, Noul, Predicate, Score, questions_from_spec
 
 __version__ = "0.1.0"
@@ -32,6 +32,7 @@ __all__ = [
     "APIError",
     "Choice",
     "ChoiceAnswer",
+    "DatasetError",
     "Decision",
     "DecisionError",
     "DecisionModel",
