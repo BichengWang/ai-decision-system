@@ -19,6 +19,17 @@ SPEC.loader.exec_module(workspace)
 ROOT = Path(__file__).resolve().parents[2]
 
 
+# The components and checks the controller routed by hand before workspace.json.
+ORIGINAL_COMPONENTS = ("relia", "experiment-gate", "research-workbench", "workspace-tooling")
+ORIGINAL_CHECK_WORKFLOWS = {
+    "Delivery policy": "Delivery policy",
+    "RELIA required": "RELIA CI",
+    "src baseline": "Research baseline",
+    "test (3.11)": "Experiment gate CI",
+    "test (3.13)": "Experiment gate CI",
+}
+
+
 def legacy_required_checks(paths):
     """The controller's hardcoded routing before workspace.json, kept as a parity reference."""
     required = {"Delivery policy"}
@@ -92,6 +103,8 @@ jobs:
     name: demo test
     runs-on: ubuntu-latest
     steps:
+      - uses: actions/checkout@cccccccccccccccccccccccccccccccccccccccc # v9
+      - uses: actions/setup-python@5555555555555555555555555555555555555555 # v8
       - run: |
           echo "paths:"  # a block scalar must not be read as a trigger
 """
@@ -125,8 +138,9 @@ class FixtureRepo:
             ),
         )
         self.write("workspace.json", json.dumps(self.manifest, indent=2))
-        self.write("README.md", "[Demo](ai-workflows/demo/README.md)\n")
-        self.write("ai-workflows/README.md", "[Demo](demo/README.md)\n")
+        self.write("README.md", "| Project | Scope |\n| --- | --- |\n| [Demo](ai-workflows/demo/README.md) | Demo |\n")
+        self.write("ai-workflows/README.md", "| Project | Purpose | Run from |\n| --- | --- | --- |\n"
+                   "| [`demo`](demo/README.md) | Demo | `ai-workflows/demo/` |\n\nMore text.\n")
         self.write("ai-workflows/demo/README.md", "Demo\n")
         self.write("ai-workflows/demo/pyproject.toml", "[project]\nname = 'demo'\n")
         self.write("ai-workflows/demo/demo/__init__.py", "import json\nfrom . import core\n")
@@ -163,21 +177,16 @@ class RepositoryManifestTests(unittest.TestCase):
         self.assertEqual(workspace.check_workspace(ROOT), [])
 
     def test_manifest_routing_matches_previous_controller_rules(self):
+        loaded = workspace.load_manifest(ROOT)
         intentional = {
             # RELIA CI already validated these; the controller now agrees with it.
-            "scripts/tests/test_export_relia.py":
-                {"Delivery policy", "RELIA required"},
+            "scripts/tests/test_export_relia.py": {"Delivery policy", "RELIA required"},
             # The manifest routes every component, so a change to it runs every check.
-            "workspace.json":
-                {"Delivery policy", "RELIA required", "src baseline", "test (3.11)", "test (3.13)",
-                 "jev-decision (3.11)", "jev-decision (3.13)"},
+            "workspace.json": set(workspace.check_workflows(loaded)),
         }
-        # Components registered after the hardcoded controller add their own checks.
-        added = {
-            ("ai-workflows/jev-decision/", ".github/workflows/jev-decision-ci.yml"):
-                {"jev-decision (3.11)", "jev-decision (3.13)"},
-        }
-        loaded = workspace.load_manifest(ROOT)
+        # Components registered after the hardcoded rules add only their own checks.
+        later = [component for name, component in loaded["components"].items()
+                 if name not in ORIGINAL_COMPONENTS]
         paths = sorted(set(workspace.tracked_files(ROOT)) | set(intentional) | {
             "src/new.py", "tests/new.py", "docs/new.md", "new-root-file", "scripts/workspace.py"})
         for path in paths:
@@ -185,21 +194,14 @@ class RepositoryManifestTests(unittest.TestCase):
                 expected = intentional.get(path)
                 if expected is None:
                     expected = legacy_required_checks([path])
-                    for prefixes, checks in added.items():
-                        if path.startswith(prefixes):
-                            expected = expected | checks
+                    for component in later:
+                        if workspace.matches_any(component["paths"], path):
+                            expected = expected | {check["name"] for check in component["checks"]}
                 self.assertEqual(workspace.required_checks(loaded, [path]), expected)
 
-    def test_check_names_map_to_their_workflows(self):
-        self.assertEqual(workspace.check_workflows(workspace.load_manifest(ROOT)), {
-            "Delivery policy": "Delivery policy",
-            "RELIA required": "RELIA CI",
-            "src baseline": "Research baseline",
-            "test (3.11)": "Experiment gate CI",
-            "test (3.13)": "Experiment gate CI",
-            "jev-decision (3.11)": "Jev decision CI",
-            "jev-decision (3.13)": "Jev decision CI",
-        })
+    def test_original_check_names_map_to_their_workflows(self):
+        mapping = workspace.check_workflows(workspace.load_manifest(ROOT))
+        self.assertLessEqual(ORIGINAL_CHECK_WORKFLOWS.items(), mapping.items())
 
 
 class PatternTests(unittest.TestCase):
@@ -397,7 +399,7 @@ class WorkspaceCheckTests(unittest.TestCase):
         self.repo.write("README.md", "No links\n")
         self.repo.git("rm", "--quiet", "ai-workflows/demo/pyproject.toml")
         problems = self.repo.problems()
-        self.assertIn("component 'demo': missing tracked ai-workflows/demo/pyproject.toml", problems)
+        self.assertIn("component 'demo': missing ai-workflows/demo/pyproject.toml", problems)
         self.assertIn("component 'demo': README.md must link ai-workflows/demo/README.md", problems)
 
     def test_workflow_filters_must_match_manifest(self):
@@ -423,6 +425,27 @@ class WorkspaceCheckTests(unittest.TestCase):
         self.assertTrue(any("scripts/workspace.py github-changes --component tooling" in item
                             for item in self.repo.problems()))
 
+    def test_declared_checks_must_be_reported_by_a_job(self):
+        loaded = json.loads((self.repo.root / "workspace.json").read_text())
+        loaded["components"]["demo"]["checks"] = [{"name": "demo tests", "workflow": "Demo CI"}]
+        self.repo.write("workspace.json", json.dumps(loaded))
+        self.assertEqual(self.repo.problems(), [
+            "component 'demo': no job in .github/workflows/demo-ci.yml reports check 'demo tests' "
+            "(jobs report ['demo test'])",
+        ])
+
+    def test_untracked_files_count_and_ignored_or_deleted_files_do_not(self):
+        self.repo.write(".gitignore", "scratch/\n")
+        self.repo.write("scratch/notes.py", "import requests\n")
+        self.repo.write("stray.py", "import os\n")
+        (self.repo.root / "tools/tool.py").unlink()
+        files = workspace.workspace_files(self.repo.root)
+        self.assertIn("stray.py", files)
+        self.assertNotIn("scratch/notes.py", files)
+        self.assertNotIn("tools/tool.py", files)
+        problems = workspace.check_workspace(self.repo.root)
+        self.assertIn("stray.py: Python source must belong to exactly one component, found []", problems)
+
     def test_missing_package_and_test_directory_fail(self):
         loaded = json.loads((self.repo.root / "workspace.json").read_text())
         loaded["components"]["demo"]["packages"] = ["missing"]
@@ -431,6 +454,122 @@ class WorkspaceCheckTests(unittest.TestCase):
         problems = self.repo.problems()
         self.assertIn("component 'demo': package 'missing' not found in ai-workflows/demo", problems)
         self.assertIn("component 'demo': test directory nowhere does not exist", problems)
+
+
+class WorkflowCheckNameTests(unittest.TestCase):
+    def names(self, jobs):
+        return workspace.workflow_check_names("name: X\non: push\njobs:\n" + jobs)
+
+    def test_job_names_and_single_key_matrices(self):
+        self.assertEqual(self.names(
+            "  plain:\n    runs-on: x\n    steps:\n      - name: Not a job name\n"
+            "  named:\n    name: \"Named job\"\n"
+            "  test:\n    strategy:\n      fail-fast: false\n      matrix:\n        python: [\"3.11\", \"3.13\"]\n"
+            "  templated:\n    name: lint (${{ matrix.tool }})\n    strategy:\n      matrix:\n        tool:\n"
+            "          - ruff\n          - mypy\n"), ({
+                "plain", "Named job", "test (3.11)", "test (3.13)", "lint (ruff)", "lint (mypy)"}, []))
+
+    def test_unmodelled_jobs_are_reported(self):
+        cases = {
+            "expression matrix": "  a:\n    strategy:\n      matrix: ${{ fromJSON(x) }}\n",
+            "include": "  a:\n    strategy:\n      matrix:\n        include:\n          - v: 1\n",
+            "two keys": "  a:\n    strategy:\n      matrix:\n        x: [1]\n        y: [2]\n",
+            "name expression": "  a:\n    name: ${{ github.ref }}\n",
+            "name without matrix key": "  a:\n    name: fixed\n    strategy:\n      matrix:\n        x: [1, 2]\n",
+        }
+        for label, jobs in cases.items():
+            with self.subTest(label=label):
+                names, problems = self.names(jobs + "  ok:\n    name: fine\n")
+                self.assertEqual(names, {"fine"})
+                self.assertEqual(len(problems), 1)
+        self.assertEqual(workspace.workflow_check_names("name: X\non: push\n"), (set(), ["workflow has no jobs"]))
+
+    def test_repository_workflows_report_their_declared_checks(self):
+        loaded = workspace.load_manifest(ROOT)
+        for name, component in loaded["components"].items():
+            with self.subTest(component=name):
+                text = (ROOT / component["ci"]["workflow"]).read_text(encoding="utf-8")
+                names, problems = workspace.workflow_check_names(text)
+                self.assertEqual(problems, [])
+                self.assertLessEqual({check["name"] for check in component["checks"]}, names)
+
+
+class ScaffoldTests(unittest.TestCase):
+    def setUp(self):
+        self.folder = tempfile.TemporaryDirectory()
+        self.addCleanup(self.folder.cleanup)
+        self.repo = FixtureRepo(self.folder.name)
+
+    def run_main(self, *args):
+        out, err = io.StringIO(), io.StringIO()
+        with contextlib.redirect_stdout(out), contextlib.redirect_stderr(err):
+            code = workspace.main(["--root", str(self.repo.root), *args])
+        return code, out.getvalue(), err.getvalue()
+
+    def test_scaffolded_project_passes_check_and_tests(self):
+        code, out, _ = self.run_main("new", "risk-score", "--summary", 'Risk "score" — ünïcode @NAME@')
+        self.assertEqual(code, 0, out)
+        self.assertIn("create .github/workflows/risk-score-ci.yml", out)
+        self.assertEqual(self.repo.problems(), [])
+        loaded = workspace.load_manifest(self.repo.root)
+        self.assertEqual(list(loaded["components"]), ["demo", "risk-score", "tooling"])
+        self.assertEqual(loaded["components"]["risk-score"]["packages"], ["risk_score"])
+        self.assertEqual(workspace.required_checks(loaded, ["ai-workflows/risk-score/risk_score/__init__.py"]),
+                         {"Policy", "risk-score (3.11)", "risk-score (3.13)"})
+        workflow = (self.repo.root / ".github/workflows/risk-score-ci.yml").read_text()
+        self.assertIn(f"actions/checkout@{'c' * 40} # v9", workflow)
+        self.assertIn(f"actions/setup-python@{'5' * 40} # v8", workflow)
+        self.assertIn("| [risk-score](ai-workflows/risk-score/README.md) |",
+                      (self.repo.root / "README.md").read_text())
+        self.assertTrue((self.repo.root / "ai-workflows/README.md").read_text().endswith(
+            "| [`risk-score`](risk-score/README.md) | Risk \"score\" — ünïcode @NAME@ | `ai-workflows/risk-score/` |"
+            "\n\nMore text.\n"))
+        self.assertIn("\nRisk \"score\" — ünïcode @NAME@\n", (self.repo.root / "ai-workflows/risk-score/README.md").read_text())
+        self.assertEqual(workspace.run_tests(self.repo.root, loaded, ["risk-score"], out=io.StringIO()), 0)
+
+    def test_dry_run_and_rejected_requests_write_nothing(self):
+        cases = [
+            ("new", "risk-score", "--summary", "Risk", "--dry-run"),
+            ("new", "Risk_Score", "--summary", "Risk"),
+            ("new", "demo", "--summary", "Demo again"),
+            ("new", "risk-score", "--summary", "Risk", "--package", "demo"),
+            ("new", "risk-score", "--summary", "Risk", "--package", "risk-score"),
+            ("new", "risk-score", "--summary", "Risk | score"),
+            ("new", "risk-score", "--summary", "  "),
+        ]
+        if getattr(sys, "stdlib_module_names", None):
+            cases.append(("new", "json-tools", "--summary", "JSON", "--package", "json"))
+        for args in cases:
+            with self.subTest(args=args):
+                code, out, err = self.run_main(*args)
+                self.assertEqual(code, 0 if "--dry-run" in args else 2, err)
+                self.assertEqual(self.repo.git("status", "--porcelain", "--untracked-files=all"), "")
+
+    def test_failed_write_restores_the_previous_state(self):
+        real_write = Path.write_text
+
+        def failing_write(path, *args, **kwargs):
+            if path.name == "risk-score-ci.yml":
+                raise OSError("disk full")
+            return real_write(path, *args, **kwargs)
+
+        with patch.object(Path, "write_text", failing_write):
+            code, _, err = self.run_main("new", "risk-score", "--summary", "Risk")
+        self.assertEqual(code, 2)
+        self.assertIn("disk full", err)
+        self.assertEqual(self.repo.git("status", "--porcelain", "--untracked-files=all"), "")
+        self.assertFalse((self.repo.root / "ai-workflows/risk-score").exists())
+
+    def test_existing_paths_and_missing_tables_are_refused(self):
+        self.repo.write("ai-workflows/risk-score/notes.md", "draft\n")
+        code, _, err = self.run_main("new", "risk-score", "--summary", "Risk")
+        self.assertEqual(code, 2)
+        self.assertIn("ai-workflows/risk-score already exists", err)
+        self.repo.write("README.md", "No project table; [Demo](ai-workflows/demo/README.md)\n")
+        code, _, err = self.run_main("new", "pricing", "--summary", "Pricing")
+        self.assertEqual(code, 2)
+        self.assertIn("cannot find the project table in README.md", err)
+        self.assertFalse((self.repo.root / "ai-workflows/pricing").exists())
 
 
 class ChangeDetectionTests(unittest.TestCase):
