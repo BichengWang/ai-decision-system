@@ -1,0 +1,178 @@
+{
+  "schema_version": 1,
+  "description": "Monorepo component registry. scripts/workspace.py reads it to list components, find the components a change affects, run their tests, and check CI routing and import boundaries. scripts/continual_delivery.py derives required checks from it. A change to this file affects every component.",
+  "global_paths": [
+    "workspace.json"
+  ],
+  "always_required_checks": [
+    {
+      "name": "Delivery policy",
+      "workflow": "Delivery policy"
+    }
+  ],
+  "components": {
+    "relia": {
+      "kind": "project",
+      "path": "ai-workflows/ai-decision-reliability",
+      "summary": "Synthetic-data reliability evaluation and release controls (RELIA)",
+      "sources": [
+        "ai-workflows/ai-decision-reliability/**"
+      ],
+      "packages": [
+        "relia"
+      ],
+      "third_party_imports": [
+        "numpy",
+        "pytest",
+        "scipy",
+        "sklearn",
+        "threadpoolctl"
+      ],
+      "paths": [
+        "ai-workflows/ai-decision-reliability/**",
+        "scripts/export-relia*",
+        "scripts/tests/test_export_relia*",
+        ".github/workflows/relia-*",
+        "Makefile",
+        ".gitignore"
+      ],
+      "ci": {
+        "workflow": ".github/workflows/relia-ci.yml",
+        "trigger": "workspace"
+      },
+      "checks": [
+        {
+          "name": "RELIA required",
+          "workflow": "RELIA CI"
+        }
+      ],
+      "test_env": {
+        "OMP_NUM_THREADS": "1",
+        "OPENBLAS_NUM_THREADS": "1",
+        "MKL_NUM_THREADS": "1",
+        "VECLIB_MAXIMUM_THREADS": "1"
+      },
+      "test": [
+        {
+          "run": "uv run --frozen python -m pytest -q"
+        },
+        {
+          "run": "python3 -m unittest discover -s scripts/tests -p test_export_relia.py",
+          "cwd": "."
+        }
+      ]
+    },
+    "experiment-gate": {
+      "kind": "project",
+      "path": "ai-workflows/experiment-gate",
+      "summary": "Ship / hold / rollback decisions for online A/B tests of decision models",
+      "sources": [
+        "ai-workflows/experiment-gate/**"
+      ],
+      "packages": [
+        "expgate"
+      ],
+      "third_party_imports": [],
+      "paths": [
+        "ai-workflows/experiment-gate/**",
+        ".github/workflows/expgate-ci.yml"
+      ],
+      "ci": {
+        "workflow": ".github/workflows/expgate-ci.yml",
+        "trigger": "paths"
+      },
+      "checks": [
+        {
+          "name": "test (3.11)",
+          "workflow": "Experiment gate CI"
+        },
+        {
+          "name": "test (3.13)",
+          "workflow": "Experiment gate CI"
+        }
+      ],
+      "test": [
+        {
+          "run": "python3 -m unittest discover -s tests"
+        }
+      ]
+    },
+    "research-workbench": {
+      "kind": "legacy",
+      "path": ".",
+      "summary": "Legacy src/ research material: agents, RL, ML, finance, and study code in the root environment",
+      "sources": [
+        "src/**",
+        "tests/**"
+      ],
+      "packages": [
+        "src"
+      ],
+      "third_party_imports": null,
+      "paths": [
+        "src/**",
+        "tests/**",
+        "pyproject.toml",
+        "requirements.txt",
+        "setup.cfg",
+        "Makefile",
+        ".github/workflows/src-baseline.yml"
+      ],
+      "ci": {
+        "workflow": ".github/workflows/src-baseline.yml",
+        "trigger": "paths"
+      },
+      "checks": [
+        {
+          "name": "src baseline",
+          "workflow": "Research baseline"
+        }
+      ],
+      "test": [
+        {
+          "run": "make test"
+        }
+      ]
+    },
+    "workspace-tooling": {
+      "kind": "tooling",
+      "path": "scripts",
+      "summary": "Delivery controller, workspace tool, and RELIA export script (standard library only)",
+      "sources": [
+        "scripts/**"
+      ],
+      "packages": [
+        "workspace"
+      ],
+      "third_party_imports": [],
+      "paths": [
+        "scripts/continual_delivery.py",
+        "scripts/workspace.py",
+        "scripts/tests/test_continual_delivery.py",
+        "scripts/tests/test_workspace.py",
+        ".github/workflows/delivery-policy.yml"
+      ],
+      "ci": {
+        "workflow": ".github/workflows/delivery-policy.yml",
+        "trigger": "always"
+      },
+      "checks": [
+        {
+          "name": "Delivery policy",
+          "workflow": "Delivery policy"
+        }
+      ],
+      "test": [
+        {
+          "run": "python3 -m unittest discover -s tests -p test_continual_delivery.py"
+        },
+        {
+          "run": "python3 -m unittest discover -s tests -p test_workspace.py"
+        },
+        {
+          "run": "python3 workspace.py check"
+        }
+      ]
+    }
+  }
+}

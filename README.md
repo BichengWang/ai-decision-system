@@ -12,6 +12,12 @@ Run the commands below from the repository root. The [workspace guide](ai-workfl
 | [Experiment gate](ai-workflows/experiment-gate/README.md) | Ship / hold / rollback decisions for online A/B tests of decision models | Standard library only; no lockfile |
 | Existing `src/` research | Agents, RL, ML, finance, and study material | Research and experiments using the root environment |
 
+[`workspace.json`](workspace.json) registers these components with their paths,
+CI checks, and test commands. `make workspace-list` shows them, `make affected`
+shows what your branch touches, and `make affected-test` runs those components'
+tests. See the [workspace guide](ai-workflows/README.md#workspace-manifest) for
+the boundary rules that `make workspace-check` enforces.
+
 RELIA's [specification](ai-workflows/ai-decision-reliability/docs/SPEC.md),
 [reproduction protocol](ai-workflows/ai-decision-reliability/docs/REPRODUCE.md),
 and [limitations](ai-workflows/ai-decision-reliability/docs/LIMITATIONS.md)
