@@ -17,6 +17,12 @@ primary metric uses a one-sided test at ``alpha``.
 A metric may carry a pre-experiment ``covariate`` summary in both arms. It is then
 estimated with CUPED regression adjustment (see :func:`expgate.stats.cuped_effect`),
 which narrows the interval without moving the decision rules above.
+
+With ``policy.sequential.planned_units`` set, every bound is an always-valid confidence
+sequence instead (see :func:`expgate.stats.sequential_multiplier`). The same rules then hold
+at every interim look: the summary can be evaluated as often as the platform refreshes it,
+and SHIP or ROLLBACK can be declared as soon as a bound clears, without inflating the error
+rates that the fixed-horizon bounds would.
 """
 from __future__ import annotations
 
@@ -92,10 +98,15 @@ def _validate(summary: dict) -> None:
             if "margin" not in spec or _number(spec["margin"], f"guardrail {name!r} margin") < 0:
                 raise ValueError(f"guardrail {name!r} needs a non-negative 'margin'")
 
+    policy = _object(summary.get("policy", {}), "'policy'")
     for key in ("alpha", "srm_alpha"):
-        value = _object(summary.get("policy", {}), "'policy'").get(key)
+        value = policy.get(key)
         if value is not None and not 0 < _number(value, f"policy {key}") < 1:
             raise ValueError(f"policy {key} must be in (0, 1)")
+    if "sequential" in policy:
+        sequential = _object(policy["sequential"], "policy sequential")
+        if _count(sequential.get("planned_units"), "policy sequential planned_units") < 2:
+            raise ValueError("policy sequential planned_units must be at least 2")
     share = _object(summary.get("assignment", {}), "'assignment'").get("expected_treatment_share")
     if share is not None and not 0 < _number(share, "expected_treatment_share") < 1:
         raise ValueError("expected_treatment_share must be in (0, 1)")
@@ -149,8 +160,16 @@ def evaluate(summary: dict) -> dict:
            "pass": srm_p >= policy["srm_alpha"]}
 
     guardrails = [n for n, s in summary["metrics"].items() if s["role"] == "guardrail"]
-    z_primary = stats.z_for(policy["alpha"])
-    z_guard = stats.z_for(policy["alpha"] / max(len(guardrails), 1))
+    alpha_primary, alpha_guard = policy["alpha"], policy["alpha"] / max(len(guardrails), 1)
+    sequential = None
+    if "sequential" in policy:
+        units = control["units"] + treatment["units"]
+        planned = policy["sequential"]["planned_units"]
+        sequential = {"planned_units": planned, "units": units, "information_fraction": units / planned}
+        z_primary = stats.sequential_multiplier(alpha_primary, planned / units)
+        z_guard = stats.sequential_multiplier(alpha_guard, planned / units)
+    else:
+        z_primary, z_guard = stats.z_for(alpha_primary), stats.z_for(alpha_guard)
 
     rows, reasons = [], []
     primary_status = None
@@ -200,6 +219,11 @@ def evaluate(summary: dict) -> dict:
         if primary_status != "IMPROVED":
             reasons.append(f"primary metric is {primary_status.lower()}")
         reasons += [f"guardrail {n} is inconclusive" for n, s in sorted(guard_status.items()) if s == "INCONCLUSIVE"]
+        if sequential is not None and sequential["information_fraction"] >= 1:
+            reasons.append("planned sample size reached without a decision")
 
-    return {"experiment": summary.get("experiment", "unnamed"), "decision": decision, "reasons": reasons,
-            "policy": policy, "sample_ratio": srm, "metrics": rows}
+    report = {"experiment": summary.get("experiment", "unnamed"), "decision": decision, "reasons": reasons,
+              "policy": policy, "sample_ratio": srm, "metrics": rows}
+    if sequential is not None:
+        report["sequential"] = sequential
+    return report
