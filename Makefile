@@ -54,6 +54,18 @@ expgate-run:
 	@test -n "$(EXPGATE_OUT)" || { echo "Set EXPGATE_OUT to a new absolute output directory"; exit 2; }
 	cd $(EXPGATE_DIR) && python3 -m expgate.run --all-scenarios --out "$(EXPGATE_OUT)"
 
+JEV_DIR := ai-workflows/jev-decision
+
+.PHONY: jev-test jev-dry-run
+jev-test:
+	cd $(JEV_DIR) && python3 -m unittest discover -s tests -v
+
+jev-dry-run:
+	cd $(JEV_DIR) && for backend in jev openai; do \
+		python3 -m jevdecision --questions examples/support-ticket.json \
+			--state "Help! My payouts have been failing for 3 days." --backend $$backend --dry-run || exit 1; \
+	done
+
 # Workspace commands read workspace.json (see ai-workflows/README.md).
 WORKSPACE := python3 scripts/workspace.py
 BASE ?= origin/main

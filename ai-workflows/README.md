@@ -11,6 +11,7 @@ commands, but a project must remain runnable from its own directory.
 | --- | --- | --- |
 | [`ai-decision-reliability`](ai-decision-reliability/README.md) | Synthetic-data reliability evaluation and release controls (RELIA) | `ai-workflows/ai-decision-reliability/` |
 | [`experiment-gate`](experiment-gate/README.md) | Ship / hold / rollback decisions for online A/B tests of decision models, with guardrails and sample-ratio checks | `ai-workflows/experiment-gate/` |
+| [`jev-decision`](jev-decision/README.md) | Jev as the core decision model: typed yes/no, choice, and score decisions, with the OpenAI Decisions API as an alternative backend | `ai-workflows/jev-decision/` |
 
 From the repository root, use the convenience targets in the [root Makefile](../Makefile):
 
@@ -20,6 +21,8 @@ make relia-test        # run the project test suite single-threaded
 make relia-reproduce RELIA_OUT=/abs/new/dir
 make expgate-test       # experiment-gate unit tests (standard library only)
 make expgate-run EXPGATE_OUT=/abs/new/dir
+make jev-test          # jev-decision unit tests (standard library only)
+make jev-dry-run       # print the example request for both backends
 ```
 
 ## Workspace manifest
