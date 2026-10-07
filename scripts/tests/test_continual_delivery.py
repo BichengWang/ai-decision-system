@@ -156,6 +156,25 @@ class EvaluationTests(unittest.TestCase):
                 ])
                 self.assertEqual(delivery.evaluate(changed, [receipt()], []), [])
 
+    def test_manifest_change_requires_every_check(self):
+        changed = pr(files=[{"path": "workspace.json"}])
+        failures = delivery.evaluate(changed, [receipt()], [])
+        for name in ("RELIA required", "test (3.11)", "test (3.13)"):
+            self.assertIn(f"required check {name} is missing, failing, or from the wrong workflow", failures)
+        self.assertFalse(any("src baseline" in item for item in failures))
+
+    def test_export_tests_require_relia_validation(self):
+        changed = pr(files=[{"path": "scripts/tests/test_export_relia.py"}])
+        self.assertEqual(delivery.evaluate(changed, [receipt()], []), [
+            "required check RELIA required is missing, failing, or from the wrong workflow",
+        ])
+
+    def test_invalid_manifest_fails_closed(self):
+        error = delivery.workspace.ManifestError("workspace.json is invalid")
+        with patch.object(delivery.workspace, "load_manifest", side_effect=error):
+            with self.assertRaises(ValueError):
+                delivery.evaluate(pr(), [receipt()], [])
+
     def test_attribution_rule(self):
         changed = pr(body="Co-authored-by: Codex")
         failures = delivery.evaluate(changed, [receipt()], [])

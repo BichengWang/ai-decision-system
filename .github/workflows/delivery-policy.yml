@@ -20,6 +20,10 @@ jobs:
           persist-credentials: false
       - name: Controller regression tests
         run: python3 -m unittest discover -s scripts/tests -p 'test_continual_delivery.py' -v
+      - name: Workspace tool regression tests
+        run: python3 -m unittest discover -s scripts/tests -p 'test_workspace.py' -v
+      - name: Workspace manifest, CI routing, and import boundaries
+        run: python3 scripts/workspace.py check
       - name: Changed Python syntax
         if: github.event_name == 'pull_request'
         env:
@@ -33,3 +37,13 @@ jobs:
                   python3 -m py_compile "$path"
                 fi
               done
+      - name: Affected components
+        if: github.event_name == 'pull_request'
+        env:
+          GH_TOKEN: ${{ github.token }}
+          PR_NUMBER: ${{ github.event.pull_request.number }}
+          GH_REPO: ${{ github.repository }}
+        run: |
+          gh api "repos/$GH_REPO/pulls/$PR_NUMBER/files" --paginate \
+              --jq '.[] | .filename, (.previous_filename // empty)' \
+            | python3 scripts/workspace.py affected --paths-from - --format markdown >> "$GITHUB_STEP_SUMMARY"
