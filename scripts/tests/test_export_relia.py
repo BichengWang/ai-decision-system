@@ -23,8 +23,11 @@ class ExportTests(unittest.TestCase):
         self.source.mkdir()
         self.env = os.environ.copy()
         self.env.update(GIT_CONFIG_GLOBAL=os.devnull, GIT_CONFIG_NOSYSTEM="1")
+        # Drop identity and command-line config injected through the environment
+        # (for example commit signing) so fixture commits are reproducible anywhere.
         for key in tuple(self.env):
-            if key.startswith(("GIT_AUTHOR_", "GIT_COMMITTER_")):
+            if key.startswith(("GIT_AUTHOR_", "GIT_COMMITTER_", "GIT_CONFIG_KEY_", "GIT_CONFIG_VALUE_")) \
+                    or key in {"GIT_CONFIG_COUNT", "GIT_CONFIG_PARAMETERS"}:
                 del self.env[key]
         self.git(self.source, "init", "--quiet", "--initial-branch=main")
         self.git(self.source, "config", "user.name", "Fixture Maintainer")

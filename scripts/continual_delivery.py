@@ -18,6 +18,11 @@ from datetime import datetime
 from pathlib import Path
 from zoneinfo import ZoneInfo
 
+SCRIPTS = Path(__file__).resolve().parent
+if str(SCRIPTS) not in sys.path:
+    sys.path.insert(0, str(SCRIPTS))
+import workspace  # noqa: E402  (sibling module; this file also runs as a script)
+
 
 MANAGED = "continual-managed"
 READY = "continual-ready"
@@ -25,13 +30,6 @@ REVIEW_PREFIX = "<!-- continual-review "
 SHA_RE = re.compile(r"^[0-9a-f]{40}$")
 ATTRIBUTION_RE = re.compile(r"codex", re.IGNORECASE)
 IMPLEMENTATION_RE = re.compile(r"^Implementation run: ([A-Za-z0-9._/-]+)$", re.M)
-CHECK_WORKFLOWS = {
-    "Delivery policy": "Delivery policy",
-    "RELIA required": "RELIA CI",
-    "src baseline": "Research baseline",
-    "test (3.11)": "Experiment gate CI",
-    "test (3.13)": "Experiment gate CI",
-}
 RELEASE_PATHS = (
     "docs/RELIA_RELEASE.md",
     ".github/workflows/relia-release-verify.yml",
@@ -126,34 +124,9 @@ def snapshot():
     }
 
 
-def required_checks(paths):
-    required = {"Delivery policy"}
-    if any(
-        path.startswith("ai-workflows/ai-decision-reliability/")
-        or path.startswith("scripts/export-relia")
-        or path.startswith(".github/workflows/relia-")
-        or path in {"Makefile", ".gitignore"}
-        for path in paths
-    ):
-        required.add("RELIA required")
-    if any(
-        path.startswith("ai-workflows/experiment-gate/")
-        or path == ".github/workflows/expgate-ci.yml"
-        for path in paths
-    ):
-        required.update({"test (3.11)", "test (3.13)"})
-    # Keep this aligned with the path filters in src-baseline.yml. Root setup
-    # changes affect the research environment even when no src/ file changes.
-    if any(
-        path.startswith(("src/", "tests/"))
-        or path in {
-            "pyproject.toml", "requirements.txt", "setup.cfg", "Makefile",
-            ".github/workflows/src-baseline.yml",
-        }
-        for path in paths
-    ):
-        required.add("src baseline")
-    return required
+def required_checks(paths, manifest=None):
+    """Checks a change needs, from the components workspace.json says it affects."""
+    return workspace.required_checks(manifest or workspace.load_manifest(), paths)
 
 
 def review_result(comments, sha, implementation_run, trusted_login):
@@ -212,16 +185,18 @@ def evaluate(pr, comments, commits, trusted_login="BichengWang"):
             failures.append("commit committer contains forbidden attribution")
         if ATTRIBUTION_RE.search(message):
             failures.append("commit message contains forbidden attribution")
+    manifest = workspace.load_manifest()
+    check_workflows = workspace.check_workflows(manifest)
     checks = {}
     for check in pr.get("statusCheckRollup") or []:
         name = check.get("name") or check.get("context")
         if name:
             checks.setdefault(name, []).append(check)
-    for name in sorted(required_checks(paths)):
+    for name in sorted(required_checks(paths, manifest)):
         matching = checks.get(name, [])
         if not matching or any(
             (check.get("conclusion") or check.get("state")) != "SUCCESS"
-            or check.get("workflowName") != CHECK_WORKFLOWS[name]
+            or check.get("workflowName") != check_workflows[name]
             for check in matching
         ):
             failures.append(f"required check {name} is missing, failing, or from the wrong workflow")
@@ -356,7 +331,7 @@ def main():
             else:
                 result = record_review(repo, args.number, args.report)
         print(json.dumps(result, indent=2, sort_keys=True))
-    except (Blocked, KeyError, ValueError, OSError) as error:
+    except (Blocked, workspace.WorkspaceError, KeyError, ValueError, OSError) as error:
         print(f"BLOCKED: {error}", file=sys.stderr)
         return 2
     return 0

@@ -54,6 +54,29 @@ expgate-run:
 	@test -n "$(EXPGATE_OUT)" || { echo "Set EXPGATE_OUT to a new absolute output directory"; exit 2; }
 	cd $(EXPGATE_DIR) && python3 -m expgate.run --all-scenarios --out "$(EXPGATE_OUT)"
 
+# Workspace commands read workspace.json (see ai-workflows/README.md).
+WORKSPACE := python3 scripts/workspace.py
+BASE ?= origin/main
+COMPONENTS ?=
+
+.PHONY: workspace-list workspace-check workspace-test affected affected-test
+workspace-list:
+	$(WORKSPACE) list
+
+workspace-check:
+	python3 -m unittest discover -s scripts/tests -p 'test_workspace.py'
+	$(WORKSPACE) check
+
+workspace-test:
+	@test -n "$(COMPONENTS)" || { echo "Set COMPONENTS to component names from 'make workspace-list'"; exit 2; }
+	$(WORKSPACE) test $(COMPONENTS)
+
+affected:
+	$(WORKSPACE) affected --base "$(BASE)"
+
+affected-test:
+	$(WORKSPACE) test --affected --base "$(BASE)"
+
 
 .PHONY: bootstrap
 bootstrap:

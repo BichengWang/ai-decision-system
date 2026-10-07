@@ -29,35 +29,9 @@ jobs:
       - name: Detect project and integration changes
         id: paths
         shell: bash
-        run: |
-          python3 - <<'PY'
-          import json, os, subprocess
-          from pathlib import Path
-
-          event = json.loads(Path(os.environ["GITHUB_EVENT_PATH"]).read_text())
-          kind = os.environ["GITHUB_EVENT_NAME"]
-          relevant = True
-          if kind != "workflow_dispatch":
-              pr = event.get("pull_request")
-              base = pr["base"]["sha"] if pr else event["before"]
-              head = pr["head"]["sha"] if pr else event["after"]
-              if base.strip("0"):
-                  revision = f"{base}...{head}" if pr else f"{base}..{head}"
-                  paths = subprocess.check_output(
-                      ["git", "diff", "--name-only", "-z", revision]
-                  ).decode().split("\0")
-                  relevant = any(
-                      path.startswith("ai-workflows/ai-decision-reliability/")
-                      or path.startswith("scripts/export-relia")
-                      or path.startswith("scripts/tests/test_export_relia")
-                      or path.startswith(".github/workflows/relia-")
-                      or path in {"Makefile", ".gitignore"}
-                      for path in paths
-                  )
-          with open(os.environ["GITHUB_OUTPUT"], "a") as output:
-              output.write(f"relevant={str(relevant).lower()}\n")
-          print(f"RELIA validation required: {relevant}")
-          PY
+        # workspace.json lists the paths that affect RELIA; manual runs, new
+        # branches, and manifest changes always validate.
+        run: python3 scripts/workspace.py github-changes --component relia >> "$GITHUB_OUTPUT"
 
   validate:
     needs: changes

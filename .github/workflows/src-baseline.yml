@@ -11,6 +11,7 @@ on:
       - "setup.cfg"
       - "Makefile"
       - ".github/workflows/src-baseline.yml"
+      - "workspace.json"
   push:
     branches: [main]
     paths:
@@ -21,6 +22,7 @@ on:
       - "setup.cfg"
       - "Makefile"
       - ".github/workflows/src-baseline.yml"
+      - "workspace.json"
   workflow_dispatch:
 
 permissions:

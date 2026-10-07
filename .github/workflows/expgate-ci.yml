@@ -6,11 +6,13 @@ on:
     paths:
       - "ai-workflows/experiment-gate/**"
       - ".github/workflows/expgate-ci.yml"
+      - "workspace.json"
   push:
     branches: [main]
     paths:
       - "ai-workflows/experiment-gate/**"
       - ".github/workflows/expgate-ci.yml"
+      - "workspace.json"
   workflow_dispatch:
 
 permissions:
