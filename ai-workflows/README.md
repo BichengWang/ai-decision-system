@@ -51,20 +51,24 @@ make affected                             # components and checks your branch af
 make affected-test                        # run the tests of the affected components
 make workspace-test COMPONENTS="experiment-gate workspace-tooling"
 make workspace-check                      # tool tests plus the consistency check below
+make workspace-new NAME=<name> SUMMARY="<one line>"   # scaffold a project (see below)
 ```
 
 `python3 scripts/workspace.py --help` lists the underlying commands. Test
 commands that start with `python3` run under the interpreter that runs the tool,
 so `python3.11 scripts/workspace.py test experiment-gate` tests on Python 3.11.
 
-The required `Delivery policy` check runs `scripts/workspace.py check`, which
-fails when:
+The required `Delivery policy` check runs `scripts/workspace.py check`. It reads
+tracked files plus untracked files that are not ignored, so it also covers work
+you have not committed yet. It fails when:
 
 - a directory under `ai-workflows/` is not registered, or a project lacks a
-  tracked `README.md`, `pyproject.toml`, or `tests/`, or is not linked from the
-  root and workspace readmes;
+  `README.md`, `pyproject.toml`, or `tests/`, or is not linked from the root and
+  workspace readmes;
 - a workflow's path filters differ from its component's `paths` plus
-  `workspace.json`, or a check is attributed to a workflow with another name;
+  `workspace.json`, a check is attributed to a workflow with another name, or no
+  job in the workflow reports a declared check name (a job's `name`, or its id,
+  expanded over a single-key matrix as GitHub names matrix jobs);
 - a Python file belongs to no component or to several;
 - a component imports another component's package, or a project imports a
   third-party module it does not declare.
@@ -89,15 +93,29 @@ its full validation.
 
 ## Adding a project
 
-1. Create `ai-workflows/<name>/` with its own package metadata (`pyproject.toml`),
-   `README.md`, package, and `tests/`.
-2. Register it in [`workspace.json`](../workspace.json) as a `project`, with
-   `ai-workflows/<name>/**` in both `sources` and `paths`.
-3. Add `.github/workflows/<name>-ci.yml`. With `"trigger": "paths"`, its
-   `pull_request` and `push` path filters must list exactly the component's
-   `paths` plus `workspace.json`. List each job's check name under `checks`.
-4. Add its row to the table above and to the root [README](../README.md).
-5. Run `make workspace-check` and `make workspace-test COMPONENTS=<name>`.
+From the repository root:
+
+```bash
+make workspace-new NAME=<name> SUMMARY="<one-line description>"
+# or: python3 scripts/workspace.py new <name> --summary "..." [--package <import_name>] [--dry-run]
+make workspace-check
+make workspace-test COMPONENTS=<name>
+```
+
+`new` creates a standard-library project in `ai-workflows/<name>/` (`README.md`,
+`pyproject.toml`, `.gitignore`, the package, and a first test), a
+`.github/workflows/<name>-ci.yml` workflow that runs the tests on Python 3.11 and
+3.13 with the action versions the other workflows pin, the project's
+`workspace.json` entry, and its rows in the table above and in the root
+[README](../README.md). It checks every input before writing and refuses existing
+paths, so the result passes `make workspace-check` as generated. The delivery gate
+then requires `<name> (3.11)` and `<name> (3.13)` for changes to the project.
+
+When a project needs third-party packages, list their import names under its
+`third_party_imports`, add a lockfile, and adjust its workflow. For a project set up
+by hand, register it with `ai-workflows/<name>/**` in both `sources` and `paths`,
+give its workflow path filters exactly those `paths` plus `workspace.json`, and
+list each job's check name under `checks`.
 
 Document any root convenience command alongside the project rather than making
 the root environment a runtime requirement.

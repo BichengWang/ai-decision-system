@@ -12,6 +12,7 @@ Commands:
   test            Run component test commands from their own directories.
   check           Verify the manifest, CI routing, project layout, and import boundaries.
   github-changes  Print `relevant=true|false` for one component in a GitHub Actions job.
+  new             Scaffold a standard-library project, its CI workflow, and its registration.
 
 Standard library only; Python 3.9 or newer. `check` needs Python 3.10+ for the
 standard-library module list and skips the undeclared-import rule without it.
@@ -19,6 +20,7 @@ standard-library module list and skips the undeclared-import rule without it.
 
 import argparse
 import ast
+import contextlib
 import json
 import os
 import re
@@ -274,6 +276,12 @@ def tracked_files(root):
     return _split_z(git(root, "ls-files", "-z"))
 
 
+def workspace_files(root):
+    """Existing tracked and untracked, non-ignored files: what a commit could contain."""
+    listed = _split_z(git(root, "ls-files", "-z", "--cached", "--others", "--exclude-standard"))
+    return sorted({path for path in listed if (Path(root) / path).is_file()})
+
+
 def changed_paths(root, base, head=None):
     """Paths changed since the merge base of `base`.
 
@@ -400,6 +408,66 @@ def read_workflow(text):
     return {"name": name, "events": events}
 
 
+MATRIX_EXPRESSION = re.compile(r"\$\{\{\s*matrix\.([A-Za-z0-9_-]+)\s*\}\}")
+
+
+def _job_check_names(job_id, body):
+    """Return the check-run names one job reports, or raise WorkspaceError.
+
+    Models a job `name` (or the job id), optionally expanded over a single-key
+    matrix list: `name: x (${{ matrix.key }})`, or no name, which GitHub reports
+    as `job-id (value)`.
+    """
+    name_entry = _mapping_entry(body, "name")
+    name = _unquote(name_entry[0]) if name_entry else None
+    matrix = {}
+    strategy = _mapping_entry(body, "strategy")
+    found = _mapping_entry(strategy[1], "matrix") if strategy and strategy[1] else None
+    if found:
+        value, matrix_body = found
+        if value or not matrix_body:
+            raise WorkspaceError(f"job {job_id!r} builds its matrix from an expression")
+        base = min(indent for indent, _ in matrix_body)
+        for indent, content in matrix_body:
+            if indent == base:
+                key = content.split(":", 1)[0].strip()
+                if key in {"include", "exclude"}:
+                    raise WorkspaceError(f"job {job_id!r} uses matrix {key}")
+                matrix[key] = _sequence(*_mapping_entry(matrix_body, key))
+    if len(matrix) > 1:
+        raise WorkspaceError(f"job {job_id!r} has a multi-key matrix")
+    if not matrix:
+        if name and "${{" in name:
+            raise WorkspaceError(f"job {job_id!r} name uses an expression")
+        return [name or job_id]
+    key, values = next(iter(matrix.items()))
+    if name is None:
+        return [f"{job_id} ({value})" for value in values]
+    if set(MATRIX_EXPRESSION.findall(name)) != {key} or "${{" in MATRIX_EXPRESSION.sub("", name):
+        raise WorkspaceError(f"job {job_id!r} name must reference matrix.{key} and no other expression")
+    return [MATRIX_EXPRESSION.sub(lambda _, value=value: value, name) for value in values]
+
+
+def workflow_check_names(text):
+    """Return (check names the workflow's jobs report, problems for jobs not modelled)."""
+    entry = _mapping_entry(_yaml_lines(text), "jobs")
+    if entry is None:
+        return set(), ["workflow has no jobs"]
+    body = entry[1]
+    names, problems = set(), []
+    if not body:
+        return names, problems
+    base = min(indent for indent, _ in body)
+    for indent, content in body:
+        if indent == base:
+            job_id = content.split(":", 1)[0].strip()
+            try:
+                names.update(_job_check_names(job_id, _mapping_entry(body, job_id)[1]))
+            except WorkspaceError as error:
+                problems.append(str(error))
+    return names, problems
+
+
 # Import boundaries ---------------------------------------------------------
 
 def import_roots(source, filename="<source>"):
@@ -479,11 +547,18 @@ def _workflow_problems(root, name, component, global_paths):
     except (OSError, WorkspaceError) as error:
         return [f"component {name!r}: cannot read {workflow_path}: {error}"]
     problems = []
+    reported, unmodelled = workflow_check_names(text)
     for check in component["checks"]:
         if workflow["name"] != check["workflow"]:
             problems.append(
                 f"component {name!r}: check {check['name']!r} expects workflow {check['workflow']!r}, "
                 f"but {workflow_path} is named {workflow['name']!r}"
+            )
+        if check["name"] not in reported:
+            detail = f"; cannot read job names: {'; '.join(unmodelled)}" if unmodelled else ""
+            problems.append(
+                f"component {name!r}: no job in {workflow_path} reports check {check['name']!r} "
+                f"(jobs report {sorted(reported)}){detail}"
             )
     trigger = component["ci"]["trigger"]
     events = workflow["events"]
@@ -515,8 +590,8 @@ def check_workspace(root=ROOT, manifest=None):
     """Return every problem with the manifest, layout, CI routing, and imports."""
     root = Path(root)
     manifest = manifest if manifest is not None else load_manifest(root)
-    files = tracked_files(root)
-    tracked = set(files)
+    files = workspace_files(root)
+    present = set(files)
     problems = []
     components = manifest["components"]
     readme = (root / "README.md").read_text(encoding="utf-8") if (root / "README.md").exists() else ""
@@ -537,7 +612,7 @@ def check_workspace(root=ROOT, manifest=None):
             problems.append(f"component {name!r}: path {path} does not exist")
             continue
         if not any(matches_any(component["sources"], file) for file in files):
-            problems.append(f"component {name!r}: sources match no tracked file")
+            problems.append(f"component {name!r}: sources match no file")
         for package in component["packages"]:
             if not ((root / path / package / "__init__.py").is_file() or (root / path / f"{package}.py").is_file()):
                 problems.append(f"component {name!r}: package {package!r} not found in {path}")
@@ -554,10 +629,10 @@ def check_workspace(root=ROOT, manifest=None):
                 if own not in component[key]:
                     problems.append(f"component {name!r}: {key} must include {own!r}")
             for required in ("README.md", "pyproject.toml"):
-                if f"{path}/{required}" not in tracked:
-                    problems.append(f"component {name!r}: missing tracked {path}/{required}")
+                if f"{path}/{required}" not in present:
+                    problems.append(f"component {name!r}: missing {path}/{required}")
             if not any(file.startswith(f"{path}/tests/") for file in files):
-                problems.append(f"component {name!r}: missing tracked tests under {path}/tests/")
+                problems.append(f"component {name!r}: missing tests under {path}/tests/")
             if f"]({path}/README.md)" not in readme:
                 problems.append(f"component {name!r}: README.md must link {path}/README.md")
             if f"]({parts[1]}/README.md)" not in workspace_readme:
@@ -613,6 +688,214 @@ def run_tests(root, manifest, names, dry_run=False, out=sys.stdout):
             print(f"{'FAIL' if results.get(name) else 'PASS'} {name}"
                   + (f": {results[name]}" if results.get(name) else ""), file=out)
     return 1 if any(results.values()) else 0
+
+
+# Scaffolding ---------------------------------------------------------------
+
+SCAFFOLD_PYTHONS = ("3.11", "3.13")
+
+SCAFFOLD_WORKFLOW = """name: @NAME@ CI
+
+on:
+  pull_request:
+    branches: [main]
+    paths:
+      - "ai-workflows/@NAME@/**"
+      - ".github/workflows/@NAME@-ci.yml"
+      - "workspace.json"
+  push:
+    branches: [main]
+    paths:
+      - "ai-workflows/@NAME@/**"
+      - ".github/workflows/@NAME@-ci.yml"
+      - "workspace.json"
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  test:
+    name: @NAME@ (${{ matrix.python-version }})
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    strategy:
+      fail-fast: false
+      matrix:
+        python-version: [@PYTHONS@]
+    defaults:
+      run:
+        shell: bash
+        working-directory: ai-workflows/@NAME@
+    steps:
+      - uses: @CHECKOUT@
+        with:
+          persist-credentials: false
+      - uses: @SETUP_PYTHON@
+        with:
+          python-version: ${{ matrix.python-version }}
+      - name: Unit tests
+        run: python -m unittest discover -s tests -v
+"""
+
+SCAFFOLD_README = """# @NAME@ (`@PACKAGE@`)
+
+@SUMMARY@
+
+The package uses only the Python standard library, so it has no dependencies
+and no lockfile. Declare any other import under this component's
+`third_party_imports` in [`workspace.json`](../../workspace.json); the workspace
+check rejects undeclared ones.
+
+## Quick start
+
+From this directory, with Python @MIN_PYTHON@ or later:
+
+```bash
+python3 -m unittest discover -s tests
+```
+
+From the repository root, `make workspace-test COMPONENTS=@NAME@` runs the same
+tests. CI runs them on Python @PYTHON_LIST@ through
+[`@NAME@-ci.yml`](../../.github/workflows/@NAME@-ci.yml).
+"""
+
+SCAFFOLD_TEST = """import unittest
+
+import @PACKAGE@
+
+
+class PackageTests(unittest.TestCase):
+    def test_version(self):
+        self.assertEqual(@PACKAGE@.__version__, "0.1.0")
+
+
+if __name__ == "__main__":
+    unittest.main()
+"""
+
+PROJECT_ROW_RE = re.compile(r"^\| \[`[^`]+`\]\([^)]+/README\.md\) \|")
+ROOT_PROJECT_ROW_RE = re.compile(r"^\| \[[^\]]+\]\(ai-workflows/[^)]+/README\.md\) \|")
+
+
+def _fill(template, values):
+    # One pass, so placeholder-like text inside a value is left alone.
+    return re.sub(r"@([A-Z_]+)@", lambda match: values[match.group(1)], template)
+
+
+def _pinned_action(root, action):
+    """Return the most common SHA-pinned `uses:` reference to an action in the workflows."""
+    pattern = re.compile(rf"uses:\s*({re.escape(action)}@[0-9a-f]{{40}}(?:\s+#\s*\S+)?)\s*$")
+    counts = {}
+    for path in sorted((Path(root) / ".github" / "workflows").glob("*.yml")):
+        for line in path.read_text(encoding="utf-8").splitlines():
+            match = pattern.search(line)
+            if match:
+                counts[match.group(1)] = counts.get(match.group(1), 0) + 1
+    if not counts:
+        raise WorkspaceError(f"no workflow pins {action} to a commit SHA to copy")
+    return max(sorted(counts), key=counts.get)
+
+
+def _insert_after_last(text, row_re, row, where):
+    lines = text.splitlines(keepends=True)
+    matches = [index for index, line in enumerate(lines) if row_re.match(line)]
+    if not matches:
+        raise WorkspaceError(f"cannot find the project table in {where}; add the project row by hand")
+    lines.insert(matches[-1] + 1, row + "\n")
+    return "".join(lines)
+
+
+def scaffold_project(root, manifest, name, summary, package=None):
+    """Plan a standard-library project; return ({path: text}, updated manifest).
+
+    Nothing is written. The result registers the project, its CI workflow, and its
+    readme rows so that `check` passes once the files are written.
+    """
+    root = Path(root)
+    package = package or name.replace("-", "_")
+    path = f"{PROJECTS_DIR}/{name}"
+    workflow = f".github/workflows/{name}-ci.yml"
+    summary = summary.strip()
+    components = manifest["components"]
+    if not NAME_RE.match(name):
+        raise WorkspaceError("project name must use lowercase letters, digits, and hyphens")
+    if not IDENTIFIER_RE.match(package):
+        raise WorkspaceError(f"package {package!r} is not a Python identifier; pass --package")
+    if package in (getattr(sys, "stdlib_module_names", None) or ()):
+        raise WorkspaceError(f"package {package!r} would shadow a standard-library module; pass --package")
+    if not summary or "\n" in summary or "|" in summary:
+        raise WorkspaceError("summary must be one non-empty line without '|'")
+    if name in components:
+        raise WorkspaceError(f"component {name!r} is already registered")
+    for component_name, component in components.items():
+        if package in component["packages"]:
+            raise WorkspaceError(f"package {package!r} already belongs to component {component_name!r}")
+    for existing in (path, workflow):
+        if (root / existing).exists():
+            raise WorkspaceError(f"{existing} already exists")
+
+    checks = [{"name": f"{name} ({version})", "workflow": f"{name} CI"} for version in SCAFFOLD_PYTHONS]
+    entry = {
+        "kind": "project",
+        "path": path,
+        "summary": summary,
+        "sources": [f"{path}/**"],
+        "packages": [package],
+        "third_party_imports": [],
+        "paths": [f"{path}/**", workflow],
+        "ci": {"workflow": workflow, "trigger": "paths"},
+        "checks": checks,
+        "test": [{"run": "python3 -m unittest discover -s tests"}],
+    }
+    # Keep projects grouped ahead of the legacy and tooling components.
+    names = list(components)
+    projects = [index for index, key in enumerate(names) if components[key]["kind"] == "project"]
+    position = projects[-1] + 1 if projects else 0
+    ordered = names[:position] + [name] + names[position:]
+    updated = dict(manifest)
+    updated["components"] = {key: entry if key == name else components[key] for key in ordered}
+    problems = validate(updated)
+    if problems:
+        raise WorkspaceError("; ".join(problems))
+
+    values = {
+        "NAME": name,
+        "PACKAGE": package,
+        "SUMMARY": summary,
+        "MIN_PYTHON": SCAFFOLD_PYTHONS[0],
+        "PYTHON_LIST": " and ".join(SCAFFOLD_PYTHONS),
+        "PYTHONS": ", ".join(f'"{version}"' for version in SCAFFOLD_PYTHONS),
+        "CHECKOUT": _pinned_action(root, "actions/checkout"),
+        "SETUP_PYTHON": _pinned_action(root, "actions/setup-python"),
+    }
+    readme = (root / "README.md").read_text(encoding="utf-8")
+    workspace_readme = (root / PROJECTS_DIR / "README.md").read_text(encoding="utf-8")
+    files = {
+        f"{path}/README.md": _fill(SCAFFOLD_README, values),
+        f"{path}/pyproject.toml": (
+            "[project]\n"
+            f"name = {json.dumps(package)}\n"
+            'version = "0.1.0"\n'
+            f"description = {json.dumps(summary, ensure_ascii=False)}\n"
+            f'requires-python = ">={SCAFFOLD_PYTHONS[0]}"\n'
+            "dependencies = []\n\n"
+            "[tool.pytest.ini_options]\n"
+            'testpaths = ["tests"]\n'
+        ),
+        f"{path}/.gitignore": "__pycache__/\n.venv/\n.pytest_cache/\n",
+        f"{path}/{package}/__init__.py": f"{json.dumps(summary, ensure_ascii=False)}\n\n__version__ = \"0.1.0\"\n",
+        f"{path}/tests/test_{package}.py": _fill(SCAFFOLD_TEST, values),
+        workflow: _fill(SCAFFOLD_WORKFLOW, values),
+        MANIFEST: json.dumps(updated, indent=2, ensure_ascii=False) + "\n",
+        "README.md": _insert_after_last(
+            readme, ROOT_PROJECT_ROW_RE,
+            f"| [{name}]({path}/README.md) | {summary} | Standard library only; no lockfile |", "README.md"),
+        f"{PROJECTS_DIR}/README.md": _insert_after_last(
+            workspace_readme, PROJECT_ROW_RE,
+            f"| [`{name}`]({name}/README.md) | {summary} | `{path}/` |", f"{PROJECTS_DIR}/README.md"),
+    }
+    return files, updated
 
 
 # CLI -----------------------------------------------------------------------
@@ -722,6 +1005,45 @@ def command_github_changes(args, root, manifest):
     return 0
 
 
+def write_files(root, files):
+    """Write files with the manifest last; on any failure, restore the previous state."""
+    root = Path(root)
+    originals = {path: (root / path).read_bytes() if (root / path).exists() else None for path in files}
+    created_dirs = []
+    try:
+        for path in sorted(files, key=lambda item: item == MANIFEST):
+            target = root / path
+            missing = [parent for parent in reversed(target.parents) if not parent.exists()]
+            target.parent.mkdir(parents=True, exist_ok=True)
+            created_dirs.extend(missing)
+            target.write_text(files[path], encoding="utf-8")
+    except BaseException:
+        for path, data in originals.items():
+            target = root / path
+            if data is None:
+                target.unlink(missing_ok=True)
+            else:
+                target.write_bytes(data)
+        for directory in reversed(created_dirs):
+            with contextlib.suppress(OSError):
+                directory.rmdir()
+        raise
+
+
+def command_new(args, root, manifest):
+    files, updated = scaffold_project(root, manifest, args.name, args.summary, args.package)
+    # Report the plan before writing, so a closed output stream cannot interrupt the writes.
+    for path in files:
+        print(f"{'update' if (root / path).exists() else 'create'} {path}", flush=True)
+    if args.dry_run:
+        return 0
+    write_files(root, files)
+    checks = ", ".join(check["name"] for check in updated["components"][args.name]["checks"])
+    print(f"\nRegistered {args.name!r}; the delivery gate will require: {checks}.")
+    print(f"Next: make workspace-check && make workspace-test COMPONENTS={args.name}")
+    return 0
+
+
 def build_parser():
     parser = argparse.ArgumentParser(description=__doc__, formatter_class=argparse.RawDescriptionHelpFormatter)
     parser.add_argument("--root", type=Path, default=ROOT, help=argparse.SUPPRESS)
@@ -750,6 +1072,12 @@ def build_parser():
 
     sub.add_parser("check", help="verify the manifest, CI routing, layout, and import boundaries")
 
+    new = sub.add_parser("new", help="scaffold a standard-library project, its CI workflow, and its registration")
+    new.add_argument("name", help="directory name under ai-workflows/ (lowercase, digits, hyphens)")
+    new.add_argument("--summary", required=True, help="one-line description for the readmes and manifest")
+    new.add_argument("--package", help="import name (default: the name with hyphens as underscores)")
+    new.add_argument("--dry-run", action="store_true", help="list the files without writing them")
+
     github = sub.add_parser("github-changes", help="print relevant=true|false for a GitHub Actions job")
     github.add_argument("--component", required=True)
     github.add_argument("--event-name", help="default: $GITHUB_EVENT_NAME")
@@ -763,6 +1091,7 @@ COMMANDS = {
     "test": command_test,
     "check": command_check,
     "github-changes": command_github_changes,
+    "new": command_new,
 }
 
 
