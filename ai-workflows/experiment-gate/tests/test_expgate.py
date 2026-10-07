@@ -1,6 +1,7 @@
 import copy
 import io
 import json
+import math
 import random
 import statistics
 import tempfile
@@ -50,7 +51,8 @@ class StatsTest(unittest.TestCase):
 
 class DecisionTest(unittest.TestCase):
     EXPECTED = {"win": "SHIP", "flat": "HOLD", "guardrail-breach": "ROLLBACK",
-                "regression": "ROLLBACK", "srm": "INVALID", "cuped": "HOLD"}
+                "regression": "ROLLBACK", "srm": "INVALID", "cuped": "HOLD",
+                "early-regression": "ROLLBACK"}
 
     def test_every_scenario_has_an_expectation(self):
         self.assertEqual(set(SCENARIOS), set(self.EXPECTED))
@@ -396,6 +398,109 @@ class CupedTest(unittest.TestCase):
             self.assertIn("CUPED on `revenue_per_user`", Path(tmp, "DECISION.md").read_text())
             record = json.loads(Path(tmp, "decision.json").read_text())
             self.assertIn("adjustment", record["metrics"][0])
+
+
+def sequential_summary(planned, n, control_mean, treatment_mean, sd=10.0):
+    """Primary-only mean-metric summary with ``n`` units per arm, monitored toward ``planned`` units."""
+    return {"metrics": {"y": {"type": "mean", "role": "primary", "direction": "increase"}},
+            "policy": {"sequential": {"planned_units": planned}},
+            "arms": {"control": {"units": n, "metrics": {"y": {"mean": control_mean, "sd": sd}}},
+                     "treatment": {"units": n, "metrics": {"y": {"mean": treatment_mean, "sd": sd}}}}}
+
+
+class SequentialTest(unittest.TestCase):
+    def test_multiplier_is_wider_than_fixed_horizon_and_narrowest_at_the_plan(self):
+        for alpha in (0.05, 0.025, 0.01):
+            with self.subTest(alpha=alpha):
+                at_plan = stats.sequential_multiplier(alpha, 1.0)
+                self.assertGreater(at_plan, stats.z_for(alpha))
+                self.assertLess(at_plan, stats.sequential_multiplier(alpha, 4.0))   # a quarter of the way in
+                self.assertLess(at_plan, stats.sequential_multiplier(alpha, 0.25))  # four times past the plan
+                self.assertLess(stats.sequential_multiplier(alpha, 4.0), stats.sequential_multiplier(alpha, 100.0))
+        self.assertLess(stats.sequential_multiplier(0.05, 1.0), stats.sequential_multiplier(0.01, 1.0))
+
+    def test_multiplier_reaches_the_mixture_boundary(self):
+        """At the returned value the one-sided mixture likelihood ratio equals 1 / alpha."""
+        for alpha, info in ((0.05, 1.0), (0.0125, 3.0)):
+            ratio = stats.mixture_ratio(alpha) / info
+            z = stats.sequential_multiplier(alpha, info)
+            mixture = 2 / (1 + ratio) ** 0.5 * math.exp(z * z * ratio / (2 * (1 + ratio))) * \
+                statistics.NormalDist().cdf(z * (ratio / (1 + ratio)) ** 0.5)
+            self.assertAlmostEqual(mixture * alpha, 1.0, places=9)
+
+    def test_rejects_invalid_arguments(self):
+        with self.assertRaises(ValueError):
+            stats.sequential_multiplier(0.05, 0.0)
+        with self.assertRaises(ValueError):
+            stats.mixture_ratio(1.0)
+
+    def test_repeated_looks_keep_the_false_ship_rate_below_alpha(self):
+        """A/A experiments checked at 20 interim looks. Re-applying the fixed-horizon bound at every
+        look ships far more often than alpha; the always-valid bound stays below it."""
+        rng, reps, looks, block, sd = random.Random(11), 400, 20, 500, 10.0
+        ships = {"sequential": 0, "fixed": 0}
+        for _ in range(reps):
+            totals, shipped = [0.0, 0.0], {"sequential": False, "fixed": False}
+            for k in range(1, looks + 1):
+                totals = [t + rng.gauss(0.0, sd / block ** 0.5) * block for t in totals]
+                summary = sequential_summary(2 * looks * block, k * block, totals[0] / (k * block),
+                                             totals[1] / (k * block), sd)
+                shipped["sequential"] |= evaluate(summary)["decision"] == "SHIP"
+                del summary["policy"]
+                shipped["fixed"] |= evaluate(summary)["decision"] == "SHIP"
+            for key in ships:
+                ships[key] += shipped[key]
+        self.assertLess(ships["sequential"] / reps, 0.05)
+        self.assertGreater(ships["fixed"] / reps, 0.10)
+
+    def test_interim_look_can_stop_for_a_large_regression(self):
+        report = evaluate(generate("early-regression"))
+        self.assertEqual(report["decision"], "ROLLBACK")
+        self.assertEqual(report["sequential"], {"planned_units": 60_000, "units": 15_000, "information_fraction": 0.25})
+        primary = report["metrics"][0]
+        self.assertAlmostEqual(primary["z"], stats.sequential_multiplier(0.05, 4.0))
+        guard = status_of(report, "latency_ms")
+        self.assertAlmostEqual(guard["z"], stats.sequential_multiplier(0.025, 4.0))
+
+    def test_same_data_can_ship_fixed_horizon_but_hold_sequentially(self):
+        summary = sequential_summary(20_000, 10_000, 50.0, 50.3)  # z = 2.12
+        self.assertEqual(evaluate(summary)["decision"], "HOLD")
+        self.assertIn("planned sample size reached without a decision", evaluate(summary)["reasons"])
+        del summary["policy"]
+        self.assertEqual(evaluate(summary)["decision"], "SHIP")
+
+    def test_hold_before_the_plan_does_not_claim_the_horizon(self):
+        report = evaluate(sequential_summary(40_000, 10_000, 50.0, 50.0))
+        self.assertEqual(report["decision"], "HOLD")
+        self.assertEqual(report["reasons"], ["primary metric is inconclusive"])
+
+    def test_fixed_horizon_records_are_unchanged(self):
+        for name in sorted(set(SCENARIOS) - {"early-regression"}):
+            with self.subTest(name):
+                self.assertNotIn("sequential", evaluate(generate(name)))
+        self.assertNotIn("sequential", evaluate(example()))
+
+    def test_malformed_sequential_policy_is_rejected(self):
+        for label, value in {
+            "not an object": 60_000,
+            "missing planned_units": {},
+            "float planned_units": {"planned_units": 60_000.0},
+            "boolean planned_units": {"planned_units": True},
+            "too small": {"planned_units": 1},
+        }.items():
+            with self.subTest(label), self.assertRaises(ValueError):
+                summary = example()
+                summary["policy"]["sequential"] = value
+                evaluate(summary)
+
+    def test_cli_reports_the_monitoring_state(self):
+        with tempfile.TemporaryDirectory() as tmp:
+            code, _, _ = run_cli("--scenario", "early-regression", "--out", tmp, "--require-ship")
+            self.assertEqual(code, 1)
+            self.assertIn("Sequential monitoring: 15000 of 60000 planned units (25%)",
+                          Path(tmp, "DECISION.md").read_text())
+            record = json.loads(Path(tmp, "decision.json").read_text())
+            self.assertEqual(record["policy"]["sequential"], {"planned_units": 60_000})
 
 
 if __name__ == "__main__":

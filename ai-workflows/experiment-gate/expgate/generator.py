@@ -28,6 +28,8 @@ class Scenario:
     covariate_corr: float | None = None
     revenue: tuple[float, float] = (20.0, 20.0)
     revenue_sd: float = 8.0
+    # Set to simulate an interim look at a sequentially monitored test planned for this many units.
+    planned_units: int | None = None
 
 
 SCENARIOS = {
@@ -45,6 +47,10 @@ SCENARIOS = {
     # fixed seed the treatment arm's pre-period covariate happens to run high, which inflates the raw lift.
     "cuped": Scenario("Real revenue lift of 0.4; a chance covariate imbalance inflates the raw estimate",
                       units=4_000, covariate_corr=0.8, revenue=(20.0, 20.4)),
+    # An interim look a quarter of the way into a sequentially monitored test: the conversion drop is
+    # large enough that the always-valid bound already excludes zero, so the test can stop now.
+    "early-regression": Scenario("Interim look at 15,000 of 60,000 planned units; candidate lowers conversion",
+                                 units=15_000, conversion=(0.100, 0.075), planned_units=60_000),
 }
 
 METRICS = {
@@ -103,6 +109,7 @@ def generate(name: str, seed: int = SEED) -> dict:
     share = s.treatment_share if s.observed_treatment_share is None else s.observed_treatment_share
     n_t = round(s.units * share)
     n_c = s.units - n_t
+    policy = {} if s.planned_units is None else {"policy": {"sequential": {"planned_units": s.planned_units}}}
     if s.covariate_corr is not None:
         return {
             "experiment": name,
@@ -120,6 +127,7 @@ def generate(name: str, seed: int = SEED) -> dict:
         "description": s.description,
         "seed": seed,
         "assignment": {"expected_treatment_share": s.treatment_share},
+        **policy,
         "metrics": METRICS,
         "arms": {
             "control": _arm(rng, n_c, s.conversion[0], s.refund[0], s.latency_ms[0], s.latency_sd),
