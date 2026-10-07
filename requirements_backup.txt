@@ -84,7 +84,7 @@ flake8==3.9.1
     # via -r requirements.in
 flatbuffers==1.12
     # via tensorflow-gpu
-fsspec==2022.10.0
+fsspec==2026.6.0
     # via
     #   torchrec-nightly
     #   torchx-nightly
