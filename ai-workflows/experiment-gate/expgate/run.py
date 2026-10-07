@@ -44,6 +44,11 @@ def render_markdown(report: dict, digest: str) -> str:
                  f"{m['status']} |")
     L.append("\nImprovement is signed so that positive values are desirable. Guardrail bounds are "
              "one-sided and Bonferroni-adjusted across guardrails.")
+    if "sequential" in report:
+        q = report["sequential"]
+        L.append(f"\nSequential monitoring: {q['units']} of {q['planned_units']} planned units "
+                 f"({q['information_fraction']:.0%}). Bounds are always-valid confidence sequences, so this "
+                 "decision stays valid however often the experiment has been checked.")
     for m in report["metrics"]:
         if "adjustment" in m:
             a = m["adjustment"]
