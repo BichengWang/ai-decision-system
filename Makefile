@@ -56,7 +56,7 @@ expgate-run:
 
 JEV_DIR := ai-workflows/jev-decision
 
-.PHONY: jev-test jev-dry-run
+.PHONY: jev-test jev-dry-run jev-eval
 jev-test:
 	cd $(JEV_DIR) && python3 -m unittest discover -s tests -v
 
@@ -65,6 +65,12 @@ jev-dry-run:
 		python3 -m jevdecision --questions examples/support-ticket.json \
 			--state "Help! My payouts have been failing for 3 days." --backend $$backend --dry-run || exit 1; \
 	done
+
+jev-eval:
+	cd $(JEV_DIR) && out=$$(mktemp -d) && python3 -m jevdecision.evaluation \
+		--questions examples/support-ticket.json --cases examples/support-ticket-cases.jsonl \
+		--responses examples/support-ticket-responses.jsonl \
+		--require examples/support-ticket-requirements.json --out "$$out" && cat "$$out/EVALUATION.md"
 
 # Workspace commands read workspace.json (see ai-workflows/README.md).
 WORKSPACE := python3 scripts/workspace.py
