@@ -71,7 +71,7 @@ WORKSPACE := python3 scripts/workspace.py
 BASE ?= origin/main
 COMPONENTS ?=
 
-.PHONY: workspace-list workspace-check workspace-test affected affected-test
+.PHONY: workspace-list workspace-check workspace-test workspace-new affected affected-test
 workspace-list:
 	$(WORKSPACE) list
 
@@ -82,6 +82,10 @@ workspace-check:
 workspace-test:
 	@test -n "$(COMPONENTS)" || { echo "Set COMPONENTS to component names from 'make workspace-list'"; exit 2; }
 	$(WORKSPACE) test $(COMPONENTS)
+
+workspace-new:
+	@test -n "$(NAME)" && test -n "$(SUMMARY)" || { echo 'Set NAME=<project-dir> and SUMMARY="<one line>"'; exit 2; }
+	$(WORKSPACE) new "$(NAME)" --summary "$(SUMMARY)"
 
 affected:
 	$(WORKSPACE) affected --base "$(BASE)"
