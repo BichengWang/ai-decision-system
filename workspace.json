@@ -97,6 +97,41 @@
         }
       ]
     },
+    "jev-decision": {
+      "kind": "project",
+      "path": "ai-workflows/jev-decision",
+      "summary": "Jev as the core decision model, with an OpenAI Decisions API backend",
+      "sources": [
+        "ai-workflows/jev-decision/**"
+      ],
+      "packages": [
+        "jevdecision"
+      ],
+      "third_party_imports": [],
+      "paths": [
+        "ai-workflows/jev-decision/**",
+        ".github/workflows/jev-decision-ci.yml"
+      ],
+      "ci": {
+        "workflow": ".github/workflows/jev-decision-ci.yml",
+        "trigger": "paths"
+      },
+      "checks": [
+        {
+          "name": "jev-decision (3.11)",
+          "workflow": "Jev decision CI"
+        },
+        {
+          "name": "jev-decision (3.13)",
+          "workflow": "Jev decision CI"
+        }
+      ],
+      "test": [
+        {
+          "run": "python3 -m unittest discover -s tests"
+        }
+      ]
+    },
     "research-workbench": {
       "kind": "legacy",
       "path": ".",
