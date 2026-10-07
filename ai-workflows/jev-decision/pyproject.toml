@@ -1,0 +1,9 @@
+[project]
+name = "jevdecision"
+version = "0.1.0"
+description = "Jev as the core decision model, with an OpenAI Decisions API backend (standard library only)"
+requires-python = ">=3.11"
+dependencies = []
+
+[tool.pytest.ini_options]
+testpaths = ["tests"]
