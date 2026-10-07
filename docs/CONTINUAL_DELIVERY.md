@@ -8,10 +8,15 @@ The recurring Codex task attached to this repository wakes every 30 minutes. It 
 2. Confirm `main` branch protection requires `Delivery policy` and `RELIA required`, requires branches up to date, and applies to administrators. The controller queries these settings before any merge. Confirm the experiment-gate check names are `test (3.11)` and `test (3.13)` on a PR that changes that project, and `src baseline` from `Research baseline` on a PR that changes the research workbench.
 3. Merge P-001 under the existing human process first. Pilot the new loop on P-002 and P-003, inspect their review receipts and CI results, and only then let the task pursue the full daily target. A schedule may run before these prerequisites, but it must report the blocker and make no merge.
 
-The controller requires `src baseline` for PRs touching `src/`, root `tests/`,
-`pyproject.toml`, `requirements.txt`, `setup.cfg`, `Makefile`, or
-`.github/workflows/src-baseline.yml`, matching that workflow's path filters.
-Missing, skipped, pending, failed, or wrongly attributed baseline checks block merging.
+The controller derives a PR's required checks from [`workspace.json`](../workspace.json):
+`Delivery policy` always, plus the checks of every component whose `paths` the PR
+touches. For example, `src baseline` is required for PRs touching `src/`, root
+`tests/`, `pyproject.toml`, `requirements.txt`, `setup.cfg`, `Makefile`, or
+`.github/workflows/src-baseline.yml`. A change to `workspace.json` requires every
+component's checks. `Delivery policy` runs `scripts/workspace.py check`, which fails
+when a workflow's path filters drift from the manifest. Missing, skipped, pending,
+failed, or wrongly attributed checks block merging, and an unreadable or invalid
+manifest blocks every merge. `make affected` previews the checks for the current branch.
 
 ## Each wakeup
 
