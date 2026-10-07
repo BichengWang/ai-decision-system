@@ -1,0 +1,8 @@
+{
+  "max_error_rate": 0.0,
+  "questions": {
+    "refund": {"n": {"min": 10}, "accuracy": {"min": 0.85}, "brier": {"max": 0.1}},
+    "department": {"n": {"min": 10}, "accuracy": {"min": 0.8}, "log_loss": {"max": 0.5}},
+    "frustration": {"n": {"min": 10}, "within_one": {"min": 0.95}, "mae": {"max": 0.5}}
+  }
+}

@@ -24,3 +24,7 @@ class APIError(DecisionError):
     @property
     def retryable(self):
         return self.status is None or self.status == 429 or self.status >= 500
+
+
+class DatasetError(DecisionError, ValueError):
+    """An evaluation case file, recorded response file, or requirement spec is invalid."""

@@ -47,3 +47,10 @@ jobs:
               --state "Help! My payouts have been failing for 3 days." \
               --backend "$backend" --dry-run
           done
+      - name: Evaluate the example cases from recorded responses
+        run: |
+          python -m jevdecision.evaluation --questions examples/support-ticket.json \
+            --cases examples/support-ticket-cases.jsonl \
+            --responses examples/support-ticket-responses.jsonl \
+            --require examples/support-ticket-requirements.json --out "$RUNNER_TEMP/jev-eval"
+          cat "$RUNNER_TEMP/jev-eval/EVALUATION.md" >> "$GITHUB_STEP_SUMMARY"

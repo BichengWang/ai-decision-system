@@ -1,0 +1,12 @@
+{"id": "t01", "state": "Help! My payouts have been failing for 3 days.", "labels": {"refund": false, "department": "technical", "frustration": "Frustrated"}}
+{"id": "t02", "state": "I was charged twice for March. Please refund the duplicate charge.", "labels": {"refund": true, "department": "billing", "frustration": "Frustrated"}}
+{"id": "t03", "state": "What does the Enterprise plan cost for 200 seats?", "labels": {"refund": false, "department": "sales", "frustration": "Calm"}}
+{"id": "t04", "state": "Your API returns 500 on every webhook since this morning. We are losing orders. Fix it NOW.", "labels": {"refund": false, "department": "technical", "frustration": "Very angry"}}
+{"id": "t05", "state": "Can I get my money back? The product is not what was advertised.", "labels": {"refund": true, "department": "billing", "frustration": "Frustrated"}}
+{"id": "t06", "state": "Hi, could you send me last year's invoices for our records? Thanks!", "labels": {"refund": false, "department": "billing", "frustration": "Calm"}}
+{"id": "t07", "state": "We'd like to upgrade from Team to Business before the next billing cycle.", "labels": {"refund": false, "department": "sales", "frustration": "Calm"}}
+{"id": "t08", "state": "Third time writing. Cancel my subscription and refund every cent or I am calling my bank.", "labels": {"refund": true, "department": "billing", "frustration": "Very angry"}}
+{"id": "t09", "state": "The SDK throws a timeout when uploading files over 2 GB.", "labels": {"refund": false, "department": "technical", "frustration": "Calm"}}
+{"id": "t10", "state": "Do you offer a discount for nonprofits? If not, I'd want a refund of my trial upgrade.", "labels": {"refund": true, "department": "sales", "frustration": "Calm"}}
+{"id": "t11", "state": "Login has been broken for two days and support hasn't answered.", "labels": {"refund": false, "department": "technical", "frustration": "Frustrated"}}
+{"id": "t12", "state": "Your price increase is outrageous. Downgrade me and refund the difference.", "labels": {"refund": true, "department": "billing", "frustration": "Very angry"}}
