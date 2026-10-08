@@ -456,6 +456,45 @@ class WorkspaceCheckTests(unittest.TestCase):
         self.assertIn("component 'demo': test directory nowhere does not exist", problems)
 
 
+class MarkdownLinkTests(unittest.TestCase):
+    def setUp(self):
+        self.folder = tempfile.TemporaryDirectory()
+        self.addCleanup(self.folder.cleanup)
+        self.repo = FixtureRepo(self.folder.name)
+
+    def test_links_to_files_directories_and_headings_pass(self):
+        self.repo.write("ai-workflows/demo/README.md", "# Demo `pkg`\n\n## Quick start (local)\n\n## Notes\n\n## Notes\n")
+        self.repo.write("docs/GUIDE.md", "\n".join([
+            "[demo](../ai-workflows/demo/README.md#quick-start-local) [again](../ai-workflows/demo/README.md#notes-1)",
+            "[pkg heading](../ai-workflows/demo/README.md#demo-pkg) [folder](../tools) [self](#guide)",
+            "[titled](<../README.md> \"Root\") [web](https://example.com/x.md) [mail](mailto:a@b.c)",
+            '<a id="custom"></a>[explicit](#custom)', "", "# Guide", ""]))
+        self.assertEqual(self.repo.problems(), [])
+
+    def test_missing_targets_and_headings_are_reported(self):
+        self.repo.write("ai-workflows/demo/README.md", "# Demo\n\n[gone](docs/OLD.md) [heading](../README.md#nope)\n"
+                        "[outside](../../../etc/passwd) [section](#missing)\n")
+        self.assertEqual(self.repo.problems(), [
+            "ai-workflows/demo/README.md:3: link 'docs/OLD.md' points to a missing file",
+            "ai-workflows/demo/README.md:3: link '../README.md#nope' names a heading that does not exist",
+            "ai-workflows/demo/README.md:4: link '../../../etc/passwd' points outside the repository",
+            "ai-workflows/demo/README.md:4: link '#missing' names a heading that does not exist",
+        ])
+
+    def test_code_and_unchecked_documents_are_ignored(self):
+        self.repo.write("README.md", self.repo.root.joinpath("README.md").read_text()
+                        + "\n`[inline](gone.md)`\n\n```md\n[fenced](gone.md)\n```\n")
+        self.repo.write("src/notes/README.md", "[legacy](gone.md)\n")
+        self.repo.write("docs/notes/old.md", "[nested](gone.md)\n")
+        self.assertEqual(self.repo.problems(), [])
+
+    def test_untracked_documents_are_checked(self):
+        self.repo.write("tools/README.md", "[new](missing.md)\n")
+        self.assertEqual(workspace.link_problems(self.repo.root, workspace.workspace_files(self.repo.root),
+                                                 self.repo.manifest),
+                         ["tools/README.md:1: link 'missing.md' points to a missing file"])
+
+
 class WorkflowCheckNameTests(unittest.TestCase):
     def names(self, jobs):
         return workspace.workflow_check_names("name: X\non: push\njobs:\n" + jobs)
