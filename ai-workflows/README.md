@@ -72,7 +72,11 @@ you have not committed yet. It fails when:
   expanded over a single-key matrix as GitHub names matrix jobs);
 - a Python file belongs to no component or to several;
 - a component imports another component's package, or a project imports a
-  third-party module it does not declare.
+  third-party module it does not declare;
+- a local Markdown link in the root or `docs/` pages, or in a project or
+  tooling component, points to a missing file or to a heading that does not
+  exist (links inside code, external URLs, and the legacy `src/` notes are not
+  checked).
 
 The [delivery controller](../scripts/continual_delivery.py) derives the checks a
 pull request must pass from the same manifest, and RELIA CI asks
