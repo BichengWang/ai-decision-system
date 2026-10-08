@@ -231,10 +231,27 @@ MALFORMED = {
     "srm_alpha out of range": _set(["policy", "srm_alpha"], 5),
     "policy not an object": _set(["policy"], 0.05),
     "share out of range": _set(["assignment", "expected_treatment_share"], 0.0),
+    "misspelled alpha": _set(["policy", "alpah"], 0.01),
+    "misspelled sequential plan": _set(["policy", "sequential"], {"planned_units": 200000, "planed_units": 1}),
+    "misspelled share": _set(["assignment", "expected_share"], 0.2),
+    "misspelled covariate": _set(["arms", "control", "metrics", "latency_ms", "covarite"],
+                                 {"mean": 40.0, "sd": 12.0, "corr": 0.5}),
+    "covariate with an extra field": lambda s: [
+        arm["metrics"]["latency_ms"].__setitem__("covariate", {"mean": 40.0, "sd": 12.0, "corr": 0.5, "rho": 0.5})
+        for arm in s["arms"].values()] and s,
+    "mean field on a proportion": _set(["arms", "control", "metrics", "conversion", "mean"], 0.1),
+    "non-string experiment name": _set(["experiment"], 7),
+    "blank experiment name": _set(["experiment"], " "),
 }
 
 
 class MalformedInputTest(unittest.TestCase):
+    def test_misspelled_setting_is_named(self):
+        summary = example()
+        summary["policy"]["alpah"] = 0.01
+        with self.assertRaisesRegex(ValueError, r"'policy' has unknown keys \['alpah'\]"):
+            evaluate(summary)
+
     def test_evaluate_raises_value_error(self):
         for label, mutate in MALFORMED.items():
             with self.subTest(label):
