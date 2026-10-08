@@ -1,8 +1,11 @@
+import email.message
+import email.utils
 import io
 import json
 import os
 import tempfile
 import unittest
+import urllib.error
 from contextlib import redirect_stderr, redirect_stdout
 from pathlib import Path
 from unittest import mock
@@ -327,6 +330,70 @@ class RetryTest(unittest.TestCase):
         with self.assertRaises(APIError):
             DecisionModel(backend).decide(STATE, QUESTIONS)
         self.assertEqual(len(transport.calls), 1)
+
+
+class RetryAfterTest(unittest.TestCase):
+    def decide_with(self, *responses, **options):
+        waits = []
+        transport = FakeTransport(*responses)
+        backend = JevBackend(api_key="k", transport=transport, sleep=waits.append, env={}, **options)
+        return backend, transport, waits
+
+    def test_backoff_without_retry_after(self):
+        backend, _, waits = self.decide_with(APIError("busy", 429), APIError("down", 503), JEV_RESPONSE)
+        DecisionModel(backend).decide(STATE, QUESTIONS)
+        self.assertEqual(waits, [0.5, 1.0])
+
+    def test_retry_after_lengthens_but_never_shortens_the_wait(self):
+        backend, transport, waits = self.decide_with(
+            APIError("busy", 429, retry_after=7.0), APIError("busy", 429, retry_after=0.0), JEV_RESPONSE)
+        DecisionModel(backend).decide(STATE, QUESTIONS)
+        self.assertEqual(waits, [7.0, 1.0])
+        self.assertEqual(len(transport.calls), 3)
+
+    def test_wait_longer_than_the_cap_fails_at_once(self):
+        backend, transport, waits = self.decide_with(APIError("busy", 429, retry_after=3600.0), JEV_RESPONSE,
+                                                     max_retry_wait=30)
+        with self.assertRaisesRegex(APIError, "3600s") as raised:
+            DecisionModel(backend).decide(STATE, QUESTIONS)
+        self.assertEqual((raised.exception.status, raised.exception.retry_after), (429, 3600.0))
+        self.assertEqual((waits, len(transport.calls)), ([], 1))
+
+    def test_max_retry_wait_is_validated(self):
+        for value in (-1, float("inf"), float("nan"), None, True):
+            with self.subTest(value=value), self.assertRaisesRegex(DecisionError, "max_retry_wait"):
+                JevBackend(api_key="k", env={}, max_retry_wait=value)
+
+    def test_retry_after_on_a_client_error_is_not_retried(self):
+        backend, transport, waits = self.decide_with(APIError("bad", 400, retry_after=1.0), JEV_RESPONSE)
+        with self.assertRaises(APIError):
+            DecisionModel(backend).decide(STATE, QUESTIONS)
+        self.assertEqual((waits, len(transport.calls)), ([], 1))
+
+    def test_parse_retry_after(self):
+        from jevdecision.backends import parse_retry_after
+        now = 1_800_000_000.0
+        self.assertEqual(parse_retry_after("120"), 120.0)
+        self.assertEqual(parse_retry_after(" 0 "), 0.0)
+        date = email.utils.formatdate(now + 45, usegmt=True)
+        self.assertAlmostEqual(parse_retry_after(date, now=now), 45.0)
+        self.assertEqual(parse_retry_after(email.utils.formatdate(now - 10, usegmt=True), now=now), 0.0)
+        for value in (None, "", "-5", "1.5", "soon", "\u00b9", "Wed, 21 Oct 2015 07:28:00"):
+            with self.subTest(value=value):
+                self.assertIsNone(parse_retry_after(value, now=now))
+
+    def test_urllib_transport_reads_the_header(self):
+        from jevdecision.backends import urllib_transport
+        headers = email.message.Message()
+        headers["Retry-After"] = "12"
+        error = urllib.error.HTTPError("https://x", 429, "Too Many Requests", headers, io.BytesIO(b"slow down"))
+        with mock.patch("urllib.request.urlopen", side_effect=error), self.assertRaises(APIError) as raised:
+            urllib_transport("https://x", {}, b"{}", 5)
+        self.assertEqual((raised.exception.status, raised.exception.retry_after), (429, 12.0))
+        error = urllib.error.HTTPError("https://x", 503, "Unavailable", email.message.Message(), io.BytesIO(b""))
+        with mock.patch("urllib.request.urlopen", side_effect=error), self.assertRaises(APIError) as raised:
+            urllib_transport("https://x", {}, b"{}", 5)
+        self.assertIsNone(raised.exception.retry_after)
 
 
 class DecisionModelTest(unittest.TestCase):

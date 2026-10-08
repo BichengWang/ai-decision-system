@@ -16,10 +16,12 @@ class ResponseError(DecisionError):
 class APIError(DecisionError):
     """The provider returned an HTTP error or could not be reached."""
 
-    def __init__(self, message, status=None, body=None):
+    def __init__(self, message, status=None, body=None, retry_after=None):
         super().__init__(message)
         self.status = status
         self.body = body
+        # Seconds the provider asked the client to wait (its Retry-After header), if any.
+        self.retry_after = retry_after
 
     @property
     def retryable(self):

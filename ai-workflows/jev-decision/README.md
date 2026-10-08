@@ -72,7 +72,11 @@ Every backend also takes `api_key`, `model`, `base_url`, `path`, `timeout`,
 `max_retries`, and `transport` arguments. Use `base_url` and `path` for a gateway
 that serves Jev elsewhere, for example `path="/v1/decisions"` with
 `model="typesafe/jev"`. Rate-limit (429), server (5xx), and connection errors are
-retried with exponential backoff (2 retries by default). Other HTTP errors are
+retried with exponential backoff (2 retries by default). When the provider sends a
+`Retry-After` header (seconds or an HTTP date), the client waits at least that long
+before retrying. A provider that asks for more than `max_retry_wait` seconds (60 by
+default) fails the request at once with `APIError`, whose `retry_after` attribute
+carries the requested wait, instead of blocking the caller. Other HTTP errors are
 raised as `APIError` immediately. `transport` is any callable
 `(url, headers, body_bytes, timeout) -> dict`, which tests use to replace the
 network.
