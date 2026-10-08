@@ -22,8 +22,9 @@ Rules are applied in order; the first match wins.
 
 The primary metric uses a one-sided test at `alpha` (default 0.05). Guardrail
 bounds are one-sided and Bonferroni-adjusted across guardrails. Proportions use
-the unpooled Wald standard error; means use the Welch standard error. Both are
-large-sample approximations. A metric can optionally be estimated with CUPED
+the unpooled Wald standard error; means use the Welch standard error; ratio
+metrics use a delta-method standard error (see [Ratio metrics](#ratio-metrics)).
+All are large-sample approximations. A metric can optionally be estimated with CUPED
 regression adjustment, which narrows its interval (see
 [Variance reduction](#variance-reduction-cuped)). A test that is checked while it
 runs can replace every bound with an always-valid confidence sequence (see
@@ -65,6 +66,30 @@ are rejected rather than ignored, so a misspelled setting such as `alpah` cannot
 silently fall back to its default.
 Any violation exits 2 with the offending field named, so malformed input is
 never mistaken for a `--require-ship` refusal (exit 1).
+
+## Ratio metrics
+
+Some metrics are a ratio of two per-unit totals: revenue per session, clicks per page view,
+when users (not sessions) are randomized. Sessions from the same user are correlated, so
+treating them as independent draws understates the standard error. Declare the metric with
+`"type": "ratio"` and give each arm the per-unit mean and sample standard deviation of the
+numerator and the denominator, and their correlation across units:
+
+```json
+"revenue_per_session": {"numerator": {"mean": 31.2, "sd": 40.5},
+                        "denominator": {"mean": 3.1, "sd": 2.4}, "corr": 0.62}
+```
+
+The arm's value is `numerator.mean / denominator.mean`, and its variance comes from the
+first-order delta method,
+`(sd_y^2 - 2 R corr sd_y sd_x + R^2 sd_x^2) / (mean_x^2 n)` with `R` the ratio and `n` the
+arm's units. The denominator mean must be positive. Ratio metrics take any role and direction,
+work with sequential monitoring, and do not take a CUPED `covariate`.
+
+In 1,000 simulated A/A tests that randomize 2,000 users per arm, each with a varying number
+of sessions and a user-level spending propensity, the delta-method standard error averaged
+0.212 against an empirical spread of 0.211, and a one-sided test at 0.05 shipped 4.6% of
+them. Treating sessions as independent shipped 9.8%.
 
 ## Variance reduction (CUPED)
 
@@ -156,8 +181,9 @@ seed (`expgate/generator.py`):
   bounds do. The guarantee is exact for normal estimates with known variance and holds only
   approximately at small samples. The sample-ratio check is not sequential: re-running it at
   every look raises its false alarm rate above `srm_alpha`.
-- CUPED is supported for one covariate per metric. There are no ratio metrics with
-  delta-method standard errors, no multi-covariate adjustment, and no heterogeneous-effect
-  analysis.
+- CUPED is supported for one covariate per proportion or mean metric. There is no CUPED for
+  ratio metrics, no multi-covariate adjustment, and no heterogeneous-effect analysis.
+- The delta method is a first-order approximation. It needs enough units that the
+  denominator mean is estimated well away from zero.
 - Synthetic scenarios show that the rules behave as specified. They say nothing
   about any real product's effects.
