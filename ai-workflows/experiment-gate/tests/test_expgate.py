@@ -231,6 +231,8 @@ MALFORMED = {
     "srm_alpha out of range": _set(["policy", "srm_alpha"], 5),
     "policy not an object": _set(["policy"], 0.05),
     "share out of range": _set(["assignment", "expected_treatment_share"], 0.0),
+    "power of 1": _set(["policy", "power"], 1.0),
+    "string power": _set(["policy", "power"], "0.8"),
     "misspelled alpha": _set(["policy", "alpah"], 0.01),
     "misspelled sequential plan": _set(["policy", "sequential"], {"planned_units": 200000, "planed_units": 1}),
     "misspelled share": _set(["assignment", "expected_share"], 0.2),
@@ -489,7 +491,8 @@ class SequentialTest(unittest.TestCase):
     def test_hold_before_the_plan_does_not_claim_the_horizon(self):
         report = evaluate(sequential_summary(40_000, 10_000, 50.0, 50.0))
         self.assertEqual(report["decision"], "HOLD")
-        self.assertEqual(report["reasons"], ["primary metric is inconclusive"])
+        self.assertEqual(len(report["reasons"]), 1)
+        self.assertTrue(report["reasons"][0].startswith("primary metric is inconclusive (detectable improvement"))
 
     def test_fixed_horizon_records_are_unchanged(self):
         for name in sorted(set(SCENARIOS) - {"early-regression"}):
@@ -633,6 +636,55 @@ class RatioTest(unittest.TestCase):
                     code, _, err = run_cli("--input", str(path), "--out", str(Path(tmp, f"out-{i}")))
                     self.assertEqual(code, 2)
                     self.assertIn("invalid experiment summary", err)
+
+
+class MinimumDetectableEffectTest(unittest.TestCase):
+    def test_every_row_reports_its_mde(self):
+        report = evaluate(example())
+        self.assertEqual(report["policy"]["power"], 0.8)
+        for row in report["metrics"]:
+            with self.subTest(row["metric"]):
+                self.assertAlmostEqual(row["mde"], (row["z"] + 0.8416212335729143) * row["se"])
+
+    def test_power_and_bounds_widen_the_mde(self):
+        base = status_of(evaluate(example()), "conversion")["mde"]
+        summary = example()
+        summary["policy"]["power"] = 0.95
+        self.assertGreater(status_of(evaluate(summary), "conversion")["mde"], base)
+        summary = example()
+        summary["policy"]["sequential"] = {"planned_units": 200_000}
+        self.assertGreater(status_of(evaluate(summary), "conversion")["mde"], base)
+        # Guardrails share alpha, so their bounds and MDEs are wider than at the full alpha.
+        latency = status_of(evaluate(example()), "latency_ms")
+        self.assertAlmostEqual(latency["mde"], stats.minimum_detectable_effect(latency["se"], stats.z_for(0.025), 0.8))
+
+    def test_a_true_effect_equal_to_the_mde_ships_at_the_stated_power(self):
+        rng, n, sd, reps = random.Random(5), 5_000, 10.0, 1_000
+        mde = stats.minimum_detectable_effect(stats.mean_effect(50.0, sd, n, 50.0, sd, n).se, stats.z_for(0.05), 0.8)
+        shipped = 0
+        for _ in range(reps):
+            summary = sequential_summary(2 * n, n, rng.gauss(50.0, sd / math.sqrt(n)),
+                                         rng.gauss(50.0 + mde, sd / math.sqrt(n)), sd)
+            del summary["policy"]
+            shipped += evaluate(summary)["decision"] == "SHIP"
+        self.assertAlmostEqual(shipped / reps, 0.8, delta=0.04)
+
+    def test_hold_reason_and_record_name_the_mde(self):
+        summary = generate("flat")
+        report = evaluate(summary)
+        self.assertEqual(report["decision"], "HOLD")
+        mde = status_of(report, "conversion")["mde"]
+        self.assertIn(f"detectable improvement at 80% power: {mde:.4g}", report["reasons"][0])
+        with tempfile.TemporaryDirectory() as tmp:
+            self.assertEqual(run_cli("--scenario", "flat", "--out", tmp)[0], 0)
+            text = Path(tmp, "DECISION.md").read_text()
+        self.assertIn("| Margin | MDE | Status |", text)
+        self.assertIn("power 0.8", text)
+
+    def test_rejects_invalid_power(self):
+        for power in (0.0, 1.0, -0.5):
+            with self.subTest(power=power), self.assertRaises(ValueError):
+                stats.minimum_detectable_effect(1.0, 1.64, power)
 
 
 if __name__ == "__main__":

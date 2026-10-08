@@ -31,19 +31,21 @@ def render_markdown(report: dict, digest: str) -> str:
     L += [f"- {r}" for r in report["reasons"]]
     srm = report["sample_ratio"]
     L.append(f"\n- decision.json SHA-256: `{digest}`")
-    L.append(f"- expgate {__version__}; alpha {report['policy']['alpha']}; SRM alpha {report['policy']['srm_alpha']}")
+    L.append(f"- expgate {__version__}; alpha {report['policy']['alpha']}; SRM alpha {report['policy']['srm_alpha']}; "
+             f"power {report['policy']['power']}")
     L.append(f"- assignment: {srm['control_units']} control / {srm['treatment_units']} treatment "
              f"(expected treatment share {srm['expected_treatment_share']}); SRM p={srm['p_value']:.3g} "
              f"-> {'PASS' if srm['pass'] else 'FAIL'}\n")
-    L.append("| Metric | Role | Control | Treatment | Improvement [bounds] | Margin | Status |")
-    L.append("|---|---|---:|---:|---|---:|---|")
+    L.append("| Metric | Role | Control | Treatment | Improvement [bounds] | Margin | MDE | Status |")
+    L.append("|---|---|---:|---:|---|---:|---:|---|")
     for m in report["metrics"]:
         lo, hi = m["improvement_bounds"]
         L.append(f"| {m['metric']} | {m['role']} | {_fmt(m['control'])} | {_fmt(m['treatment'])} | "
                  f"{_fmt(m['improvement'])} [{_fmt(lo)}, {_fmt(hi)}] | {_fmt(m['margin']) if 'margin' in m else ''} | "
-                 f"{m['status']} |")
+                 f"{_fmt(m['mde'])} | {m['status']} |")
     L.append("\nImprovement is signed so that positive values are desirable. Guardrail bounds are "
-             "one-sided and Bonferroni-adjusted across guardrails.")
+             "one-sided and Bonferroni-adjusted across guardrails. MDE is the smallest true improvement "
+             f"each bound would detect with {report['policy']['power']:.0%} power at the current sample size.")
     if "sequential" in report:
         q = report["sequential"]
         L.append(f"\nSequential monitoring: {q['units']} of {q['planned_units']} planned units "
