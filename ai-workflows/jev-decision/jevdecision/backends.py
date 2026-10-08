@@ -10,6 +10,7 @@ with model `typesafe/jev`); set `base_url`, `path`, and `model` for those.
 """
 
 import json
+import math
 import os
 import time
 import urllib.error
@@ -54,11 +55,11 @@ def _check_state(state):
     elif isinstance(state, dict):
         ok = bool(state)
     elif isinstance(state, (list, tuple)):
-        ok = bool(state) and all(isinstance(item, str) for item in state)
+        ok = bool(state) and all(isinstance(item, str) and item.strip() for item in state)
     else:
         ok = False
     if not ok:
-        raise DecisionError("state must be non-empty text, a JSON object, or a list of strings")
+        raise DecisionError("state must be non-empty text, a JSON object, or a list of non-empty strings")
     return list(state) if isinstance(state, tuple) else state
 
 
@@ -75,6 +76,9 @@ class HTTPBackend:
     def __init__(self, api_key=None, model=None, base_url=None, path=None, timeout=DEFAULT_TIMEOUT,
                  max_retries=2, backoff=0.5, transport=None, sleep=time.sleep, env=None):
         env = os.environ if env is None else env
+        if isinstance(timeout, bool) or not isinstance(timeout, (int, float)) or not (
+                math.isfinite(timeout) and timeout > 0):
+            raise DecisionError(f"{self.name}: timeout must be a positive number of seconds")
         self.api_key = api_key if api_key is not None else env.get(self.api_key_env)
         self.model = model or env.get(self.model_env) or self.default_model
         self.base_url = (base_url or self.default_base_url).rstrip("/")

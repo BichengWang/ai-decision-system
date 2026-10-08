@@ -14,10 +14,21 @@ import os
 import sys
 from pathlib import Path
 
-from .backends import BACKENDS, create_backend
+from .backends import BACKENDS, _check_state, create_backend
 from .core import BACKEND_ENV, DEFAULT_BACKEND, DecisionModel
-from .errors import DecisionError, QuestionError
+from .errors import DecisionError
 from .questions import check_question_set, questions_from_spec
+
+
+def positive_seconds(text):
+    """argparse type for --timeout: a finite number of seconds above zero."""
+    try:
+        value = float(text)
+    except ValueError:
+        raise argparse.ArgumentTypeError(f"invalid number: {text!r}") from None
+    if not 0 < value < float("inf"):
+        raise argparse.ArgumentTypeError("must be a positive number of seconds")
+    return value
 
 
 def parse_args(argv):
@@ -34,7 +45,7 @@ def parse_args(argv):
     parser.add_argument("--model", help="model id (default: the backend's)")
     parser.add_argument("--base-url", help="provider or gateway base URL")
     parser.add_argument("--path", help="endpoint path, e.g. /v1/decisions on a gateway")
-    parser.add_argument("--timeout", type=float, default=30.0)
+    parser.add_argument("--timeout", type=positive_seconds, default=30.0, help="seconds (default: 30)")
     parser.add_argument("--dry-run", action="store_true", help="print the request; send nothing")
     return parser.parse_args(argv)
 
@@ -51,10 +62,11 @@ def main(argv=None):
     try:
         spec = json.loads(args.questions.read_text(encoding="utf-8"))
         questions = check_question_set(questions_from_spec(spec))
-        state = load_state(args)
+        state = _check_state(load_state(args))
         backend = create_backend(args.backend, model=args.model, base_url=args.base_url,
                                  path=args.path, timeout=args.timeout)
-    except (OSError, json.JSONDecodeError, QuestionError) as error:
+    except (OSError, ValueError, DecisionError) as error:
+        # ValueError covers malformed JSON, undecodable text, and invalid questions.
         print(f"error: {error}", file=sys.stderr)
         return 2
     if args.dry_run:

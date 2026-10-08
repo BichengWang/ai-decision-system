@@ -77,7 +77,7 @@ raised as `APIError` immediately. `transport` is any callable
 `(url, headers, body_bytes, timeout) -> dict`, which tests use to replace the
 network.
 
-The structured state can be text, a JSON object, or a list of strings. Jev
+The structured state can be text, a JSON object, or a list of non-empty strings. Jev
 receives it unchanged. The OpenAI backend sends text, so it serializes an object
 as JSON with sorted keys and joins a list with blank lines.
 
@@ -97,8 +97,10 @@ The questions file uses Jev's native question map
 ([`examples/support-ticket.json`](examples/support-ticket.json)). `predicate` is
 accepted as an alias of `noul`. A `.json` state file is sent as structured
 state, and any other file is sent as text. `--dry-run` prints the provider request
-without sending it, so it needs no API key. The decision is printed as JSON. Exit
-codes: 0 for success, 1 for a provider or response error, 2 for invalid input.
+without sending it, so it needs no API key; the state is validated first either
+way. The decision is printed as JSON. Exit codes: 0 for success, 1 for a provider
+or response error, 2 for invalid input (questions, state, or a `--timeout` that is
+not a positive number of seconds).
 
 From the repository root, `make jev-test` runs the tests and
 `make jev-dry-run` prints the example request for both backends.

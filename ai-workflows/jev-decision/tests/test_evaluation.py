@@ -354,6 +354,15 @@ class CLITest(unittest.TestCase):
             self.assertIn("no API key", err)
             self.assertFalse(Path(tmp, "out").exists())
 
+    def test_rejects_a_non_positive_timeout(self):
+        with tempfile.TemporaryDirectory() as tmp:
+            for timeout in ("0", "-5"):
+                with self.subTest(timeout), self.assertRaises(SystemExit) as raised, redirect_stderr(io.StringIO()):
+                    main(["--questions", str(QUESTIONS_FILE), "--cases", str(CASES_FILE),
+                          "--timeout", timeout, "--out", str(Path(tmp, "out"))])
+                self.assertEqual(raised.exception.code, 2)
+            self.assertFalse(Path(tmp, "out").exists())
+
     def test_refuses_a_non_empty_output_directory(self):
         with tempfile.TemporaryDirectory() as tmp:
             Path(tmp, "keep").write_text("x")
