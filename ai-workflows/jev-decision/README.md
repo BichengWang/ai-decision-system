@@ -130,7 +130,11 @@ questions: `true` or `false` for a `noul`, a label for a `choice`, and a level
 | `choice` | `accuracy`, `brier` (summed over labels), `log_loss`, `ece` (probability of the chosen label against correctness), a confusion matrix |
 | `score` | `accuracy` (nearest level), `within_one`, `mae` (in level steps) |
 
-Every question also reports `n`, the number of cases that label it. `ece` is the
+Every question also reports `n`, the number of cases that label it, and
+`accuracy_lower` and `accuracy_upper`, the 95% Wilson score interval for
+`accuracy`. With 12 cases, 11 correct answers give an accuracy of 0.917 but an
+interval of [0.646, 0.985], so a gate on `accuracy_lower` asks for enough cases as
+well as a high hit rate. `ece` is the
 expected calibration error over ten equal-width probability bins. Log loss clips
 probabilities to [1e-6, 1 - 1e-6].
 
@@ -141,7 +145,7 @@ a bound on a question with no labeled cases fails.
 
 ```json
 {"max_error_rate": 0.0,
- "questions": {"refund": {"n": {"min": 10}, "brier": {"max": 0.1}}}}
+ "questions": {"refund": {"n": {"min": 10}, "accuracy_lower": {"min": 0.8}, "brier": {"max": 0.1}}}}
 ```
 
 ```bash
@@ -179,7 +183,7 @@ From the repository root, `make jev-eval` runs the example into a temporary dire
   production.
 - Image inputs and per-request options beyond the model are not modeled yet.
 - Unit tests use recorded response shapes and never call a provider.
-- Evaluation metrics are point estimates with no confidence intervals. With a
-  few dozen cases they are noisy, so set `n` minimums that match the thresholds
-  you rely on.
+- Only accuracy carries a confidence interval. Brier, log loss, calibration
+  error and MAE are point estimates, which are noisy with a few dozen cases, so set
+  `n` minimums that match the thresholds you rely on.
 - A live evaluation sends one request per case, sequentially.

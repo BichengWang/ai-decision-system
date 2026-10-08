@@ -14,7 +14,8 @@ Metrics per question:
 | `Choice` | `accuracy`, `brier` (summed over labels), `log_loss`, `ece` (probability of the chosen label against correctness), `confusion` |
 | `Score` | `accuracy` (nearest level), `within_one`, `mae` (in level steps) |
 
-Every question also reports `n`, its number of labeled and answered cases. `ece` is the
+Every question also reports `n`, its number of labeled and answered cases, and
+`accuracy_lower` / `accuracy_upper`, the 95% Wilson score interval for `accuracy`. `ece` is the
 expected calibration error over ten equal-width probability bins. Log loss clips
 probabilities to [1e-6, 1 - 1e-6].
 
@@ -41,6 +42,7 @@ import math
 import sys
 from dataclasses import dataclass
 from pathlib import Path
+from statistics import NormalDist
 
 from . import __version__
 from .backends import BACKENDS, _check_state, create_backend
@@ -49,10 +51,12 @@ from .questions import Choice, Noul, Score
 
 EPSILON = 1e-6
 ECE_BINS = 10
+CONFIDENCE = 0.95
+_ACCURACY = ("accuracy", "accuracy_lower", "accuracy_upper")
 METRICS = {
-    "noul": ("n", "accuracy", "brier", "log_loss", "ece", "base_rate", "mean_probability"),
-    "choice": ("n", "accuracy", "brier", "log_loss", "ece"),
-    "score": ("n", "accuracy", "within_one", "mae"),
+    "noul": ("n", *_ACCURACY, "brier", "log_loss", "ece", "base_rate", "mean_probability"),
+    "choice": ("n", *_ACCURACY, "brier", "log_loss", "ece"),
+    "score": ("n", *_ACCURACY, "within_one", "mae"),
 }
 
 
@@ -189,6 +193,27 @@ def _log_loss(probability):
     return -math.log(min(max(probability, EPSILON), 1 - EPSILON))
 
 
+def wilson_interval(successes, n, confidence=CONFIDENCE):
+    """Two-sided Wilson score interval for a proportion; (None, None) when there are no cases.
+
+    Unlike the normal (Wald) interval it stays inside [0, 1] and does not collapse to a point
+    at 0% or 100% accuracy, which matters for the small labeled sets an evaluation starts with.
+    """
+    if n == 0:
+        return None, None
+    z = NormalDist().inv_cdf(0.5 + confidence / 2)
+    p, z2 = successes / n, z * z
+    center = (p + z2 / (2 * n)) / (1 + z2 / n)
+    half = z / (1 + z2 / n) * math.sqrt(p * (1 - p) / n + z2 / (4 * n * n))
+    return max(center - half, 0.0), min(center + half, 1.0)
+
+
+def _accuracy(correct):
+    """`accuracy` with its Wilson interval, from one bool per case."""
+    lower, upper = wilson_interval(sum(correct), len(correct))
+    return {"accuracy": _mean([float(c) for c in correct]), "accuracy_lower": lower, "accuracy_upper": upper}
+
+
 def expected_calibration_error(pairs, bins=ECE_BINS):
     """Weighted mean |accuracy - confidence| over equal-width bins of (confidence, correct) pairs."""
     if not pairs:
@@ -204,7 +229,7 @@ def _noul_metrics(pairs):
     """`pairs` is [(probability of yes, expected bool)]."""
     return {
         "n": len(pairs),
-        "accuracy": _mean([float((p >= 0.5) == y) for p, y in pairs]),
+        **_accuracy([(p >= 0.5) == y for p, y in pairs]),
         "brier": _mean([(p - y) ** 2 for p, y in pairs]),
         "log_loss": _mean([_log_loss(p if y else 1 - p) for p, y in pairs]),
         "ece": expected_calibration_error([(p, y) for p, y in pairs]),
@@ -221,7 +246,7 @@ def _choice_metrics(question, pairs):
         row[answer.choice] = row.get(answer.choice, 0) + 1
     return {
         "n": len(pairs),
-        "accuracy": _mean([float(a.choice == y) for a, y in pairs]),
+        **_accuracy([a.choice == y for a, y in pairs]),
         "brier": _mean([sum((p - (label == y)) ** 2 for label, p in a.probabilities.items()) for a, y in pairs]),
         "log_loss": _mean([_log_loss(a.probabilities.get(y, 0.0)) for a, y in pairs]),
         "ece": expected_calibration_error([(a.probabilities[a.choice], a.choice == y) for a, y in pairs]),
@@ -233,7 +258,7 @@ def _score_metrics(question, pairs):
     """`pairs` is [(ScoreAnswer, expected level index)]."""
     return {
         "n": len(pairs),
-        "accuracy": _mean([float(question.levels.index(a.level) == y) for a, y in pairs]),
+        **_accuracy([question.levels.index(a.level) == y for a, y in pairs]),
         "within_one": _mean([float(abs(question.levels.index(a.level) - y) <= 1) for a, y in pairs]),
         "mae": _mean([abs(a.score - y) for a, y in pairs]),
     }
