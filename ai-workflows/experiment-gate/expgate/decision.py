@@ -21,6 +21,10 @@ A proportion or mean metric may carry a pre-experiment ``covariate`` summary in 
 estimated with CUPED regression adjustment (see :func:`expgate.stats.cuped_effect`),
 which narrows the interval without moving the decision rules above.
 
+Each metric also reports ``mde``, the minimum detectable effect: the smallest true improvement
+that the metric's own bound would show at ``policy.power`` (default 0.8), given the current
+standard error. It tells a HOLD whether the test could have seen the effect it was run for.
+
 With ``policy.sequential.planned_units`` set, every bound is an always-valid confidence
 sequence instead (see :func:`expgate.stats.sequential_multiplier`). The same rules then hold
 at every interim look: the summary can be evaluated as often as the platform refreshes it,
@@ -89,7 +93,7 @@ def _count(value, where: str) -> int:
     return value
 
 
-_POLICY_KEYS = {"alpha", "srm_alpha", "sequential"}
+_POLICY_KEYS = {"alpha", "srm_alpha", "power", "sequential"}
 _SEQUENTIAL_KEYS = {"planned_units"}
 _ASSIGNMENT_KEYS = {"expected_treatment_share"}
 
@@ -124,7 +128,7 @@ def _validate(summary: dict) -> None:
 
     policy = _object(summary.get("policy", {}), "'policy'")
     _known_keys(policy, _POLICY_KEYS, "'policy'")
-    for key in ("alpha", "srm_alpha"):
+    for key in ("alpha", "srm_alpha", "power"):
         value = policy.get(key)
         if value is not None and not 0 < _number(value, f"policy {key}") < 1:
             raise ValueError(f"policy {key} must be in (0, 1)")
@@ -197,7 +201,7 @@ def _validate(summary: dict) -> None:
 def evaluate(summary: dict) -> dict:
     """Return a JSON-serializable decision report for an experiment summary."""
     _validate(summary)
-    policy = {"alpha": 0.05, "srm_alpha": 0.001, **summary.get("policy", {})}
+    policy = {"alpha": 0.05, "srm_alpha": 0.001, "power": 0.8, **summary.get("policy", {})}
     control, treatment = summary["arms"]["control"], summary["arms"]["treatment"]
     share = summary.get("assignment", {}).get("expected_treatment_share", 0.5)
 
@@ -230,7 +234,8 @@ def evaluate(summary: dict) -> dict:
         lo, hi = improvement - z * eff.se, improvement + z * eff.se
         row = {"metric": name, "role": spec["role"], "type": spec["type"], "direction": spec["direction"],
                "control": eff.control, "treatment": eff.treatment, "diff": eff.diff, "se": eff.se,
-               "improvement": improvement, "improvement_bounds": [lo, hi], "z": z}
+               "improvement": improvement, "improvement_bounds": [lo, hi], "z": z,
+               "mde": stats.minimum_detectable_effect(eff.se, z, policy["power"])}
         if adjustment is not None:
             row["adjustment"] = adjustment
         if spec["role"] == "primary":
@@ -264,7 +269,9 @@ def evaluate(summary: dict) -> dict:
     else:
         decision = "HOLD"
         if primary_status != "IMPROVED":
-            reasons.append(f"primary metric is {primary_status.lower()}")
+            primary = next(row for row in rows if row["role"] == "primary")
+            reasons.append(f"primary metric is {primary_status.lower()} (detectable improvement at "
+                           f"{policy['power']:.0%} power: {primary['mde']:.4g})")
         reasons += [f"guardrail {n} is inconclusive" for n, s in sorted(guard_status.items()) if s == "INCONCLUSIVE"]
         if sequential is not None and sequential["information_fraction"] >= 1:
             reasons.append("planned sample size reached without a decision")

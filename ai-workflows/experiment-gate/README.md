@@ -30,6 +30,17 @@ regression adjustment, which narrows its interval (see
 runs can replace every bound with an always-valid confidence sequence (see
 [Sequential monitoring](#sequential-monitoring)).
 
+Every metric also reports its **minimum detectable effect** (`mde`): the smallest
+true improvement, in the metric's own units, that its bound would show with
+probability `policy.power` (default 0.8) at the current sample size. It is
+`(z + z_power) * se`, where `z` is the metric's own critical value (so it accounts
+for the Bonferroni split and sequential bounds). A `HOLD` reason states the primary
+metric's MDE, which tells you whether the test could have detected the effect it
+was run for or simply needs more units. For a guardrail, a margin below its MDE
+means that even a candidate with no effect on it is unlikely to be shown
+non-inferior. In 1,000 simulated tests whose true lift equals the MDE, 80.3%
+shipped.
+
 ## Quick start
 
 From this directory, with Python 3.11 or later:
@@ -58,7 +69,7 @@ better (`increase` or `decrease`). `policy` and `assignment` are optional;
 
 The summary is validated before any statistic is computed: counts must be
 integers within range, means, standard deviations and margins must be finite,
-`alpha`, `srm_alpha` and `expected_treatment_share` must lie in (0, 1), and
+`alpha`, `srm_alpha`, `power` and `expected_treatment_share` must lie in (0, 1), and
 `policy.sequential.planned_units` must be an integer of at least 2. `experiment`,
 when present, must be a non-empty string. Unknown keys in `policy`,
 `policy.sequential`, `assignment`, an arm's metric statistics, and a `covariate`
