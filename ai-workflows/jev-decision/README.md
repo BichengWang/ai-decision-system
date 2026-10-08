@@ -161,8 +161,11 @@ python3 -m jevdecision.evaluation --questions examples/support-ticket.json \
 ```
 
 `--out` must be new or empty. Each run writes `evaluation.json` (sorted keys),
-a readable `EVALUATION.md`, and `responses.jsonl` with the raw provider
-responses. Passing that file back as `--responses` reproduces the report, so a
+a readable `EVALUATION.md`, `responses.jsonl` with the raw provider
+responses, and `cases.jsonl` with one row per case: each labeled question's
+expected and predicted answer (with the probability or score) and whether it was
+correct, or the case's error. `EVALUATION.md` lists the incorrect answers (the first
+20), so a failed gate points at the cases to inspect. Passing that file back as `--responses` reproduces the report, so a
 live run can be audited and re-scored without calling the provider again.
 `--backend` names the response format to replay (`jev` by default). Exit codes:
 0 when every requirement passes, 1 when one fails or the provider cannot be

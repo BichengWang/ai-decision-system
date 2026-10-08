@@ -12,12 +12,14 @@ from jevdecision.answers import parse_answers
 from jevdecision.errors import DatasetError
 from jevdecision.evaluation import (
     Case,
+    case_results,
     evaluate,
     expected_calibration_error,
     load_cases,
     load_requirements,
     load_responses,
     main,
+    render_markdown,
     replay,
     run_live,
     score_answers,
@@ -320,6 +322,48 @@ class RunTest(unittest.TestCase):
                                                                 recorded)[::2])
             self.assertEqual(replayed["questions"], live["questions"])
             self.assertEqual(replayed["error_rate"], live["error_rate"])
+
+    def test_case_results(self):
+        cases = self.CASES + [Case("c", "x", {"refund": False})]
+        answers, _, errors = replay(JevBackend(env={}), QUESTIONS, cases, {"a": JEV_RESPONSE})
+        rows = case_results(QUESTIONS, cases, answers, errors)
+        self.assertEqual([row["id"] for row in rows], ["a", "b", "c"])
+        self.assertEqual(rows[1], {"id": "b", "error": "no recorded response"})
+        self.assertEqual(set(rows[0]["questions"]), set(self.CASES[0].labels))
+        for name, result in rows[0]["questions"].items():
+            with self.subTest(name):
+                self.assertEqual(set(result) - {"probability", "score"}, {"expected", "predicted", "correct"})
+                self.assertEqual(result["correct"], result["expected"] == result["predicted"])
+        self.assertEqual(rows[2], {"id": "c", "error": "no recorded response"})
+
+    def test_case_results_are_written_and_misses_listed(self):
+        with tempfile.TemporaryDirectory() as tmp:
+            code, _, _ = run_cli("--questions", QUESTIONS_FILE, "--cases", CASES_FILE, "--responses", RESPONSES_FILE,
+                                 "--require", REQUIRE_FILE, "--out", Path(tmp, "out"))
+            self.assertEqual(code, 0)
+            rows = [json.loads(line) for line in Path(tmp, "out", "cases.jsonl").read_text().splitlines()]
+            report = json.loads(Path(tmp, "out", "evaluation.json").read_text())
+            markdown = Path(tmp, "out", "EVALUATION.md").read_text()
+        self.assertEqual(len(rows), report["cases"])
+        for name, metrics in report["questions"].items():
+            results = [row["questions"][name] for row in rows if name in row.get("questions", {})]
+            with self.subTest(name):
+                self.assertEqual(len(results), metrics["n"])
+                self.assertAlmostEqual(sum(r["correct"] for r in results) / len(results), metrics["accuracy"])
+        misses = [(row["id"], name) for row in rows for name, r in row["questions"].items() if not r["correct"]]
+        self.assertIn(f"Incorrect answers ({len(misses)};", markdown)
+        for case_id, name in misses:
+            self.assertIn(f"- `{case_id}` {name}: expected", markdown)
+
+    def test_long_miss_lists_are_truncated(self):
+        cases = [Case(str(i), "x", {"refund": True}) for i in range(25)]
+        answers = {case.id: {"refund": parse_answers({"refund": {"noul": 0.1}}, [REFUND])["refund"]} for case in cases}
+        report = {"jevdecision_version": "x", "backend": "jev", "model": "m", "source": "replay",
+                  **evaluate([REFUND], cases, answers, [])}
+        markdown = render_markdown(report, "d", case_results([REFUND], cases, answers, []))
+        self.assertIn("Incorrect answers (25;", markdown)
+        self.assertEqual(markdown.count(": expected true, got false"), 20)
+        self.assertIn("- ... and 5 more", markdown)
 
     def test_replay_parses_the_openai_layout(self):
         answers, _, errors = replay(OpenAIDecisionsBackend(env={}), QUESTIONS, self.CASES,

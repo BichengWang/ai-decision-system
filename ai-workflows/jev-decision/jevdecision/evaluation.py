@@ -27,6 +27,9 @@ A requirement spec turns the report into a gate:
 A case whose request or response fails counts as an error, not as a wrong answer, and
 `max_error_rate` (default 0) bounds the share of such cases.
 
+Each run also writes `cases.jsonl`, one row per case with every labeled question's expected
+and predicted answer (or the case's error), and EVALUATION.md lists the incorrect answers.
+
 Command line (exit 0 when every requirement passes, 1 when one fails, 2 for invalid input):
 
     python -m jevdecision.evaluation --questions examples/support-ticket.json \
@@ -280,6 +283,34 @@ def score_answers(questions, cases, answers):
     return report
 
 
+def _case_result(question, answer, expected):
+    """Expected and predicted answer for one labeled question in one case."""
+    if isinstance(question, Noul):
+        return {"expected": expected, "predicted": answer.is_yes(), "probability": answer.probability,
+                "correct": answer.is_yes() == expected}
+    if isinstance(question, Choice):
+        return {"expected": expected, "predicted": answer.choice, "probability": answer.probability,
+                "correct": answer.choice == expected}
+    level = question.levels[expected]
+    return {"expected": level, "predicted": answer.level, "score": answer.score, "correct": answer.level == level}
+
+
+def case_results(questions, cases, answers, errors):
+    """One row per case: each labeled question's expected and predicted answer, or the case's error."""
+    failed = {error["id"]: error["error"] for error in errors}
+    rows = []
+    for case in cases:
+        row = {"id": case.id}
+        if case.id in answers:
+            row["questions"] = {question.name: _case_result(question, answers[case.id][question.name],
+                                                            case.labels[question.name])
+                                for question in questions if question.name in case.labels}
+        else:
+            row["error"] = failed.get(case.id, "no answer")
+        rows.append(row)
+    return rows
+
+
 # Running -------------------------------------------------------------------
 
 def replay(backend, questions, cases, responses):
@@ -344,7 +375,10 @@ def _fmt(value):
     return "" if value is None else f"{value:.4g}"
 
 
-def render_markdown(report, digest):
+MAX_LISTED_MISSES = 20
+
+
+def render_markdown(report, digest, cases=None):
     lines = [f"# Decision model evaluation: {'PASS' if report['pass'] else 'FAIL'}\n",
              f"- evaluation.json SHA-256: `{digest}`",
              f"- jevdecision {report['jevdecision_version']}; backend {report['backend']}; "
@@ -362,19 +396,34 @@ def render_markdown(report, digest):
     if report["errors"]:
         lines.append("\nErrors:\n")
         lines += [f"- `{error['id']}`: {error['error']}" for error in report["errors"]]
+    misses = [(row["id"], name, result) for row in cases or () for name, result in row.get("questions", {}).items()
+              if not result["correct"]]
+    if misses:
+        lines.append(f"\nIncorrect answers ({len(misses)}; every case is in `cases.jsonl`):\n")
+        shown = lambda value: json.dumps(value, ensure_ascii=False)  # noqa: E731
+        lines += [f"- `{case_id}` {name}: expected {shown(result['expected'])}, got {shown(result['predicted'])}"
+                  for case_id, name, result in misses[:MAX_LISTED_MISSES]]
+        if len(misses) > MAX_LISTED_MISSES:
+            lines.append(f"- ... and {len(misses) - MAX_LISTED_MISSES} more")
     return "\n".join(lines) + "\n"
 
 
-def write_records(report, raw, out):
-    """Write evaluation.json (sorted keys), EVALUATION.md, and the raw responses as JSON Lines."""
+def _write_jsonl(path, rows):
+    lines = [json.dumps(row, sort_keys=True, ensure_ascii=False) for row in rows]
+    path.write_text("".join(line + "\n" for line in lines), encoding="utf-8")
+
+
+def write_records(report, raw, out, cases=None):
+    """Write evaluation.json (sorted keys), EVALUATION.md, the raw responses as JSON Lines, and,
+    when `cases` (from `case_results`) is given, the per-case results as cases.jsonl."""
     out.mkdir(parents=True, exist_ok=True)
     blob = json.dumps(report, indent=2, sort_keys=True, ensure_ascii=False).encode("utf-8")
     digest = hashlib.sha256(blob).hexdigest()
     (out / "evaluation.json").write_bytes(blob)
-    (out / "EVALUATION.md").write_text(render_markdown(report, digest), encoding="utf-8")
-    lines = [json.dumps({"id": case_id, "response": response}, sort_keys=True, ensure_ascii=False)
-             for case_id, response in raw.items()]
-    (out / "responses.jsonl").write_text("".join(line + "\n" for line in lines), encoding="utf-8")
+    (out / "EVALUATION.md").write_text(render_markdown(report, digest, cases), encoding="utf-8")
+    _write_jsonl(out / "responses.jsonl", ({"id": case_id, "response": response} for case_id, response in raw.items()))
+    if cases is not None:
+        _write_jsonl(out / "cases.jsonl", cases)
     return digest
 
 
@@ -425,7 +474,7 @@ def main(argv=None):
               "model": ", ".join(models) or backend.model,
               "source": "replay" if args.responses else "live",
               **evaluate(questions, cases, answers, errors, requirements)}
-    digest = write_records(report, raw, args.out)
+    digest = write_records(report, raw, args.out, case_results(questions, cases, answers, errors))
     print(f"{'PASS' if report['pass'] else 'FAIL'} {digest}")
     for result in report["requirements"]:
         if not result["pass"]:
