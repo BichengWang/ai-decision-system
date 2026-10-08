@@ -21,6 +21,7 @@ from jevdecision.evaluation import (
     replay,
     run_live,
     score_answers,
+    wilson_interval,
     write_records,
 )
 
@@ -148,6 +149,38 @@ class MetricTest(unittest.TestCase):
         self.assertAlmostEqual(m["accuracy"], 1.0)  # a scores 1.5, which rounds to the top level
         self.assertAlmostEqual(m["within_one"], 1.0)
         self.assertAlmostEqual(m["mae"], (0.5 + 0.0) / 2)
+
+    def test_accuracy_carries_a_wilson_interval(self):
+        for name, correct, n in (("refund", 2, 3), ("department", 2, 3), ("frustration", 2, 2)):
+            with self.subTest(name):
+                m = self.report[name]
+                lower, upper = wilson_interval(correct, n)
+                self.assertEqual((m["accuracy_lower"], m["accuracy_upper"]), (lower, upper))
+                self.assertLessEqual(m["accuracy_lower"], m["accuracy"])
+                self.assertGreaterEqual(m["accuracy_upper"], m["accuracy"])
+
+    def test_wilson_interval(self):
+        # Reference values for the 95% Wilson score interval.
+        for (successes, n), (lower, upper) in {(11, 12): (0.6461, 0.9851), (50, 100): (0.4038, 0.5962),
+                                               (12, 12): (0.7575, 1.0), (0, 5): (0.0, 0.4345)}.items():
+            with self.subTest(successes=successes, n=n):
+                got = wilson_interval(successes, n)
+                self.assertAlmostEqual(got[0], lower, places=4)
+                self.assertAlmostEqual(got[1], upper, places=4)
+        self.assertEqual(wilson_interval(0, 0), (None, None))
+        narrow, wide = wilson_interval(90, 100, confidence=0.8), wilson_interval(90, 100, confidence=0.99)
+        self.assertLess(wide[0], narrow[0])
+        self.assertGreater(wide[1], narrow[1])
+
+    def test_requirement_on_the_accuracy_lower_bound(self):
+        cases = [Case(str(i), "x", {"refund": True}) for i in range(12)]
+        answers = {case.id: {"refund": parse_answers({"refund": {"noul": 0.9 if i else 0.1}}, [REFUND])["refund"]}
+                   for i, case in enumerate(cases)}
+        loose = evaluate([REFUND], cases, answers, [], {"questions": {"refund": {"accuracy": {"min": 0.9}}}})
+        strict = evaluate([REFUND], cases, answers, [], {"questions": {"refund": {"accuracy_lower": {"min": 0.9}}}})
+        self.assertTrue(loose["pass"])  # 11 of 12 correct
+        self.assertFalse(strict["pass"])  # but the interval reaches down to 0.65
+        self.assertAlmostEqual(strict["requirements"][1]["value"], 0.6461, places=4)
 
     def test_log_loss_is_clipped(self):
         cases = [Case("a", "x", {"refund": True})]
