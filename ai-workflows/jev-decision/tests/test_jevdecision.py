@@ -207,7 +207,7 @@ class JevBackendTest(unittest.TestCase):
 
     def test_invalid_state(self):
         backend, _ = jev()
-        for state in ("", {}, [], [1], None):
+        for state in ("", {}, [], [1], [STATE, " "], None):
             with self.subTest(state=state), self.assertRaises(DecisionError):
                 DecisionModel(backend).decide(state, [REFUND])
 
@@ -378,6 +378,43 @@ class CLITest(unittest.TestCase):
             code, _, err = self.run_cli("--questions", str(path), "--state", STATE, "--dry-run")
         self.assertEqual(code, 2)
         self.assertIn("levels", err)
+
+    def test_invalid_state_exits_2_even_in_dry_run(self):
+        with tempfile.TemporaryDirectory() as tmp:
+            cases = {"number.json": "5", "empty.json": "[]", "blank.json": '["ok", ""]', "blank.txt": "  \n"}
+            for name, text in cases.items():
+                path = Path(tmp) / name
+                path.write_text(text)
+                for dry_run in ((), ("--dry-run",)):
+                    with self.subTest(name, dry_run=dry_run):
+                        code, out, err = self.run_cli("--questions", str(EXAMPLE), "--state-file", str(path),
+                                                      "--backend", "jev", *dry_run)
+                        self.assertEqual(code, 2)
+                        self.assertEqual(out, "")
+                        self.assertIn("state must be", err)
+        code, out, _ = self.run_cli("--questions", str(EXAMPLE), "--state", " ", "--dry-run")
+        self.assertEqual((code, out), (2, ""))
+
+    def test_undecodable_state_file_exits_2(self):
+        with tempfile.TemporaryDirectory() as tmp:
+            path = Path(tmp) / "state.txt"
+            path.write_bytes(b"\xff\xfe payouts")
+            code, _, err = self.run_cli("--questions", str(EXAMPLE), "--state-file", str(path), "--dry-run")
+        self.assertEqual(code, 2)
+        self.assertIn("error:", err)
+
+    def test_timeout_must_be_positive(self):
+        for timeout in ("0", "-1", "nan", "inf", "soon"):
+            with self.subTest(timeout), self.assertRaises(SystemExit) as raised:
+                self.run_cli("--questions", str(EXAMPLE), "--state", STATE, "--timeout", timeout, "--dry-run")
+            self.assertEqual(raised.exception.code, 2)
+        code, _, _ = self.run_cli("--questions", str(EXAMPLE), "--state", STATE, "--timeout", "2.5", "--dry-run")
+        self.assertEqual(code, 0)
+
+    def test_backend_rejects_invalid_timeout(self):
+        for timeout in (0, -1.0, float("nan"), float("inf"), True, "30"):
+            with self.subTest(timeout=timeout), self.assertRaisesRegex(DecisionError, "timeout"):
+                JevBackend(api_key="k", env={}, timeout=timeout)
 
     def test_missing_key_exits_1(self):
         code, _, err = self.run_cli("--questions", str(EXAMPLE), "--state", STATE, "--backend", "jev")

@@ -354,6 +354,7 @@ def write_records(report, raw, out):
 
 
 def main(argv=None):
+    from .__main__ import positive_seconds
     from .questions import check_question_set, questions_from_spec
 
     parser = argparse.ArgumentParser(prog="python -m jevdecision.evaluation",
@@ -369,7 +370,7 @@ def main(argv=None):
     parser.add_argument("--model", help="model id for a live run (default: the backend's)")
     parser.add_argument("--base-url", help="provider or gateway base URL for a live run")
     parser.add_argument("--path", help="endpoint path for a live run")
-    parser.add_argument("--timeout", type=float, default=30.0)
+    parser.add_argument("--timeout", type=positive_seconds, default=30.0, help="seconds for a live run (default: 30)")
     args = parser.parse_args(sys.argv[1:] if argv is None else argv)
 
     if args.out.exists() and (not args.out.is_dir() or any(args.out.iterdir())):
