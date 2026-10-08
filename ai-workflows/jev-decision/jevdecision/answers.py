@@ -8,6 +8,7 @@ answer against the question it answers, so callers see one typed result.
 """
 
 import math
+import re
 from dataclasses import dataclass, field
 from typing import Any, Optional
 
@@ -17,6 +18,7 @@ from .questions import Choice, Noul, Score
 # Providers round probabilities; tolerate that much overshoot of [0, 1].
 PROBABILITY_SLACK = 1e-6
 LABEL_KEYS = ("value", "label", "choice", "level", "name")
+LEVEL_INDEX_RE = re.compile(r"[0-9]+")
 PROBABILITY_KEYS = ("probability", "p", "prob")
 
 
@@ -157,6 +159,10 @@ def _probability_map(raw, where):
             value = _first(item, PROBABILITY_KEYS)
             if key is None or value is None:
                 raise ResponseError(f"{where}[{index}]: needs a label and a probability")
+            if not isinstance(key, (str, int)) or isinstance(key, bool):
+                raise ResponseError(f"{where}[{index}]: label must be a string or an index, got {key!r}")
+            if str(key) in result:
+                raise ResponseError(f"{where}: label {str(key)!r} appears more than once")
             result[str(key)] = _probability(value, f"{where}[{key!r}]")
         return result
     raise ResponseError(f"{where}: expected an object or a list, got {raw!r}")
@@ -177,7 +183,7 @@ def _parse_noul(question, entry, where):
 def _parse_choice(question, entry, where):
     labels = question.labels
     choice = _first(entry, ("choice", "value", "label"))
-    if choice not in question.options:
+    if not isinstance(choice, str) or choice not in question.options:
         raise ResponseError(f"{where}: choice {choice!r} is not one of {list(labels)}")
     raw = entry.get("probabilities")
     probabilities = _probability_map(raw, f"{where}.probabilities") if raw is not None else {}
@@ -199,13 +205,17 @@ def _parse_score(question, entry, where):
             raise ResponseError(f"{where}: expected {len(levels)} probabilities, got {len(raw)}")
         probabilities = [_probability(value, f"{where}.probabilities[{i}]") for i, value in enumerate(raw)]
     elif raw is not None:
+        named = set()
         for key, value in _probability_map(raw, f"{where}.probabilities").items():
             if key in levels:
                 index = levels.index(key)
-            elif key.isdigit() and int(key) < len(levels):
+            elif LEVEL_INDEX_RE.fullmatch(key) and int(key) < len(levels):
                 index = int(key)
             else:
                 raise ResponseError(f"{where}: probabilities name unknown level {key!r}")
+            if index in named:
+                raise ResponseError(f"{where}: probabilities name level {levels[index]!r} more than once")
+            named.add(index)
             probabilities[index] = value
     score = entry.get("score")
     if score is None:
@@ -255,7 +265,7 @@ def parse_answers(raw_answers, questions):
         if not isinstance(entry, dict):
             raise ResponseError(f"{where}: missing or not an object")
         kind = entry.get("type")
-        if kind is not None and TYPE_ALIASES.get(kind) != question.type:
+        if kind is not None and (not isinstance(kind, str) or TYPE_ALIASES.get(kind) != question.type):
             raise ResponseError(f"{where}: answered as {kind!r}, asked as {question.type!r}")
         answers[question.name] = PARSERS[type(question)](question, entry, where)
     return answers

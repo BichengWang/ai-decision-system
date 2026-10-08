@@ -278,6 +278,15 @@ class ResponseValidationTest(unittest.TestCase):
             "score out of range": self.answers(frustration={"score": 2.5}),
             "unknown level": self.answers(frustration={"probabilities": {"7": 1.0}}),
             "nan confidence": self.answers(department={"confidence": float("nan")}),
+            # Malformed shapes must surface as ResponseError, not TypeError or ValueError.
+            "list choice": self.answers(department={"choice": ["technical"]}),
+            "object choice": self.answers(department={"choice": {"technical": 1}}),
+            "list type": self.answers(refund={"type": ["noul"]}),
+            "non-ASCII digit level": self.answers(frustration={"probabilities": {"\u00b2": 1.0}}),
+            "list label": self.answers(department={"probabilities": [{"value": ["technical"], "probability": 1}]}),
+            "level named twice": self.answers(frustration={"probabilities": {"1": 0.5, "Frustrated": 0.5}}),
+            "label listed twice": self.answers(department={"probabilities": [
+                {"value": "technical", "probability": 0.2}, {"value": "technical", "probability": 0.8}]}),
         }
         for label, answers in cases.items():
             with self.subTest(label):
@@ -285,6 +294,15 @@ class ResponseValidationTest(unittest.TestCase):
         extra = self.answers()
         extra["other"] = {"type": "noul", "noul": 0.1}
         self.check_rejects(extra)
+
+    def test_malformed_recorded_responses_are_errors_not_crashes(self):
+        from jevdecision.evaluation import Case, replay
+        backend, _ = jev()
+        cases = [Case("a", STATE, {"department": "technical"}), Case("b", STATE, {"department": "technical"})]
+        responses = {"a": {"answers": self.answers(department={"choice": ["technical"]})}, "b": JEV_RESPONSE}
+        answers, _, errors = replay(backend, QUESTIONS, cases, responses)
+        self.assertEqual(list(answers), ["b"])
+        self.assertEqual([error["id"] for error in errors], ["a"])
 
     def test_provider_error_body(self):
         backend, _ = jev({"error": {"message": "bad request"}})
