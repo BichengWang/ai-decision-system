@@ -14,7 +14,10 @@ Rules, applied in order:
 Guardrail bounds are one-sided and Bonferroni-adjusted across guardrails; the
 primary metric uses a one-sided test at ``alpha``.
 
-A metric may carry a pre-experiment ``covariate`` summary in both arms. It is then
+A ``ratio`` metric (a ratio of two per-unit means, such as revenue per session when users
+are randomized) uses a delta-method standard error (see :func:`expgate.stats.ratio_effect`).
+
+A proportion or mean metric may carry a pre-experiment ``covariate`` summary in both arms. It is then
 estimated with CUPED regression adjustment (see :func:`expgate.stats.cuped_effect`),
 which narrows the interval without moving the decision rules above.
 
@@ -32,7 +35,7 @@ from . import stats
 
 DECISIONS = ("SHIP", "HOLD", "ROLLBACK", "INVALID")
 _DIRECTIONS = {"increase": 1.0, "decrease": -1.0}
-_TYPES = ("proportion", "mean")
+_TYPES = ("proportion", "mean", "ratio")
 
 
 def _covariate(stat: dict) -> stats.Covariate:
@@ -57,7 +60,14 @@ def _effect(spec: dict, control: dict, treatment: dict, name: str):
             return stats.cuped_effect(c["mean"], c["sd"] ** 2, control["units"], _covariate(c),
                                       t["mean"], t["sd"] ** 2, treatment["units"], _covariate(t))
         return stats.mean_effect(c["mean"], c["sd"], control["units"], t["mean"], t["sd"], treatment["units"]), None
+    if spec["type"] == "ratio":
+        return stats.ratio_effect(_ratio_arm(c, control["units"]), _ratio_arm(t, treatment["units"])), None
     raise ValueError(f"metric {name!r}: unknown type {spec['type']!r}")
+
+
+def _ratio_arm(stat: dict, units: int) -> stats.RatioArm:
+    num, den = stat["numerator"], stat["denominator"]
+    return stats.RatioArm(units, num["mean"], num["sd"], den["mean"], den["sd"], stat["corr"])
 
 
 def _object(value, where: str) -> dict:
@@ -105,7 +115,7 @@ def _validate(summary: dict) -> None:
         if spec.get("role") not in ("primary", "guardrail"):
             raise ValueError(f"metric {name!r}: role must be 'primary' or 'guardrail'")
         if spec.get("type") not in _TYPES:
-            raise ValueError(f"metric {name!r}: type must be 'proportion' or 'mean'")
+            raise ValueError(f"metric {name!r}: type must be 'proportion', 'mean' or 'ratio'")
         if spec.get("direction") not in _DIRECTIONS:
             raise ValueError(f"metric {name!r}: direction must be 'increase' or 'decrease'")
         if spec["role"] == "guardrail":
@@ -142,12 +152,28 @@ def _validate(summary: dict) -> None:
         for name, spec in metrics.items():
             where = f"arm {arm_name!r} metric {name!r}"
             stat = _object(observed[name], where)
-            fields = {"successes"} if spec["type"] == "proportion" else {"mean", "sd"}
-            _known_keys(stat, fields | {"covariate"}, where)
+            if spec["type"] == "ratio":
+                _known_keys(stat, {"numerator", "denominator", "corr"}, where)
+            else:
+                fields = {"successes"} if spec["type"] == "proportion" else {"mean", "sd"}
+                _known_keys(stat, fields | {"covariate"}, where)
             if spec["type"] == "proportion":
                 successes = _count(stat.get("successes"), f"{where} successes")
                 if not 0 <= successes <= units:
                     raise ValueError(f"{where} successes must be between 0 and units")
+            elif spec["type"] == "ratio":
+                for part in ("numerator", "denominator"):
+                    summary_part = _object(stat.get(part), f"{where} {part}")
+                    _known_keys(summary_part, {"mean", "sd"}, f"{where} {part}")
+                    mean = _number(summary_part.get("mean"), f"{where} {part} mean")
+                    if _number(summary_part.get("sd"), f"{where} {part} sd") < 0:
+                        raise ValueError(f"{where} {part} sd must be non-negative")
+                    if part == "denominator" and mean <= 0:
+                        raise ValueError(f"{where} denominator mean must be positive")
+                if not -1 <= _number(stat.get("corr"), f"{where} corr") <= 1:
+                    raise ValueError(f"{where} corr must be in [-1, 1]")
+                if units < 2:
+                    raise ValueError(f"{where} needs at least 2 units for a ratio metric")
             else:
                 _number(stat.get("mean"), f"{where} mean")
                 if _number(stat.get("sd"), f"{where} sd") < 0:
