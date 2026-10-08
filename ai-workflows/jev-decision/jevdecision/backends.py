@@ -9,6 +9,7 @@ Jev is also served by gateways under other paths (for example `/v1/decisions`
 with model `typesafe/jev`); set `base_url`, `path`, and `model` for those.
 """
 
+import email.utils
 import json
 import math
 import os
@@ -21,6 +22,24 @@ from .errors import APIError, DecisionError, ResponseError
 from .questions import Choice, Noul, Score
 
 DEFAULT_TIMEOUT = 30.0
+# Longest Retry-After the client honors; a provider asking for more fails the request instead.
+DEFAULT_MAX_RETRY_WAIT = 60.0
+
+
+def parse_retry_after(value, now=None):
+    """Seconds to wait from a Retry-After header (delay-seconds or an HTTP date); None if unusable."""
+    if value is None:
+        return None
+    value = value.strip()
+    if value.isascii() and value.isdigit():
+        return float(value)
+    try:
+        when = email.utils.parsedate_to_datetime(value)
+    except (TypeError, ValueError):
+        return None
+    if when is None or when.tzinfo is None:
+        return None
+    return max(when.timestamp() - (time.time() if now is None else now), 0.0)
 
 
 def urllib_transport(url, headers, body, timeout):
@@ -31,7 +50,8 @@ def urllib_transport(url, headers, body, timeout):
             payload = response.read()
     except urllib.error.HTTPError as error:
         text = error.read().decode("utf-8", "replace")
-        raise APIError(f"HTTP {error.code} from {url}: {text[:500]}", error.code, text) from error
+        retry_after = parse_retry_after(error.headers.get("Retry-After") if error.headers else None)
+        raise APIError(f"HTTP {error.code} from {url}: {text[:500]}", error.code, text, retry_after) from error
     except (urllib.error.URLError, TimeoutError, OSError) as error:
         raise APIError(f"could not reach {url}: {error}") from error
     try:
@@ -74,7 +94,8 @@ class HTTPBackend:
     model_env = ""
 
     def __init__(self, api_key=None, model=None, base_url=None, path=None, timeout=DEFAULT_TIMEOUT,
-                 max_retries=2, backoff=0.5, transport=None, sleep=time.sleep, env=None):
+                 max_retries=2, backoff=0.5, transport=None, sleep=time.sleep, env=None,
+                 max_retry_wait=DEFAULT_MAX_RETRY_WAIT):
         env = os.environ if env is None else env
         if isinstance(timeout, bool) or not isinstance(timeout, (int, float)) or not (
                 math.isfinite(timeout) and timeout > 0):
@@ -86,6 +107,10 @@ class HTTPBackend:
         self.timeout = timeout
         self.max_retries = max_retries
         self.backoff = backoff
+        if isinstance(max_retry_wait, bool) or not isinstance(max_retry_wait, (int, float)) or not (
+                0 <= max_retry_wait < math.inf):
+            raise DecisionError(f"{self.name}: max_retry_wait must be a non-negative number of seconds")
+        self.max_retry_wait = max_retry_wait
         self.transport = transport or urllib_transport
         self._sleep = sleep
 
@@ -117,9 +142,20 @@ class HTTPBackend:
             except APIError as error:
                 if not error.retryable or attempt >= self.max_retries:
                     raise
-                self._sleep(self.backoff * (2 ** attempt))
+                self._sleep(self._retry_delay(error, attempt))
                 attempt += 1
         return self.parse_response(raw, questions)
+
+    def _retry_delay(self, error, attempt):
+        """Exponential backoff, or longer when the provider's Retry-After asks for it."""
+        delay = self.backoff * (2 ** attempt)
+        if error.retry_after is None:
+            return delay
+        if error.retry_after > self.max_retry_wait:
+            raise APIError(f"{error} (provider asked to retry after {error.retry_after:g}s, more than "
+                           f"max_retry_wait={self.max_retry_wait:g}s)", error.status, error.body,
+                           error.retry_after) from error
+        return max(delay, error.retry_after)
 
     def parse_response(self, raw, questions):
         if not isinstance(raw, dict):
