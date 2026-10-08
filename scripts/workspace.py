@@ -10,7 +10,7 @@ Commands:
   list            Show registered components.
   affected        Show the components and CI checks a change affects.
   test            Run component test commands from their own directories.
-  check           Verify the manifest, CI routing, project layout, and import boundaries.
+  check           Verify the manifest, CI routing, project layout, import boundaries, and doc links.
   github-changes  Print `relevant=true|false` for one component in a GitHub Actions job.
   new             Scaffold a standard-library project, its CI workflow, and its registration.
 
@@ -29,6 +29,7 @@ import subprocess
 import sys
 from functools import lru_cache
 from pathlib import Path, PurePosixPath
+from urllib.parse import unquote
 
 
 ROOT = Path(__file__).resolve().parents[1]
@@ -645,6 +646,96 @@ def check_workspace(root=ROOT, manifest=None):
             problems.append(f"always-required check {check['name']!r} is not reported by any component's workflow")
 
     problems.extend(import_problems(root, manifest, files))
+    problems.extend(link_problems(root, files, manifest))
+    return problems
+
+
+# Markdown links ------------------------------------------------------------
+
+# Documentation whose local links `check` verifies: the root and docs/ pages, plus every
+# project and tooling component (see link_scope). Legacy research notes are not checked.
+LINK_CHECKED = ("*.md", "docs/*.md")
+_FENCE_RE = re.compile(r"^ {0,3}(```|~~~)")
+_CODE_SPAN_RE = re.compile(r"(`+)(?:(?!\1).)+?\1")
+_LINK_RE = re.compile(r"\]\(\s*(<[^>]*>|[^)\s]+)(?:\s+(?:\"[^\"]*\"|'[^']*'))?\s*\)")
+_HEADING_RE = re.compile(r"^ {0,3}#{1,6}\s+(.*?)\s*#*\s*$")
+_HTML_ANCHOR_RE = re.compile(r"<a\s[^>]*(?:id|name)=[\"']([^\"']+)[\"']", re.IGNORECASE)
+_SCHEME_RE = re.compile(r"^[A-Za-z][A-Za-z0-9+.-]*:")
+
+
+def _prose_lines(text):
+    """Yield (line number, line) outside fenced code blocks, with code spans blanked."""
+    fence = None
+    for number, line in enumerate(text.splitlines(), 1):
+        opening = _FENCE_RE.match(line)
+        if fence is None and opening:
+            fence = opening.group(1)
+        elif fence is not None:
+            if line.lstrip().startswith(fence):
+                fence = None
+        else:
+            yield number, _CODE_SPAN_RE.sub(lambda match: " " * len(match.group(0)), line)
+
+
+def heading_anchors(text):
+    """The fragment ids GitHub generates for a Markdown file's headings, plus explicit HTML anchors."""
+    anchors, seen = set(), {}
+    for _, line in _prose_lines(text):
+        anchors.update(match.lower() for match in _HTML_ANCHOR_RE.findall(line))
+    for line in (line for _, line in _prose_lines(text.replace("`", ""))):
+        match = _HEADING_RE.match(line)
+        if not match:
+            continue
+        title = re.sub(r"!?\[([^\]]*)\]\([^)]*\)", r"\1", match.group(1))  # keep link text
+        slug = re.sub(r"[^\w\- ]", "", title.lower()).replace(" ", "-")
+        count = seen.get(slug, 0)
+        seen[slug] = count + 1
+        anchors.add(slug if count == 0 else f"{slug}-{count}")
+    return anchors
+
+
+def link_scope(manifest):
+    """Path patterns of the Markdown files whose links `check` verifies."""
+    return LINK_CHECKED + tuple(f"{component['path']}/**" for component in manifest["components"].values()
+                                if component["kind"] in ("project", "tooling"))
+
+
+def link_problems(root, files, manifest):
+    """Local Markdown links in link_scope files whose target file or heading does not exist."""
+    root = Path(root)
+    scope = link_scope(manifest)
+    present = set(files)
+    directories = {str(PurePosixPath(path).parent) for path in present}
+    anchor_cache = {}
+
+    def anchors(path):
+        if path not in anchor_cache:
+            anchor_cache[path] = heading_anchors((root / path).read_text(encoding="utf-8"))
+        return anchor_cache[path]
+
+    problems = []
+    for source in sorted(path for path in present if path.endswith(".md") and matches_any(scope, path)):
+        text = (root / source).read_text(encoding="utf-8")
+        for number, line in _prose_lines(text):
+            for match in _LINK_RE.finditer(line):
+                target = match.group(1).strip("<>")
+                if not target or _SCHEME_RE.match(target) or target.startswith("/"):
+                    continue
+                link_path, _, fragment = target.partition("#")
+                where = f"{source}:{number}: link {target!r}"
+                if link_path:
+                    resolved = os.path.normpath(PurePosixPath(source).parent / unquote(link_path)).replace(os.sep, "/")
+                    if resolved == ".." or resolved.startswith("../"):
+                        problems.append(f"{where} points outside the repository")
+                        continue
+                    if resolved not in present and resolved not in directories and resolved != ".":
+                        problems.append(f"{where} points to a missing file")
+                        continue
+                else:
+                    resolved = source
+                if fragment and resolved.endswith(".md") and resolved in present:
+                    if unquote(fragment).lower() not in anchors(resolved):
+                        problems.append(f"{where} names a heading that does not exist")
     return problems
 
 
