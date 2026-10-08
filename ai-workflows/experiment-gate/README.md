@@ -53,7 +53,11 @@ python3 -m expgate.run --input examples/offer-ranker-v2.json --out review-run/ex
 
 `--out` must be new or empty. Each evaluation writes `decision.json` (sorted
 keys; byte-identical across runs for the same input) and a readable
-`DECISION.md`. `--require-ship` exits 1 unless every decision is `SHIP`, so the
+`DECISION.md`. `--input` takes several summaries at once (`--input exports/*.json`);
+each record then goes to `--out/<experiment>/`, so every summary must name its
+`experiment`, and the names must be distinct (ignoring case) and usable as a
+directory name. Every summary is read and evaluated before anything is written,
+so one invalid file leaves no partial records. `--require-ship` exits 1 unless every decision is `SHIP`, so the
 command can gate a promotion job. Invalid input exits 2.
 
 From the repository root, `make expgate-test` and

@@ -687,5 +687,60 @@ class MinimumDetectableEffectTest(unittest.TestCase):
                 stats.minimum_detectable_effect(1.0, 1.64, power)
 
 
+class BatchInputTest(unittest.TestCase):
+    def write(self, folder, name, **changes):
+        summary = example()
+        summary.update(changes)
+        path = Path(folder, f"{name}.json")
+        path.write_text(json.dumps(summary))
+        return path
+
+    def test_several_summaries_get_one_record_each(self):
+        with tempfile.TemporaryDirectory() as tmp:
+            a = self.write(tmp, "a", experiment="ranker-a")
+            b = self.write(tmp, "b", experiment="ranker-b")
+            out = Path(tmp, "out")
+            code, stdout, _ = run_cli("--input", str(a), str(b), "--out", str(out), "--require-ship")
+            self.assertEqual(code, 0)
+            self.assertEqual([line.split(":")[0] for line in stdout.splitlines()], ["ranker-a", "ranker-b"])
+            single = Path(tmp, "single")
+            run_cli("--input", str(a), "--out", str(single))
+            self.assertEqual((out / "ranker-a" / "decision.json").read_bytes(), (single / "decision.json").read_bytes())
+            self.assertTrue((out / "ranker-b" / "DECISION.md").is_file())
+
+    def test_require_ship_covers_the_whole_batch(self):
+        with tempfile.TemporaryDirectory() as tmp:
+            ship = self.write(tmp, "a", experiment="ships")
+            hold = Path(tmp, "hold.json")
+            hold.write_text(json.dumps(generate("flat")))
+            code, stdout, _ = run_cli("--input", str(ship), str(hold), "--out", str(Path(tmp, "out")), "--require-ship")
+            self.assertEqual(code, 1)
+            self.assertIn("flat: HOLD", stdout)
+
+    def test_invalid_batches_exit_2_and_write_nothing(self):
+        with tempfile.TemporaryDirectory() as tmp:
+            good = self.write(tmp, "good", experiment="good")
+            batches = {
+                "invalid second summary": [good, self.write(tmp, "bad", experiment="bad", metrics={})],
+                "unreadable second file": [good, Path(tmp, "missing.json")],
+                "duplicate names": [good, self.write(tmp, "dup", experiment="good")],
+                "names differing only in case": [good, self.write(tmp, "case", experiment="GOOD")],
+                "path in the name": [good, self.write(tmp, "path", experiment="../escape")],
+                "dot name": [good, self.write(tmp, "dot", experiment="..")],
+                "hidden name": [good, self.write(tmp, "hidden", experiment=".git")],
+                "missing name": [good, self.write(tmp, "unnamed")],
+            }
+            batches["missing name"][1].write_text(json.dumps({k: v for k, v in example().items() if k != "experiment"}))
+            for i, (label, paths) in enumerate(batches.items()):
+                with self.subTest(label):
+                    out = Path(tmp, f"out-{i}")
+                    code, stdout, err = run_cli("--input", *map(str, paths), "--out", str(out), "--require-ship")
+                    self.assertEqual(code, 2)
+                    self.assertEqual(stdout, "")
+                    self.assertIn("error:", err)
+                    self.assertFalse(out.exists())
+            self.assertFalse(Path(tmp, "escape").exists())
+
+
 if __name__ == "__main__":
     unittest.main()

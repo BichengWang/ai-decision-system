@@ -2,10 +2,13 @@
 
     python -m expgate.run --scenario win --out review-run
     python -m expgate.run --input examples/offer-ranker-v2.json --out review-run
+    python -m expgate.run --input exports/*.json --out review-run
     python -m expgate.run --all-scenarios --out review-run
 
 Writes ``decision.json`` (deterministic, sorted keys) and ``DECISION.md`` per
-experiment. ``--require-ship`` exits 1 unless every evaluated experiment ships,
+experiment, in ``--out`` itself for one experiment and in ``--out/<experiment>/`` for
+several. Every summary is read and evaluated before anything is written, so invalid
+input leaves no partial records. ``--require-ship`` exits 1 unless every evaluated experiment ships,
 so the command can gate a promotion step in CI.
 """
 from __future__ import annotations
@@ -74,7 +77,7 @@ def main(argv=None) -> int:
     src = ap.add_mutually_exclusive_group(required=True)
     src.add_argument("--scenario", choices=sorted(SCENARIOS))
     src.add_argument("--all-scenarios", action="store_true")
-    src.add_argument("--input", type=Path, help="experiment summary JSON")
+    src.add_argument("--input", type=Path, nargs="+", help="one or more experiment summary JSON files")
     ap.add_argument("--out", type=Path, required=True, help="new or empty output directory")
     ap.add_argument("--require-ship", action="store_true", help="exit 1 unless every decision is SHIP")
     a = ap.parse_args(argv)
@@ -83,29 +86,54 @@ def main(argv=None) -> int:
         ap.error("--out must be a new path or an existing empty directory")
 
     if a.input:
-        try:
-            summaries = [json.loads(a.input.read_text())]
-        except (OSError, ValueError) as exc:
-            print(f"error: cannot read experiment summary: {exc}", file=sys.stderr)
-            return 2
+        summaries = []
+        for path in a.input:
+            try:
+                summaries.append((str(path), json.loads(path.read_text())))
+            except (OSError, ValueError) as exc:
+                print(f"error: cannot read experiment summary {path}: {exc}", file=sys.stderr)
+                return 2
     elif a.all_scenarios:
-        summaries = [generate(name) for name in sorted(SCENARIOS)]
+        summaries = [(name, generate(name)) for name in sorted(SCENARIOS)]
     else:
-        summaries = [generate(a.scenario)]
+        summaries = [(a.scenario, generate(a.scenario))]
+
+    reports = []
+    for source, summary in summaries:
+        try:
+            reports.append(evaluate(summary))
+        except (KeyError, TypeError, ValueError) as exc:
+            print(f"error: invalid experiment summary {source}: {exc}", file=sys.stderr)
+            return 2
+    if len(reports) > 1:
+        problem = _batch_problem(summaries, reports)
+        if problem:
+            print(f"error: {problem}", file=sys.stderr)
+            return 2
 
     decisions = []
-    for summary in summaries:
-        try:
-            report = evaluate(summary)
-        except (KeyError, TypeError, ValueError) as exc:
-            print(f"error: invalid experiment summary: {exc}", file=sys.stderr)
-            return 2
-        target = a.out / report["experiment"] if len(summaries) > 1 else a.out
+    for report in reports:
+        target = a.out / report["experiment"] if len(reports) > 1 else a.out
         digest = write_record(report, target)
         decisions.append(report["decision"])
         print(f"{report['experiment']}: {report['decision']} {digest}")
 
     return 1 if a.require_ship and any(d != "SHIP" for d in decisions) else 0
+
+
+def _batch_problem(summaries, reports) -> str | None:
+    """Several records share --out, one directory per experiment, so names must be usable and unique."""
+    seen = {}
+    for (source, summary), report in zip(summaries, reports):
+        name = report["experiment"]
+        if "experiment" not in summary:
+            return f"{source}: an experiment name is required when evaluating several summaries"
+        if name in (".", "..") or name.startswith(".") or any(c in name for c in "/\\\0") or name != name.strip():
+            return f"{source}: experiment name {name!r} cannot be used as a directory name"
+        if name.casefold() in seen:
+            return f"{source}: experiment name {name!r} is also used by {seen[name.casefold()]}"
+        seen[name.casefold()] = source
+    return None
 
 
 if __name__ == "__main__":
