@@ -196,6 +196,14 @@ def sequential_multiplier(alpha: float, information_ratio: float) -> float:
     return _mixture_critical(mixture_ratio(alpha) / information_ratio, alpha)
 
 
+def minimum_detectable_effect(se: float, z: float, power: float) -> float:
+    """Smallest true effect that a one-sided bound ``estimate - z * se`` excludes zero for with
+    probability ``power``: ``(z + z_power) * se``, on the same normal approximation as the bound."""
+    if not 0.0 < power < 1.0:
+        raise ValueError("power must be in (0, 1)")
+    return (z + _N.inv_cdf(power)) * se
+
+
 def sample_ratio_p_value(control_n: int, treatment_n: int, expected_treatment_share: float) -> float:
     """Chi-square (1 df) goodness-of-fit p-value for the observed assignment split."""
     if not 0.0 < expected_treatment_share < 1.0:
