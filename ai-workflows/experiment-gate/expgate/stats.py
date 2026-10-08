@@ -50,6 +50,43 @@ def mean_effect(control_mean: float, control_sd: float, control_n: int,
 
 
 @dataclass(frozen=True)
+class RatioArm:
+    """Per-unit summary of a ratio metric's numerator and denominator in one arm: their means,
+    sample standard deviations, and their correlation across units."""
+
+    n: int
+    num_mean: float
+    num_sd: float
+    den_mean: float
+    den_sd: float
+    corr: float
+
+    def ratio_and_variance(self) -> tuple[float, float]:
+        """The ratio of means and the delta-method variance of that ratio."""
+        if self.n <= 1 or self.den_mean <= 0 or self.num_sd < 0 or self.den_sd < 0 or not -1.0 <= self.corr <= 1.0:
+            raise ValueError("ratio metrics need units > 1, a positive denominator mean, "
+                             "non-negative standard deviations and a correlation in [-1, 1]")
+        ratio = self.num_mean / self.den_mean
+        cov = self.corr * self.num_sd * self.den_sd
+        var = (self.num_sd ** 2 - 2 * ratio * cov + ratio ** 2 * self.den_sd ** 2) / (self.den_mean ** 2 * self.n)
+        return ratio, max(var, 0.0)
+
+
+def ratio_effect(control: RatioArm, treatment: RatioArm) -> Effect:
+    """Difference in ratios of means (e.g. revenue per session when users are randomized).
+
+    Each arm's ratio ``R = ybar / xbar`` is a ratio of two per-unit means, so its units (sessions,
+    page views) are not independent draws and the plain mean or proportion standard error is too
+    small. The first-order delta method gives
+    ``var(R) = (s_y**2 - 2 R s_xy + R**2 s_x**2) / (xbar**2 n)``, with ``n`` the randomized units and
+    ``s_xy = corr * s_y * s_x`` the per-unit covariance of numerator and denominator.
+    """
+    rc, vc = control.ratio_and_variance()
+    rt, vt = treatment.ratio_and_variance()
+    return Effect(rc, rt, rt - rc, sqrt(vc + vt))
+
+
+@dataclass(frozen=True)
 class Covariate:
     """Summary of a pre-experiment covariate for one arm: its mean, sample sd, and its
     correlation with the outcome within the arm."""

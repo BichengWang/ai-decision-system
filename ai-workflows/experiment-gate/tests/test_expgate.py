@@ -520,5 +520,120 @@ class SequentialTest(unittest.TestCase):
             self.assertEqual(record["policy"]["sequential"], {"planned_units": 60_000})
 
 
+def ratio_stat(num_mean, num_sd, den_mean, den_sd, corr):
+    return {"numerator": {"mean": num_mean, "sd": num_sd}, "denominator": {"mean": den_mean, "sd": den_sd},
+            "corr": corr}
+
+
+def with_ratio_guardrail(summary, control, treatment, margin=0.5):
+    summary["metrics"]["revenue_per_session"] = {"type": "ratio", "role": "guardrail", "direction": "increase",
+                                                 "margin": margin}
+    summary["arms"]["control"]["metrics"]["revenue_per_session"] = control
+    summary["arms"]["treatment"]["metrics"]["revenue_per_session"] = treatment
+    return summary
+
+
+class RatioTest(unittest.TestCase):
+    def test_delta_method_by_hand(self):
+        arm = stats.RatioArm(100, 12.0, 6.0, 3.0, 1.5, 0.5)
+        ratio, var = arm.ratio_and_variance()
+        self.assertAlmostEqual(ratio, 4.0)
+        # (36 - 2*4*(0.5*6*1.5) + 16*2.25) / (9*100) = (36 - 36 + 36) / 900
+        self.assertAlmostEqual(var, 0.04)
+        effect = stats.ratio_effect(arm, stats.RatioArm(400, 13.0, 6.0, 3.0, 1.5, 0.5))
+        self.assertAlmostEqual(effect.diff, 13.0 / 3.0 - 4.0)
+        r = 13.0 / 3.0
+        self.assertAlmostEqual(effect.se ** 2, 0.04 + (36 - 2 * r * 4.5 + r * r * 2.25) / (9 * 400))
+
+    def test_constant_denominator_reduces_to_a_mean(self):
+        effect = stats.ratio_effect(stats.RatioArm(100, 10.0, 2.0, 1.0, 0.0, 0.0),
+                                    stats.RatioArm(400, 11.0, 4.0, 1.0, 0.0, 0.0))
+        mean = stats.mean_effect(10.0, 2.0, 100, 11.0, 4.0, 400)
+        self.assertAlmostEqual(effect.diff, mean.diff)
+        self.assertAlmostEqual(effect.se, mean.se)
+
+    def test_rejects_unusable_arms(self):
+        for arm in (stats.RatioArm(1, 1.0, 1.0, 1.0, 1.0, 0.0), stats.RatioArm(10, 1.0, 1.0, 0.0, 1.0, 0.0),
+                    stats.RatioArm(10, 1.0, -1.0, 1.0, 1.0, 0.0), stats.RatioArm(10, 1.0, 1.0, 1.0, 1.0, 1.5)):
+            with self.subTest(arm=arm), self.assertRaises(ValueError):
+                arm.ratio_and_variance()
+
+    def test_simulation_matches_the_delta_method(self):
+        """Randomize users with a varying number of correlated sessions: the reported SE must match
+        the spread of the A/A differences, which the session-level SE understates."""
+        rng, n, reps = random.Random(3), 400, 300
+        diffs, reported, naive = [], [], []
+
+        def arm():
+            sessions, revenue, flat = [], [], []
+            for _ in range(n):
+                k, propensity = 1 + int(rng.expovariate(0.5)), rng.lognormvariate(0, 0.6)
+                spend = [propensity * rng.expovariate(1.0) * 5 for _ in range(k)]
+                sessions.append(k)
+                revenue.append(sum(spend))
+                flat += spend
+            summary = stats.RatioArm(n, statistics.fmean(revenue), statistics.stdev(revenue),
+                                     statistics.fmean(sessions), statistics.stdev(sessions),
+                                     statistics.correlation(revenue, sessions))
+            return summary, statistics.variance(flat) / len(flat)
+
+        for _ in range(reps):
+            (c, naive_c), (t, naive_t) = arm(), arm()
+            effect = stats.ratio_effect(c, t)
+            diffs.append(effect.diff)
+            reported.append(effect.se)
+            naive.append(math.sqrt(naive_c + naive_t))
+        empirical = statistics.stdev(diffs)
+        self.assertAlmostEqual(statistics.fmean(reported) / empirical, 1.0, delta=0.12)
+        self.assertLess(statistics.fmean(naive) / empirical, 0.85)
+
+    def test_ratio_guardrail_in_a_decision(self):
+        control, treatment = ratio_stat(31.0, 40.0, 3.1, 2.4, 0.6), ratio_stat(31.2, 40.0, 3.1, 2.4, 0.6)
+        report = evaluate(with_ratio_guardrail(example(), control, treatment, margin=0.5))
+        row = status_of(report, "revenue_per_session")
+        self.assertAlmostEqual(row["control"], 31.0 / 3.1)
+        self.assertAlmostEqual(row["treatment"], 31.2 / 3.1)
+        self.assertEqual(row["status"], "NON_INFERIOR")
+        self.assertEqual(report["decision"], "SHIP")
+        harmful = ratio_stat(26.0, 40.0, 3.1, 2.4, 0.6)
+        report = evaluate(with_ratio_guardrail(example(), control, harmful, margin=0.5))
+        self.assertEqual(status_of(report, "revenue_per_session")["status"], "BREACH")
+        self.assertEqual(report["decision"], "ROLLBACK")
+
+    def test_ratio_primary_with_sequential_monitoring(self):
+        summary = example()
+        summary["metrics"] = {"revenue_per_session": {"type": "ratio", "role": "primary", "direction": "increase"}}
+        summary["policy"] = {"sequential": {"planned_units": 200000}}
+        summary["arms"]["control"]["metrics"] = {"revenue_per_session": ratio_stat(31.0, 40.0, 3.1, 2.4, 0.6)}
+        summary["arms"]["treatment"]["metrics"] = {"revenue_per_session": ratio_stat(32.5, 40.0, 3.1, 2.4, 0.6)}
+        report = evaluate(summary)
+        self.assertEqual(report["decision"], "SHIP")
+        self.assertGreater(report["metrics"][0]["z"], stats.z_for(0.05))
+
+    def test_malformed_ratio_metrics_exit_2(self):
+        good = ratio_stat(31.0, 40.0, 3.1, 2.4, 0.6)
+        bad = {
+            "zero denominator": ratio_stat(31.0, 40.0, 0.0, 2.4, 0.6),
+            "negative sd": ratio_stat(31.0, -1.0, 3.1, 2.4, 0.6),
+            "correlation above 1": ratio_stat(31.0, 40.0, 3.1, 2.4, 1.1),
+            "missing denominator": {"numerator": {"mean": 31.0, "sd": 40.0}, "corr": 0.6},
+            "missing corr": {"numerator": {"mean": 31.0, "sd": 40.0}, "denominator": {"mean": 3.1, "sd": 2.4}},
+            "flat mean instead": {"mean": 10.0, "sd": 4.0},
+            "covariate": {**good, "covariate": {"mean": 1.0, "sd": 1.0, "corr": 0.5}},
+            "unknown part key": {**good, "numerator": {"mean": 31.0, "sd": 40.0, "n": 5}},
+        }
+        with tempfile.TemporaryDirectory() as tmp:
+            for i, (label, stat) in enumerate(bad.items()):
+                with self.subTest(label):
+                    summary = with_ratio_guardrail(example(), good, stat)
+                    with self.assertRaises(ValueError):
+                        evaluate(summary)
+                    path = Path(tmp, f"{i}.json")
+                    path.write_text(json.dumps(summary))
+                    code, _, err = run_cli("--input", str(path), "--out", str(Path(tmp, f"out-{i}")))
+                    self.assertEqual(code, 2)
+                    self.assertIn("invalid experiment summary", err)
+
+
 if __name__ == "__main__":
     unittest.main()
