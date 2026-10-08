@@ -58,7 +58,11 @@ better (`increase` or `decrease`). `policy` and `assignment` are optional;
 The summary is validated before any statistic is computed: counts must be
 integers within range, means, standard deviations and margins must be finite,
 `alpha`, `srm_alpha` and `expected_treatment_share` must lie in (0, 1), and
-`policy.sequential.planned_units` must be an integer of at least 2.
+`policy.sequential.planned_units` must be an integer of at least 2. `experiment`,
+when present, must be a non-empty string. Unknown keys in `policy`,
+`policy.sequential`, `assignment`, an arm's metric statistics, and a `covariate`
+are rejected rather than ignored, so a misspelled setting such as `alpah` cannot
+silently fall back to its default.
 Any violation exits 2 with the offending field named, so malformed input is
 never mistaken for a `--require-ship` refusal (exit 1).
 
