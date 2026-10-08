@@ -79,8 +79,22 @@ def _count(value, where: str) -> int:
     return value
 
 
+_POLICY_KEYS = {"alpha", "srm_alpha", "sequential"}
+_SEQUENTIAL_KEYS = {"planned_units"}
+_ASSIGNMENT_KEYS = {"expected_treatment_share"}
+
+
+def _known_keys(value: dict, allowed: set, where: str) -> None:
+    # A misspelled setting would otherwise be ignored and its default applied silently.
+    unknown = set(value) - allowed
+    if unknown:
+        raise ValueError(f"{where} has unknown keys {sorted(unknown)}; expected only {sorted(allowed)}")
+
+
 def _validate(summary: dict) -> None:
     _object(summary, "experiment summary")
+    if "experiment" in summary and (not isinstance(summary["experiment"], str) or not summary["experiment"].strip()):
+        raise ValueError("'experiment' must be a non-empty string")
     metrics = _object(summary.get("metrics"), "'metrics'")
     for name, spec in metrics.items():
         _object(spec, f"metric {name!r}")
@@ -99,15 +113,19 @@ def _validate(summary: dict) -> None:
                 raise ValueError(f"guardrail {name!r} needs a non-negative 'margin'")
 
     policy = _object(summary.get("policy", {}), "'policy'")
+    _known_keys(policy, _POLICY_KEYS, "'policy'")
     for key in ("alpha", "srm_alpha"):
         value = policy.get(key)
         if value is not None and not 0 < _number(value, f"policy {key}") < 1:
             raise ValueError(f"policy {key} must be in (0, 1)")
     if "sequential" in policy:
         sequential = _object(policy["sequential"], "policy sequential")
+        _known_keys(sequential, _SEQUENTIAL_KEYS, "policy sequential")
         if _count(sequential.get("planned_units"), "policy sequential planned_units") < 2:
             raise ValueError("policy sequential planned_units must be at least 2")
-    share = _object(summary.get("assignment", {}), "'assignment'").get("expected_treatment_share")
+    assignment = _object(summary.get("assignment", {}), "'assignment'")
+    _known_keys(assignment, _ASSIGNMENT_KEYS, "'assignment'")
+    share = assignment.get("expected_treatment_share")
     if share is not None and not 0 < _number(share, "expected_treatment_share") < 1:
         raise ValueError("expected_treatment_share must be in (0, 1)")
 
@@ -124,6 +142,8 @@ def _validate(summary: dict) -> None:
         for name, spec in metrics.items():
             where = f"arm {arm_name!r} metric {name!r}"
             stat = _object(observed[name], where)
+            fields = {"successes"} if spec["type"] == "proportion" else {"mean", "sd"}
+            _known_keys(stat, fields | {"covariate"}, where)
             if spec["type"] == "proportion":
                 successes = _count(stat.get("successes"), f"{where} successes")
                 if not 0 <= successes <= units:
@@ -134,6 +154,7 @@ def _validate(summary: dict) -> None:
                     raise ValueError(f"{where} sd must be non-negative")
             if "covariate" in stat:
                 cov = _object(stat["covariate"], f"{where} covariate")
+                _known_keys(cov, {"mean", "sd", "corr"}, f"{where} covariate")
                 _number(cov.get("mean"), f"{where} covariate mean")
                 if _number(cov.get("sd"), f"{where} covariate sd") <= 0:
                     raise ValueError(f"{where} covariate sd must be positive")
