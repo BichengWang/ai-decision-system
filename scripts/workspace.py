@@ -22,6 +22,7 @@ import argparse
 import ast
 import contextlib
 import json
+import keyword
 import os
 import re
 import shlex
@@ -115,6 +116,8 @@ def _check_list(problems, where, value, item_problem, allow_empty=False):
 def _identifier_problem(value):
     if not isinstance(value, str) or not IDENTIFIER_RE.match(value):
         return "must be a Python identifier"
+    if keyword.iskeyword(value):
+        return "must not be a Python keyword"
     return None
 
 
@@ -921,8 +924,8 @@ def scaffold_project(root, manifest, name, summary, package=None):
     components = manifest["components"]
     if not NAME_RE.match(name):
         raise WorkspaceError("project name must use lowercase letters, digits, and hyphens")
-    if not IDENTIFIER_RE.match(package):
-        raise WorkspaceError(f"package {package!r} is not a Python identifier; pass --package")
+    if _identifier_problem(package):
+        raise WorkspaceError(f"package {package!r} is not a valid Python identifier; pass --package")
     if package in (getattr(sys, "stdlib_module_names", None) or ()):
         raise WorkspaceError(f"package {package!r} would shadow a standard-library module; pass --package")
     if not summary or "\n" in summary or "|" in summary:

@@ -14,7 +14,7 @@ import subprocess
 import sys
 import tempfile
 from contextlib import contextmanager
-from datetime import datetime
+from datetime import datetime, timezone
 from pathlib import Path
 from zoneinfo import ZoneInfo
 
@@ -93,6 +93,8 @@ def day_counts(merged, now):
 
 
 def snapshot():
+    now = datetime.now(ZoneInfo("America/Los_Angeles"))
+    day_start = now.replace(hour=0, minute=0, second=0, microsecond=0).astimezone(timezone.utc)
     run("gh", "auth", "status")
     repo = repo_name()
     open_prs = gh_json(
@@ -101,6 +103,7 @@ def snapshot():
     )
     merged_prs = gh_json(
         "pr", "list", "--state", "merged", "--limit", "1000",
+        "--search", f"merged:>={day_start.isoformat()}",
         "--json", "number,mergedAt,labels",
     )
     issues = gh_json(
@@ -120,10 +123,10 @@ def snapshot():
         (issue for issue in issues if issue["number"] not in active_ids),
         key=lambda issue: issue["createdAt"],
     )
-    count = day_counts(merged_prs, datetime.now(ZoneInfo("America/Los_Angeles")))
+    count = day_counts(merged_prs, now)
     return {
         "repo": repo,
-        "date": str(datetime.now(ZoneInfo("America/Los_Angeles")).date()),
+        "date": str(now.date()),
         "merged_today": count,
         "open_managed_prs": managed,
         "next_issue": queue[0] if queue and count < 20 and len(managed) < 3 else None,
