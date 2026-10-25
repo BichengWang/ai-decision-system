@@ -248,9 +248,20 @@ each phase file carries a status table for every row of that phase.
 | P-034 | Proposed 2026-10-22; gated on an outside user | **Bind LLM proposals in decision-control**: store the raw tool-call response that produced a `Recommendation` and re-derive the recommendation on replay, as Jev does for its answers. Needs record schema 6; the LangGraph example carries thread ids in the review note because the record has no metadata member. Starts when an outside decision-control user must show which model output produced an action. Agent builds |
 | P-035 | Proposed 2026-10-22; gated on an outside user | **Record for a sampled action from a bandit or RL policy**: the action probabilities and the random draw, so the choice can be recomputed; logged probabilities would also let expgate approve a policy from off-policy evaluation instead of an online test. The owner's RL-pricing repository can serve as a test bed but is not outside evidence. Agent builds |
 
-### Fixes merged 2026-10-25
+## Completed
 
-Each PR had an independent review with a PASS verdict and green required checks before the owner squash-merged it.
+Dates are America/Los_Angeles (UTC−07:00) calendar days. PRs #234–#263 merged between 2026-10-19T20:18Z and 2026-10-20T01:01Z, which is 13:18 to 18:01 on 2026-10-19 Pacific time; in UTC, some of them fall on 2026-10-20.
+
+Merged after the 2026-10-19 snapshot and before the 2026-10-25 fixes below (`main` 5d0c8d1):
+#264 (plan status), #265 (nested-doc link check), #266 (Jev conformance generator
+`--check`/`--out`), #267 (expgate golden-vector generator hash lock), #268
+(decision-control canonical decision ids in record schemas 4 and 5), #269
+(published 0.1.0 docs; P-016 closed), #270 and #274 (notebook pruning in `src/`),
+#271 (model-coverage proposals), #273 (P-036 outreach trigger), #275 (GitHub Pages
+site serving schemas at their `$id` paths plus conformance vectors), and
+#276–#279 (Dependabot bumps).
+
+Fixes merged 2026-10-25 (`main` 97735ec). Each PR had an independent review with a PASS verdict and green required checks before the owner squash-merged it:
 
 | PR | Change |
 | --- | --- |
@@ -260,19 +271,6 @@ Each PR had an independent review with a PASS verdict and green required checks 
 | #283 | `workspace.py` rejects Python keywords as package names |
 | #284 | Move uv dev dependencies to a PEP 735 dependency group |
 | #285 | Outreach retries unposted announcements and paginates discussions (P-036) |
-
-## Completed
-
-Dates are America/Los_Angeles (UTC−07:00) calendar days. PRs #234–#263 merged between 2026-10-19T20:18Z and 2026-10-20T01:01Z, which is 13:18 to 18:01 on 2026-10-19 Pacific time; in UTC, some of them fall on 2026-10-20.
-
-Merged after the 2026-10-19 snapshot and before the 2026-10-25 fixes above (`main` 5d0c8d1):
-#264 (plan status), #265 (nested-doc link check), #266 (Jev conformance generator
-`--check`/`--out`), #267 (expgate golden-vector generator hash lock), #268
-(decision-control canonical decision ids in record schemas 4 and 5), #269
-(published 0.1.0 docs; P-016 closed), #270 and #274 (notebook pruning in `src/`),
-#271 (model-coverage proposals), #273 (P-036 outreach trigger), #275 (GitHub Pages
-site serving schemas at their `$id` paths plus conformance vectors), and
-#276–#279 (Dependabot bumps).
 
 | Plan ID | Outcome | Evidence |
 | --- | --- | --- |
