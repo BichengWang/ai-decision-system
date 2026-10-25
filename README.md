@@ -1,5 +1,7 @@
 # AI Decision System
 
+[![Experiment gate CI](https://github.com/BichengWang/ai-decision-system/actions/workflows/expgate-ci.yml/badge.svg?branch=main)](https://github.com/BichengWang/ai-decision-system/actions/workflows/expgate-ci.yml) [![Jev decision CI](https://github.com/BichengWang/ai-decision-system/actions/workflows/jev-decision-ci.yml/badge.svg?branch=main)](https://github.com/BichengWang/ai-decision-system/actions/workflows/jev-decision-ci.yml) [![Decision-control CI](https://github.com/BichengWang/ai-decision-system/actions/workflows/decision-control-ci.yml/badge.svg?branch=main)](https://github.com/BichengWang/ai-decision-system/actions/workflows/decision-control-ci.yml) [![Node conformance](https://github.com/BichengWang/ai-decision-system/actions/workflows/conformance.yml/badge.svg?branch=main)](https://github.com/BichengWang/ai-decision-system/actions/workflows/conformance.yml) [![expgate](https://img.shields.io/pypi/v/expgate?label=expgate)](https://pypi.org/project/expgate/) [![jevdecision](https://img.shields.io/pypi/v/jevdecision?label=jevdecision)](https://pypi.org/project/jevdecision/) [![decisioncontrol](https://img.shields.io/pypi/v/decisioncontrol?label=decisioncontrol)](https://pypi.org/project/decisioncontrol/) ![Python 3.11+](https://img.shields.io/badge/python-3.11%2B-blue) [![MIT license](https://img.shields.io/badge/license-MIT-green)](LICENSE) [![Schemas and vectors site](https://img.shields.io/badge/site-schemas%20%26%20vectors-blue)](https://bichengwang.github.io/ai-decision-system/)
+
 Replayable, offline-verifiable records for AI-assisted go/no-go decisions.
 
 Site, schemas and conformance vectors: <https://bichengwang.github.io/ai-decision-system/>
@@ -157,4 +159,6 @@ grants no current rights; intended Apache-2.0 publication requires rights cleara
 See [SECURITY](SECURITY.md), [CONTRIBUTING](CONTRIBUTING.md), [CITATION](CITATION.cff),
 [records](docs/DECISION_RECORDS.md), [releasing](docs/RELEASING.md),
 [pilot protocol template](docs/PILOT_PROTOCOL.md), [regulatory mapping (draft, no compliance claim)](docs/REGULATORY_MAPPING.md),
-[plan](.plan/README.md) and [publication records](docs/publication/README.md).
+[documentation index](docs/README.md) and [plan](.plan/README.md).
+
+[Maintainer portfolio and publication evidence](docs/portfolio/).

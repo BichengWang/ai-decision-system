@@ -15,4 +15,4 @@ this index.
 
 Fixtures and self-produced reports are not live-model quality, adoption,
 production impact or national-importance evidence. RELIA reuse remains subject to
-rights, reproduction and acceptance review ([RELIA release record](../RELIA_RELEASE.md)).
+rights, reproduction and acceptance review ([RELIA release record](../../RELIA_RELEASE.md)).
