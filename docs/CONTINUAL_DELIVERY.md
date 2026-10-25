@@ -28,6 +28,7 @@ manifest blocks every merge. `make affected` previews the checks for the current
 
 ## Boundaries and recovery
 
+- The snapshot queries merged PRs since the current America/Los_Angeles midnight, converted to UTC with daylight saving time accounted for, and counts only managed merges on that local calendar day. Older merge history does not consume the listing limit. Any listing that reaches 1,000 results, including the daily merged-PR query, blocks the snapshot as potentially incomplete.
 - Standalone releases, `relia-release`, tags, and publication never enter this loop. Release-control files listed in the controller are also excluded from automatic merging. Use [RELIA_RELEASE.md](RELIA_RELEASE.md) and its rights, reproduction, and maintainer acceptance records for publication.
 - The old `auto-merge` label has no merge authority. The GitHub workflow only removes merged branches, and the old root README alias was removed.
 - The controller fails closed on absent authentication, unavailable GitHub, missing branch protection, skipped or failed checks, stale review, draft or conflicting PRs, prohibited attribution, or the daily cap. Keep blocked PRs open for repair; do not retry by bypassing the controller.

@@ -416,11 +416,29 @@ class RetryAfterTest(unittest.TestCase):
         error = urllib.error.HTTPError("https://x", 429, "Too Many Requests", headers, io.BytesIO(b"slow down"))
         with mock.patch("urllib.request.OpenerDirector.open", side_effect=error), self.assertRaises(APIError) as raised:
             urllib_transport("https://x", {}, b"{}", 5)
+        error.close()
         self.assertEqual((raised.exception.status, raised.exception.retry_after), (429, 12.0))
         error = urllib.error.HTTPError("https://x", 503, "Unavailable", email.message.Message(), io.BytesIO(b""))
         with mock.patch("urllib.request.OpenerDirector.open", side_effect=error), self.assertRaises(APIError) as raised:
             urllib_transport("https://x", {}, b"{}", 5)
+        error.close()
         self.assertIsNone(raised.exception.retry_after)
+
+    def test_urllib_transport_closes_http_error(self):
+        from jevdecision.backends import urllib_transport
+
+        class TrackingBody(io.BytesIO):
+            was_closed = False
+
+            def close(self):
+                self.was_closed = True
+                super().close()
+
+        body = TrackingBody(b"unavailable")
+        error = urllib.error.HTTPError("https://x", 503, "Unavailable", email.message.Message(), body)
+        with mock.patch("urllib.request.OpenerDirector.open", side_effect=error), self.assertRaises(APIError):
+            urllib_transport("https://x", {}, b"{}", 5)
+        self.assertTrue(body.was_closed)
 
 
 class DecisionModelTest(unittest.TestCase):
