@@ -182,6 +182,9 @@ class RepositoryManifestTests(unittest.TestCase):
         intentional = {
             # RELIA CI already validated these; the controller now agrees with it.
             "scripts/tests/test_export_relia.py": {"Delivery policy", "RELIA required"},
+            # Notebook policy changes also run the research baseline.
+            "scripts/notebooks.py": {"Delivery policy", "src baseline"},
+            ".gitattributes": {"Delivery policy", "src baseline"},
             # The manifest routes every component, so a change to it runs every check.
             "workspace.json": set(workspace.check_workflows(loaded)),
         }

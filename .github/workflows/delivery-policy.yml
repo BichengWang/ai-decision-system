@@ -30,6 +30,8 @@ jobs:
         run: python3 -m unittest discover -s scripts/tests -p 'test_pages.py' -v
       - name: Outreach trigger regression tests
         run: python3 -m unittest discover -s scripts/tests -p 'test_outreach.py' -v
+      - name: Notebook strip/check tests
+        run: python3 -m unittest discover -s scripts/tests -p 'test_notebooks.py' -v
       - name: Workspace manifest, CI routing, and import boundaries
         run: python3 scripts/workspace.py check
       - name: Changed Python syntax

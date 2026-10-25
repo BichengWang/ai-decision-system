@@ -251,6 +251,8 @@ conda install pywin32
 ### Jupyter notebook
 
 Many decision experiments live in notebooks under `src/ml/` and `src/fin/`.
+Notebooks are committed without outputs or execution metadata; run `make notebooks`
+or `python scripts/notebooks.py strip` before committing. `make test` checks this.
 
 #### lint
 
