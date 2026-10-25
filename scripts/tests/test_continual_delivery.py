@@ -222,6 +222,62 @@ class EvaluationTests(unittest.TestCase):
         self.assertIsNone(result["next_issue"])
         self.assertEqual(result["blocker"], "three PRs open")
 
+    def test_snapshot_search_starts_at_la_midnight_across_dst_and_utc_boundary(self):
+        cases = (
+            ("2026-03-09T06:30:00+00:00", "2026-03-08", "2026-03-08T08:00:00+00:00"),
+            ("2026-11-02T07:30:00+00:00", "2026-11-01", "2026-11-01T07:00:00+00:00"),
+        )
+        for timestamp, day, start in cases:
+            with self.subTest(timestamp=timestamp), \
+                 patch.object(delivery, "datetime", wraps=datetime) as clock, \
+                 patch.object(delivery, "run"), \
+                 patch.object(delivery, "repo_name", return_value="a/b"), \
+                 patch.object(delivery, "gh_json", side_effect=[[], [], []]) as query:
+                clock.now.return_value = datetime.fromisoformat(timestamp).astimezone(
+                    ZoneInfo("America/Los_Angeles")
+                )
+                result = delivery.snapshot()
+                args = query.call_args_list[1].args
+                self.assertIn("--search", args)
+                self.assertEqual(args[args.index("--search") + 1], f"merged:>={start}")
+                self.assertEqual(result["date"], day)
+
+    def test_snapshot_history_volume_does_not_block_daily_count(self):
+        now = datetime(2026, 9, 26, 0, 20, tzinfo=ZoneInfo("America/Los_Angeles"))
+        today = {"labels": [{"name": delivery.MANAGED}],
+                 "mergedAt": "2026-09-26T07:01:00Z"}
+        old = {"labels": [{"name": delivery.MANAGED}],
+               "mergedAt": "2026-09-26T06:59:59Z"}
+        for volume in (1000, 1500):
+            history = [today] + [old] * volume
+
+            def query(*args):
+                if args[:2] == ("pr", "list") and args[args.index("--state") + 1] == "merged":
+                    matches = history
+                    if "--search" in args:
+                        start = datetime.fromisoformat(args[args.index("--search") + 1][len("merged:>="):])
+                        matches = [item for item in history if
+                                   datetime.fromisoformat(item["mergedAt"].replace("Z", "+00:00")) >= start]
+                    return matches[:int(args[args.index("--limit") + 1])]
+                return []
+
+            with self.subTest(volume=volume), \
+                 patch.object(delivery, "datetime", wraps=datetime) as clock, \
+                 patch.object(delivery, "run"), \
+                 patch.object(delivery, "repo_name", return_value="a/b"), \
+                 patch.object(delivery, "gh_json", side_effect=query):
+                clock.now.return_value = now
+                result = delivery.snapshot()
+                self.assertEqual(result["merged_today"], 1)
+                self.assertIsNone(result["blocker"])
+
+    def test_snapshot_saturated_daily_merges_fail_closed(self):
+        with patch.object(delivery, "run"), \
+             patch.object(delivery, "repo_name", return_value="a/b"), \
+             patch.object(delivery, "gh_json", side_effect=[[], [{}] * 1000, []]):
+            with self.assertRaisesRegex(delivery.Blocked, "listing reached its limit"):
+                delivery.snapshot()
+
     def test_stale_review_cannot_be_recorded(self):
         with tempfile.TemporaryDirectory() as folder:
             path = Path(folder) / "report.json"

@@ -682,6 +682,19 @@ class ScaffoldTests(unittest.TestCase):
                 self.assertEqual(code, 0 if "--dry-run" in args else 2, err)
                 self.assertEqual(self.repo.git("status", "--porcelain", "--untracked-files=all"), "")
 
+    def test_keyword_packages_are_rejected_without_writing(self):
+        cases = [
+            ("new", "class", "--summary", "X"),
+            ("new", "async-tools", "--summary", "X", "--package", "async"),
+        ]
+        for args in cases:
+            with self.subTest(args=args):
+                manifest_before = (self.repo.root / workspace.MANIFEST).read_bytes()
+                code, _, err = self.run_main(*args)
+                self.assertEqual(code, 2, err)
+                self.assertEqual((self.repo.root / workspace.MANIFEST).read_bytes(), manifest_before)
+                self.assertEqual(self.repo.git("status", "--porcelain", "--untracked-files=all"), "")
+
     def test_failed_write_restores_the_previous_state(self):
         real_write = Path.write_text
 
