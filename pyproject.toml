@@ -77,14 +77,15 @@ dependencies = [
     "pytesseract>=0.3.13",
 ]
 
-[tool.uv]
-dev-dependencies = [
+[dependency-groups]
+dev = [
     "pytest>=8.0.0",
     "pytest-cov>=4.0.0",
     "pytest-custom-exit-code>=0.3.0",
     "flake8>=7.0.0",
 ]
 
+[tool.uv]
 # Security floors for packages that arrive transitively (or whose own constraint is loose).
 # Each is the first patched release named by the open Dependabot advisories; raise it
 # when a new advisory lands. accelerate and pytorch-lightning have no patched tag in the
