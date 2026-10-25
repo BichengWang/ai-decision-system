@@ -65,11 +65,14 @@ def urllib_transport(url, headers, body, timeout):
             payload = response.read()
     except urllib.error.HTTPError as error:
         try:
-            text = error.read().decode("utf-8", "replace")
-        except (http.client.HTTPException, OSError, TimeoutError) as body_error:
-            raise APIError(f"could not read HTTP error response from {url}: {body_error}") from body_error
-        retry_after = parse_retry_after(error.headers.get("Retry-After") if error.headers else None)
-        raise APIError(f"HTTP {error.code} from {url}: {text[:500]}", error.code, text, retry_after) from error
+            try:
+                text = error.read().decode("utf-8", "replace")
+            except (http.client.HTTPException, OSError, TimeoutError) as body_error:
+                raise APIError(f"could not read HTTP error response from {url}: {body_error}") from body_error
+            retry_after = parse_retry_after(error.headers.get("Retry-After") if error.headers else None)
+            raise APIError(f"HTTP {error.code} from {url}: {text[:500]}", error.code, text, retry_after) from error
+        finally:
+            error.close()
     except (urllib.error.URLError, TimeoutError, OSError, http.client.HTTPException) as error:
         raise APIError(f"could not reach {url}: {error}") from error
     try:
