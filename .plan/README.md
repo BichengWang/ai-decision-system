@@ -1,6 +1,6 @@
 # ai-decision-system plan: re-verifiable records for AI go/no-go decisions
 
-Status: refreshed 2026-10-25, `main` 5d0c8d1 [2026-10-19 snapshot: 726ff04];
+Status: refreshed 2026-10-25, `main` 97735ec [2026-10-19 snapshot: 726ff04];
 model-coverage proposals added 2026-10-22 ([Model coverage](#model-coverage)). Owner:
 Bicheng Wang. This directory is the source of truth for
 direction and the delivery queue. Change
@@ -67,7 +67,7 @@ is the record, not another platform.
 | Canonical form | Adopted 2026-10-19 and implemented: RFC 8785 (JCS) digests in expgate `decision.json` schema 3, Jev answer record schema 2 and decision-control record schemas 4 and 5 and `evaluation.json` schema 2 (#246, #248, #250, #257). Each package carries a standard-library `jcs.py` tested against shared RFC 8785 vectors, and the Node checker recomputes every valid vector's digest without Python (#249). Versions that were verifiable before keep their original canonicalization and still verify (expgate decision schema 2; decision-control records 1–3 and `evaluation.json` 1). Jev answer schema 1 and expgate decision schema 1 stay readable but unverifiable (exit 2). Jev `evaluation.json` and `provenance.json` have no canonical form; provenance pins exact file bytes. Derived floats compare at a relative 1e-9 in expgate verification and Jev re-scoring (decisions.md); decision-control compares exactly because it uses no libm function |
 | RELIA | Candidate 0.1.5, spec 0.1.3, 1,098 source lines, 38 tests (38 passed on 2026-10-19); unreleased and human-gated. Its roadmap's September 2026 FTC comment (docket FTC-2026-1057, closed 2026-09-25) was filed as regulations.gov document FTC-2026-1057-0650 (received 2026-08-29, posted 2026-08-31) on the owner's confirmation and recorded in the RELIA roadmap by #242; it does not contain the technical description the roadmap planned. Initial release anchor set by the owner: 2026-10-28 |
 | Workspace | `make workspace-check` passes (7 components; 6 before the `conformance` Node component of #249); every workflow on `main` 726ff04 is green, including `conformance (node)`, the three Sigstore attestation jobs and expgate's `golden vectors` |
-| Security | 45 open Dependabot alerts on 2026-10-25 [0 on 2026-10-19; 100 on 2026-10-18]: pillow 41 on `uv.lock`, certifi 3, opentelemetry-api 1; all created 2026-10-23/24. Dependabot's pillow 13.0.0 bump (#276) updated `requirements.txt` only because streamlit 1.66.0 capped pillow below 13 in `uv.lock`. Fix proposed in #280 (open, not merged): `uv.lock` to pillow 13.0.0 / streamlit 1.66.1 / certifi 2026.10.23; `requirements.txt` to certifi 2026.10.23 and opentelemetry-api 1.45.1; dependency floors added. #236 and #244 upgraded or removed the previously vulnerable dependencies of the legacy `src/` workbench, which stays in this repository. Not re-checked: whether CI exercises the airllm 4.0.0 and transformers 5.19.0 bumps |
+| Security | 0 open Dependabot alerts on 2026-10-25 after #280 merged; all 45 alerts created 2026-10-23/24 (pillow 41 on `uv.lock`, certifi 3, opentelemetry-api 1) are `fixed` [45 open earlier on 2026-10-25; 0 on 2026-10-19; 100 on 2026-10-18]. Dependabot's pillow 13.0.0 bump (#276) updated `requirements.txt` only because streamlit 1.66.0 capped pillow below 13 in `uv.lock`. #280 moved `uv.lock` to pillow 13.0.0 / streamlit 1.66.1 / certifi 2026.10.23; `requirements.txt` to certifi 2026.10.23 and opentelemetry-api 1.45.1; dependency floors added. #236 and #244 upgraded or removed the previously vulnerable dependencies of the legacy `src/` workbench, which stays in this repository. Not re-checked: whether CI exercises the airllm 4.0.0 and transformers 5.19.0 bumps |
 | Delivery loop | Last `continual-managed` PRs #218–#220 merged 2026-10-12. P-006–P-010 landed in PR #224; P-011–P-013, P-015, P-017–P-019 and P-025–P-028 followed on 2026-10-19 in PRs #234–#262. As of 2026-10-25, issues #238–#241 (created 2026-10-19) are all closed [#238 (P-016 docs) was open]; #238 closed as completed at 2026-10-20T05:43Z (#269) |
 | Audience | 2026-10-25: 260 stars [172 on 2026-10-19], 18 forks [12], 10 watchers [9]; 0 open issues [1 (#238)]. Contributors (2026-10-19 snapshot): the owner (760 commits [743]) and Dependabot (38). Traffic and signal quality below are the 2026-10-18 measurements and were not repeated. Views 2026-10-04 → 17: 360 (163 unique), peak 2026-10-14 at 94 (73 unique); top referrer Google (23 unique) |
 | Signal quality | (2026-10-18) 57 of 152 stargazers have 0 followers and at most 2 public repositories; about 33 accounts were under 60 days old when they starred. The 12 forks have 0 stars each and were last pushed 2026-10-09 → 13. Stars are not adoption evidence here |
@@ -214,7 +214,7 @@ outside user asks, the phase active at that time gets the row.
 | Risk | Mitigation |
 | --- | --- |
 | PyPI package-name takeover before first publication | Closed by P-016 on 2026-10-19 PDT: all three 0.1.0 projects are published with active trusted publishers |
-| 100 open alerts in a governance repository read as negligence | Reopened 2026-10-23: 45 open alerts on 2026-10-25 [closed by P-019 (#236, #244): 0 open on 2026-10-19]; fix proposed in #280 (open, not merged). A new alert on the workbench is triaged the same way: upgrade or remove the dependency |
+| 100 open alerts in a governance repository read as negligence | Reopened 2026-10-23 with 45 alerts and closed again on 2026-10-25 by #280: 0 open [closed by P-019 (#236, #244): 0 open on 2026-10-19]. A new alert on the workbench is triaged the same way: upgrade or remove the dependency |
 | A schema freeze locks in a canonical form other languages cannot reproduce | P-011 vectors carry canonical bytes in RFC 8785 form (adopted 2026-10-19), so another language's canonicalizer can be tested before any schema is published |
 | Signed records leak decision metadata to a public transparency log | Keyed (HMAC) signing is the default; Sigstore is opt-in and documented as public |
 | Adapters drift into a platform | Importers convert exported files only; no network clients, no services |
@@ -237,7 +237,7 @@ each phase file carries a status table for every row of that phase.
 | P-022 | Recorded (#242); owner follow-up pending | Dates are in the RELIA roadmap. The filed comment has no technical content; RELIA's initial release (due 2026-10-28) follows RELIA's human-gated process and is not scheduled by this plan |
 | P-023 | Prepared (#263); blocked on P-020 and owner release | Version 0.2.0 and `## [0.2.0] - Unreleased` changelogs are on `main`; 0.2.0 is not dated, tagged or published. P-016 is done; active PyPI publishers are configured. After enabling Zenodo (P-020), the owner runs `release.py prepare` with the date, tags and approves the `pypi` deployments. Target 2026-12-10 |
 | P-024 | Drafted, owner action pending | Launch kit in [`docs/launch/`](../docs/launch/README.md) (#261). Owner posts on 2027-01-12 after P-023; no launch draft has been posted. Separately, a five-part progress series went out on Medium and LinkedIn on 2026-10-22 ([outreach log](../docs/launch/README.md#outreach-log)) |
-| P-036 | Implemented 2026-10-22; owner setup pending | Merged in #273; 2026-10-25: retry/pagination changes proposed in #285 (open, not merged). The [trigger](../docs/launch/README.md#trigger) opens the launch's tracking issue once 0.2.0 is on PyPI. Owner creates environment `outreach` (required reviewer), then sets repository variable `OUTREACH_ANNOUNCE=true`; until then the issue is its only output |
+| P-036 | Implemented 2026-10-22; owner setup pending | Merged in #273; #285 (2026-10-25) retries announcements not yet posted and pages through discussions. The [trigger](../docs/launch/README.md#trigger) opens the launch's tracking issue once 0.2.0 is on PyPI. Owner creates environment `outreach` (required reviewer), then sets repository variable `OUTREACH_ANNOUNCE=true`; until then the issue is its only output |
 | P-027 | Drafted, owner action pending | Template in [`docs/PILOT_PROTOCOL.md`](../docs/PILOT_PROTOCOL.md) (#243). Owner recruits a team; none has agreed to anything. Proposed 2026-10-22: outreach opens by asking whether the team makes approve/decline decisions about people or accounts with a model it trains and hosts; a yes leads to P-033 |
 | P-028 | Drafted, owner review pending | [`docs/REGULATORY_MAPPING.md`](../docs/REGULATORY_MAPPING.md) (#247, #258). It makes no compliance claim; ISO/IEC 42001 text was not reviewed |
 | P-029 | Blocked on owner | Owner recruits an unaffiliated reviewer; needs 0.2.x on PyPI (P-023). Due 2027-04-30 |
@@ -248,13 +248,13 @@ each phase file carries a status table for every row of that phase.
 | P-034 | Proposed 2026-10-22; gated on an outside user | **Bind LLM proposals in decision-control**: store the raw tool-call response that produced a `Recommendation` and re-derive the recommendation on replay, as Jev does for its answers. Needs record schema 6; the LangGraph example carries thread ids in the review note because the record has no metadata member. Starts when an outside decision-control user must show which model output produced an action. Agent builds |
 | P-035 | Proposed 2026-10-22; gated on an outside user | **Record for a sampled action from a bandit or RL policy**: the action probabilities and the random draw, so the choice can be recomputed; logged probabilities would also let expgate approve a policy from off-policy evaluation instead of an online test. The owner's RL-pricing repository can serve as a test bed but is not outside evidence. Agent builds |
 
-### Open PRs (2026-10-25)
+### Fixes merged 2026-10-25
 
-Opened 2026-10-25; all await the owner/delivery controller and are not merged.
+Each PR had an independent review with a PASS verdict and green required checks before the owner squash-merged it.
 
-| PR | Proposed change |
+| PR | Change |
 | --- | --- |
-| #280 | Security pins and floors (fix proposed; see [Security](#where-we-start)) |
+| #280 | Security pins and floors; 45 open Dependabot alerts to 0 (see [Security](#where-we-start)) |
 | #281 | `continual_delivery` counts only today's merges; removes the 1,000-merged-PR lockout |
 | #282 | `jev-decision` closes HTTPError responses |
 | #283 | `workspace.py` rejects Python keywords as package names |
@@ -265,7 +265,7 @@ Opened 2026-10-25; all await the owner/delivery controller and are not merged.
 
 Dates are America/Los_Angeles (UTC−07:00) calendar days. PRs #234–#263 merged between 2026-10-19T20:18Z and 2026-10-20T01:01Z, which is 13:18 to 18:01 on 2026-10-19 Pacific time; in UTC, some of them fall on 2026-10-20.
 
-As of 2026-10-25, `main` is 5d0c8d1. Merged after the 2026-10-19 snapshot:
+Merged after the 2026-10-19 snapshot and before the 2026-10-25 fixes above (`main` 5d0c8d1):
 #264 (plan status), #265 (nested-doc link check), #266 (Jev conformance generator
 `--check`/`--out`), #267 (expgate golden-vector generator hash lock), #268
 (decision-control canonical decision ids in record schemas 4 and 5), #269
@@ -293,6 +293,6 @@ site serving schemas at their `$id` paths plus conformance vectors), and
 | P-016 | **Done 2026-10-19 PDT:** 0.1.0 of all three packages on PyPI, with wheels, sdists and GitHub trusted-publishing attestations | [expgate](https://pypi.org/project/expgate/0.1.0/), [decisioncontrol](https://pypi.org/project/decisioncontrol/0.1.0/), [jevdecision](https://pypi.org/project/jevdecision/0.1.0/); clean Python 3.11 pinned installation and root quickstart passed (details in [phase 0](phase-0-ship-0.1.md#status-2026-10-19)); docs follow-up #238 completed 2026-10-20T05:43Z (#269; confirmed 2026-10-25) [docs follow-up pending] |
 | P-017 | `jev-decision-verify` for answer records (schema 2 embeds the questions and the raw response under an RFC 8785 digest) and `--evaluation DIR`; schema 1 answers stay readable and exit 2; completes P-009 | #246, #251, #252; signing #255 |
 | P-018 | Stale status claims corrected: RELIA roadmap and changelog, `CITATION.cff` (`version`, `date-released`, `license`), `scripts/README.md` and the CONTRIBUTING link | #234 |
-| P-019 | 2026-10-25: 45 open Dependabot alerts, created 2026-10-23/24; fix proposed in #280 (open, not merged) [0 open on 2026-10-19, every alert `fixed`, none dismissed; 100 open on 2026-10-18]; `src/` stays in the repository. On 2026-10-19, the bounded `src baseline` check was green and `make workspace-check` passed (7 components; the P-019 acceptance said 6, before #249 added the `conformance` component) | #236, #244 |
+| P-019 | 2026-10-25: 0 open Dependabot alerts after #280 fixed the 45 created 2026-10-23/24 [0 open on 2026-10-19, every alert `fixed`, none dismissed; 100 open on 2026-10-18]; `src/` stays in the repository. On 2026-10-19, the bounded `src baseline` check was green and `make workspace-check` passed (7 components; the P-019 acceptance said 6, before #249 added the `conformance` component) | #236, #244, #280 |
 | P-025 | `experiment-gate --from growthbook results.json --mapping mapping.json` converts a GrowthBook results export into a schema-3 record that keeps the export's digest; fixtures were captured from a throwaway self-hosted GrowthBook 5.1.0 with synthetic data, so this is software-behavior evidence and no real GrowthBook user has run it | #254 |
 | P-026 | LangGraph example mapping `interrupt()` and `Command(resume=…)` onto decision-control submit and approve/reject and an exported record that replays; the proposer's own approval is refused, and a forged record naming the proposer as reviewer fails replay with exit 1; LangGraph is a dev-only dependency tested in CI | #260 |
