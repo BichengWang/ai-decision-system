@@ -29,6 +29,7 @@ class FakeGitHub:
             "pkg/v1.0.0": {"draft": False, "published_at": "2026-12-10T00:00:00Z", "html_url": "https://gh/rel"}}
         self.issue_map, self.created, self.edited, self.comments, self.posted = {}, [], [], [], []
         self.titles = {}
+        self.discussions_calls = 0
 
     def releases(self):
         return self.release_map
@@ -50,6 +51,7 @@ class FakeGitHub:
         self.comments.append((number, body))
 
     def discussions(self):
+        self.discussions_calls += 1
         return {"id": "R1", "discussionCategories": {"nodes": [{"id": "C1", "name": "Announcements"}]},
                 "discussions": {"nodes": [{"title": title, "url": url} for title, url in self.titles.items()]}}
 
@@ -118,7 +120,7 @@ class OutreachTests(unittest.TestCase):
         self.assertIn("$ echo installed\ninstalled\n$ test -f", announcement)
         self.assertNotIn("{{", announcement)
 
-        self.assertEqual(self.start(github), [])
+        self.assertEqual(self.start(github), ["pkg-1.0.0"])
         self.assertEqual((len(github.created), github.edited), (1, []))
 
         # The owner rewrites the text in the issue; GitHub stores edited bodies with CRLF.
@@ -129,6 +131,124 @@ class OutreachTests(unittest.TestCase):
             outreach.announce(self.root, github, ["pkg-1.0.0"])
         self.assertEqual(github.posted, [("R1", "C1", "pkg 1.0.0", "Rewritten by the owner.\nSecond line.")])
         self.assertEqual(github.comments, [(10, "Announced in GitHub Discussions: https://gh/discussions/1")])
+
+    def test_announce_enabled_after_issue_creation(self):
+        github = FakeGitHub()
+        # The workflow skips announce while OUTREACH_ANNOUNCE is disabled.
+        self.assertEqual(self.start(github), ["pkg-1.0.0"])
+        self.assertEqual(github.posted, [])
+
+        # Once enabled, it forwards the next start's output to announce.
+        with mock.patch("sys.stdout"):
+            outreach.announce(self.root, github, self.start(github))
+        self.assertEqual(len(github.posted), 1)
+        self.assertEqual((len(github.created), github.edited), (1, []))
+
+    def test_failed_announcement_retries_on_later_start(self):
+        github = FakeGitHub()
+        ready = self.start(github)
+        with mock.patch.object(github, "create_discussion", side_effect=outreach.Blocked("posting failed")):
+            with self.assertRaisesRegex(outreach.Blocked, "posting failed"):
+                outreach.announce(self.root, github, ready)
+        self.assertEqual(github.comments, [])
+
+        with mock.patch("sys.stdout"):
+            outreach.announce(self.root, github, self.start(github))
+            outreach.announce(self.root, github, self.start(github))
+        self.assertEqual(len(github.posted), 1)
+        self.assertEqual(len(github.comments), 1)
+
+    def test_existing_issue_is_not_ready_when_requirements_no_longer_hold(self):
+        github = FakeGitHub()
+        self.start(github)
+        body = github.issue_map[10]["body"]
+        self.assertEqual(self.start(github, pypi=lambda dist, version: None), [])
+        github.release_map = {}
+        self.assertEqual(self.start(github), [])
+        self.assertEqual(github.issue_map[10]["body"], body)
+        self.assertEqual(github.edited, [])
+
+    def test_existing_issue_without_an_announcement_is_not_ready(self):
+        del self.milestone["announcement"]
+        self.write_manifest()
+        github = FakeGitHub()
+        self.assertEqual(self.start(github), [])
+        self.assertEqual(self.start(github), [])
+        self.assertEqual((len(github.created), github.edited), (1, []))
+        self.assertEqual(github.discussions_calls, 0)
+
+    def test_existing_issues_only_offer_unposted_titles_with_one_discussions_fetch(self):
+        manifest = json.loads((self.root / outreach.MANIFEST).read_text())
+        manifest["milestones"]["pkg-followup"] = dict(
+            self.milestone, announcement=dict(self.milestone["announcement"], title="pkg followup"))
+        (self.root / outreach.MANIFEST).write_text(json.dumps(manifest))
+        github = FakeGitHub()
+        self.assertEqual(self.start(github), ["pkg-1.0.0", "pkg-followup"])
+        self.assertEqual(github.discussions_calls, 0)
+
+        for titles, expected in [
+            ([], ["pkg-1.0.0", "pkg-followup"]),
+            (["pkg 1.0.0"], ["pkg-followup"]),
+            (["pkg 1.0.0", "pkg followup"], []),
+        ]:
+            with self.subTest(posted=titles):
+                github.titles = dict.fromkeys(titles, "https://gh/discussions/posted")
+                github.discussions_calls = 0
+                self.assertEqual(self.start(github), expected)
+                self.assertEqual(github.discussions_calls, 1)
+        self.assertEqual((len(github.created), github.edited), (2, []))
+
+    def test_new_issue_is_ready_without_checking_posted_titles(self):
+        github = FakeGitHub()
+        github.titles["pkg 1.0.0"] = "https://gh/discussions/posted"
+        self.assertEqual(self.start(github), ["pkg-1.0.0"])
+        self.assertEqual(github.discussions_calls, 0)
+        with mock.patch("sys.stdout"):
+            outreach.announce(self.root, github, ["pkg-1.0.0"])
+        self.assertEqual(github.posted, [])
+
+    def test_later_start_preserves_owner_edited_issue(self):
+        github = FakeGitHub()
+        self.start(github)
+        body = github.issue_map[10]["body"]
+        edited = body.replace(outreach.extract_announcement(body), "Owner's announcement.")
+        edited = edited.replace("- [ ] **LinkedIn**", "- [x] **LinkedIn**").replace("\n", "\r\n")
+        github.issue_map[10]["body"] = edited
+
+        with mock.patch.object(outreach, "run_demo") as demo:
+            self.assertEqual(self.start(github), ["pkg-1.0.0"])
+        demo.assert_not_called()
+        self.assertEqual(github.issue_map[10]["body"], edited)
+        self.assertEqual(github.edited, [])
+        with mock.patch("sys.stdout"):
+            outreach.announce(self.root, github, self.start(github))
+        self.assertEqual(github.posted[0][3], "Owner's announcement.")
+
+    def test_announcement_on_second_discussions_page_is_not_reposted(self):
+        github = FakeGitHub()
+        ready = self.start(github)
+        repository = {"id": "R1", "discussionCategories": {"nodes": [{"id": "C1", "name": "Announcements"}]}}
+        pages = [
+            {"data": {"repository": dict(repository, discussions={
+                "nodes": [{"title": f"Other {number}", "url": f"https://gh/discussions/{number}"}
+                          for number in range(100)],
+                "pageInfo": {"hasNextPage": True, "endCursor": "page-one-end"}})}},
+            {"data": {"repository": dict(repository, discussions={
+                "nodes": [{"title": "pkg 1.0.0", "url": "https://gh/discussions/older"}],
+                "pageInfo": {"hasNextPage": False, "endCursor": "page-two-end"}})}},
+        ]
+        with mock.patch.object(github, "discussions", lambda: outreach.GitHub.discussions(github)), \
+                mock.patch.object(outreach, "run", side_effect=[json.dumps(page) for page in pages]) as run, \
+                mock.patch("sys.stdout"):
+            outreach.announce(self.root, github, ready)
+        self.assertEqual(github.posted, [])
+        self.assertEqual(github.comments, [])
+        self.assertEqual(run.call_count, 2)
+        payloads = [json.loads(call.kwargs["input_text"]) for call in run.call_args_list]
+        self.assertIsNone(payloads[0]["variables"].get("after"))
+        self.assertEqual(payloads[1]["variables"]["after"], "page-one-end")
+        self.assertIn("after: $after", payloads[0]["query"])
+        self.assertIn("pageInfo", payloads[0]["query"])
 
     def test_failed_demo_blocks_announcement_until_a_later_run_reproduces(self):
         self.flag.unlink()

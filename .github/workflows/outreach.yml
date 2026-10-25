@@ -25,6 +25,7 @@ jobs:
     timeout-minutes: 20
     permissions:
       contents: read
+      discussions: read
       issues: write
     outputs:
       announce: ${{ steps.start.outputs.announce }}
@@ -35,7 +36,7 @@ jobs:
       - uses: actions/setup-python@5fda3b95a4ea91299a34e894583c3862153e4b97 # v7.0.0
         with:
           python-version: "3.11"
-      - name: Open or refresh tracking issues of reached milestones
+      - name: Prepare tracking issues and report milestones ready to announce
         id: start
         env:
           GH_TOKEN: ${{ github.token }}

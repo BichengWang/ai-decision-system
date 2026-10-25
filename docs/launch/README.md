@@ -46,19 +46,27 @@ flowchart LR
 
 When a milestone is reached, `start`:
 
-1. Re-runs the milestone's demo in an empty directory, from PyPI, with no token in
-   its environment. Every step must exit 0 and print the lines the manifest expects.
+1. For a new or demo-blocked issue, re-runs the milestone's demo in an empty
+   directory, from PyPI, with no token in its environment. Every step must exit 0
+   and print the lines the manifest expects.
 2. Opens one issue, `Outreach: <milestone title>`, with the facts it checked, the
    transcript, a checkbox per channel and the filled-in
    [announcement](github-discussion.md). Later runs find the issue by its
-   `<!-- outreach-milestone: <id> -->` marker and leave it alone. If the demo failed,
-   the issue carries the blocker and no announcement, and each later run re-runs the
-   demo and replaces the issue body until the demo passes.
-3. Hands the milestone to the `announce` job, which runs only when repository
-   variable `OUTREACH_ANNOUNCE` is `true` and waits for the owner to approve the
-   `outreach` environment deployment. It posts the issue's text between the
+   `<!-- outreach-milestone: <id> -->` marker and preserve its body, including owner
+   edits. If the demo failed, the issue carries the blocker and no announcement,
+   and each later run re-runs the demo and replaces the issue body until the demo
+   passes.
+3. On every run, rechecks the release requirements and hands each reached,
+   non-blocked milestone with an announcement to the `announce` job, including
+   existing issues whose announcement title is not already posted in repository
+   discussions. Already-posted announcements on existing issues are not offered
+   for approval again. A skipped, rejected or failed announcement can therefore
+   be retried on a later run. The job runs only when repository variable
+   `OUTREACH_ANNOUNCE` is `true` and waits for the owner to approve the `outreach`
+   environment deployment. It posts the issue's text between the
    announcement markers as it is at that moment, so edit it in the issue first. It
-   posts each title once and comments the discussion link on the issue.
+   checks all pages of existing discussions, posts each title once and comments
+   the discussion link on the issue only when creating a post.
 
 Nothing else is posted automatically:
 
@@ -79,7 +87,9 @@ One-time setup, by the owner, after this is merged to `main` (`workflow_run` and
    deployment branch `main`.
 2. Then set repository variable `OUTREACH_ANNOUNCE=true`. Until then the issue is
    the trigger's only output. Do not set it first: a job that names a missing
-   environment creates it without protection rules.
+   environment creates it without protection rules. If the tracking issue already
+   exists, the next trigger run offers its announcement for approval only if its
+   title is not already posted in repository discussions.
 
 Locally, with an authenticated `gh`:
 
@@ -235,6 +245,11 @@ meaning of silent: no response from maintainers or readers 14 days after the dat
 record the date you checked. Also note any issue or PR from someone other than the
 owner; the [phase 2 exit criteria](../../.plan/phase-2-bridges.md#exit-criteria)
 count those, and a dated "none arrived" counts too.
+
+For GitHub Discussions, log the actual post using the link commented on the
+tracking issue. Skipped, rejected or failed announce jobs can be retried by the
+next trigger run; they are not posts. A retry that finds the same title already
+posted creates neither a new discussion nor another log row.
 
 | Date | Venue | Link | Response (accepted / declined / silent) | Response date | Non-owner issue or PR (link, or none) | Notes |
 | --- | --- | --- | --- | --- | --- | --- |
