@@ -157,4 +157,6 @@ grants no current rights; intended Apache-2.0 publication requires rights cleara
 See [SECURITY](SECURITY.md), [CONTRIBUTING](CONTRIBUTING.md), [CITATION](CITATION.cff),
 [records](docs/DECISION_RECORDS.md), [releasing](docs/RELEASING.md),
 [pilot protocol template](docs/PILOT_PROTOCOL.md), [regulatory mapping (draft, no compliance claim)](docs/REGULATORY_MAPPING.md),
-[plan](.plan/README.md) and [publication records](docs/publication/README.md).
+[documentation index](docs/README.md) and [plan](.plan/README.md).
+
+[Maintainer portfolio and publication evidence](docs/portfolio/).
