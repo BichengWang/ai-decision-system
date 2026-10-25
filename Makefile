@@ -105,6 +105,10 @@ env:
 # Lint only what the baseline covers; the wider src/ tree has ~1300 legacy findings.
 baseline_lint := tests $(wildcard src/lc/*_test.py src/lc/*/*_test.py)
 
+.PHONY: notebooks
+notebooks:
+	python3 scripts/notebooks.py strip
+
 .PHONY: lint
 lint:
 	python3 -m flake8 $(baseline_lint)
@@ -114,6 +118,7 @@ lint:
 # FILE_NAME=<file> runs one file under tests/ instead of the whole baseline.
 .PHONY: test
 test: clean lint
+	python3 scripts/notebooks.py check
 	SIM_TEST_MODE=true $(pytest) -k "not personal_transport_e2e" $(if $(FILE_NAME),tests/$(FILE_NAME),) $(pytest_extra_args)
 
 .PHONY: all_test

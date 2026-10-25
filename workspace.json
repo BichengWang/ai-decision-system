@@ -199,6 +199,8 @@
         "requirements.txt",
         "setup.cfg",
         "Makefile",
+        "scripts/notebooks.py",
+        ".gitattributes",
         ".github/workflows/src-baseline.yml"
       ],
       "ci": {
@@ -242,6 +244,8 @@
         ".github/workflows/release.yml",
         "scripts/pages.py",
         "scripts/tests/test_pages.py",
+        "scripts/notebooks.py",
+        "scripts/tests/test_notebooks.py",
         ".github/workflows/pages.yml",
         "site/**",
         "scripts/outreach.py",
@@ -274,6 +278,9 @@
         },
         {
           "run": "python3 -m unittest discover -s tests -p test_pages.py"
+        },
+        {
+          "run": "python3 -m unittest discover -s tests -p test_notebooks.py"
         },
         {
           "run": "python3 -m unittest discover -s tests -p test_outreach.py"

@@ -46,6 +46,9 @@ For research workbench changes, follow the [baseline setup](src/README.md#baseli
 and run `make test` with Python 3.11. Additional component-specific checks are
 documented in each project's README.
 
+Commit notebooks without outputs or execution metadata: run `make notebooks` or
+`python scripts/notebooks.py strip` before committing; the baseline checks this.
+
 ## Changes and review
 
 Reproduce a bug with a failing test before fixing it. Test observable behavior,
