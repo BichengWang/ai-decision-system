@@ -65,6 +65,10 @@ evaluation record schema numbers are unchanged.
 - `jev-decision-eval` retains exact copies of the question file and any requirement file as
   `questions.json` and `requirements.json` and lists them in `provenance.json` `outputs`.
 
+### Fixed
+- `urllib_transport` closes the HTTP error response after reading its body and headers; it was left for
+  garbage collection, which emitted `ResourceWarning`.
+
 ### Security
 - Signed records and `--require-signature` bind a record to a key: an edited record whose `record_sha256` was
   recomputed passes the digest check but fails the signature check. HMAC proves possession of the shared
