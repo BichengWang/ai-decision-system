@@ -45,11 +45,14 @@ DEMO_TIMEOUT = 600
 # The demo installs and runs published code; it gets no token from the environment.
 DEMO_ENV = ("HOME", "LANG", "LC_ALL", "TMPDIR", "LD_LIBRARY_PATH", "SSL_CERT_FILE",
             "HTTP_PROXY", "HTTPS_PROXY", "NO_PROXY", "http_proxy", "https_proxy", "no_proxy")
-DISCUSSIONS = """query($owner: String!, $name: String!) {
+DISCUSSIONS = """query($owner: String!, $name: String!, $after: String) {
   repository(owner: $owner, name: $name) {
     id
     discussionCategories(first: 25) { nodes { id name } }
-    discussions(first: 100, orderBy: {field: CREATED_AT, direction: DESC}) { nodes { title url } }
+    discussions(first: 100, after: $after, orderBy: {field: CREATED_AT, direction: DESC}) {
+      nodes { title url }
+      pageInfo { hasNextPage endCursor }
+    }
   }
 }"""
 CREATE_DISCUSSION = """mutation($repo: ID!, $category: ID!, $title: String!, $body: String!) {
@@ -295,8 +298,17 @@ class GitHub:
 
     def discussions(self):
         owner, name = self.repo.split("/")
-        payload = {"query": DISCUSSIONS, "variables": {"owner": owner, "name": name}}
-        return json.loads(run("gh", "api", "graphql", "--input", "-", input_text=json.dumps(payload)))["data"]["repository"]
+        payload = {"query": DISCUSSIONS, "variables": {"owner": owner, "name": name, "after": None}}
+        nodes = []
+        while True:
+            repository = json.loads(run("gh", "api", "graphql", "--input", "-",
+                                        input_text=json.dumps(payload)))["data"]["repository"]
+            discussions = repository["discussions"]
+            nodes.extend(discussions["nodes"])
+            if not discussions["pageInfo"]["hasNextPage"]:
+                discussions["nodes"] = nodes
+                return repository
+            payload["variables"]["after"] = discussions["pageInfo"]["endCursor"]
 
     def create_discussion(self, repository_id, category_id, title, body):
         variables = {"repo": repository_id, "category": category_id, "title": title, "body": body}
@@ -321,14 +333,20 @@ def start(root, github, pypi, today):
     issues, releases = github.issues(), github.releases()
     origin, note = origin_and_note(today)
     ready = []
+    posted_titles = None
     for name, milestone in manifest["milestones"].items():
         issue = issues.get(name)
-        if issue and BLOCKED not in (issue.get("body") or ""):
-            print(f"{name}: already started in #{issue['number']}")
-            continue
         facts, missing = check(milestone, manifest["publisher"], pypi, releases)
         if missing:
             print(f"{name}: not reached: {'; '.join(missing)}")
+            continue
+        if issue and BLOCKED not in (issue.get("body") or ""):
+            print(f"{name}: already started in #{issue['number']}")
+            if milestone.get("announcement"):
+                if posted_titles is None:
+                    posted_titles = {item["title"] for item in github.discussions()["discussions"]["nodes"]}
+                if milestone["announcement"]["title"] not in posted_titles:
+                    ready.append(name)
             continue
         demo = (None, None)
         if milestone.get("demo"):
