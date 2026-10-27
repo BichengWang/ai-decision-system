@@ -77,7 +77,7 @@ def urllib_transport(url, headers, body, timeout):
         raise APIError(f"could not reach {url}: {error}") from error
     try:
         return json.loads(payload)
-    except json.JSONDecodeError as error:
+    except (json.JSONDecodeError, UnicodeDecodeError) as error:
         raise ResponseError(f"response from {url} is not JSON: {error}") from error
 
 

@@ -593,6 +593,17 @@ class CLITest(unittest.TestCase):
         self.assertEqual(code, 1)
         self.assertIn("API key", err)
 
+    def test_undecodable_provider_response_exits_1_without_retrying(self):
+        for backend_type in (JevBackend, OpenAIDecisionsBackend):
+            with self.subTest(backend=backend_type.name):
+                backend = backend_type(api_key="k", env={})
+                with mock.patch("jevdecision.__main__.create_backend", return_value=backend), \
+                        mock.patch("urllib.request.OpenerDirector.open", return_value=io.BytesIO(b"\xff")) as request:
+                    code, out, err = self.run_cli("--questions", str(EXAMPLE), "--state", STATE)
+                self.assertEqual((code, out), (1, ""))
+                self.assertIn("not JSON", err)
+                request.assert_called_once()
+
 
 if __name__ == "__main__":
     unittest.main()
