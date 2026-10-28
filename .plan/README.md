@@ -1,7 +1,7 @@
 # ai-decision-system plan: re-verifiable records for AI go/no-go decisions
 
 Status: refreshed 2026-10-25, `main` 97735ec [2026-10-19 snapshot: 726ff04];
-model-coverage proposals added 2026-10-22 ([Model coverage](#model-coverage)). Owner:
+model-coverage proposals added 2026-10-22, extended 2026-10-27 ([Model coverage](#model-coverage)). Owner:
 Bicheng Wang. This directory is the source of truth for
 direction and the delivery queue. Change
 [`decisions.md`](decisions.md) first when direction changes. RELIA's own
@@ -186,23 +186,31 @@ is not use, and interest is not adoption.
 
 ## Model coverage
 
-Proposed 2026-10-22 in [`decisions.md`](decisions.md); nothing below is built
+Proposed 2026-10-22 and extended 2026-10-27 in [`decisions.md`](decisions.md); nothing below is built
 until an outside user asks ([non-goals](#non-goals)). Records follow the go/no-go
 decision, not the model family. Four families feed decisions here: generators
 (LLMs) propose actions, System One decisioners (Jev, the OpenAI Decisions API)
 answer typed questions with probabilities, embedding and ranking models order
 candidates, and predictors trained on the operator's own outcomes score cases.
 Only the decisioner and the predictor end in a go/no-go themselves; a ranking is
-not one.
+not one. Calibrators and optimizers also end in one. Generative image, audio and
+video models (GANs, diffusion), simulators and perception models (OCR, speech,
+vision) do not: they produce a proposal, a scenario or the state that a decision
+reads. A diffusion policy is the exception, because its sample is the action.
 
 | Model kind | Go/no-go it feeds | Record today | Gap | Plan |
 | --- | --- | --- | --- | --- |
 | System One decisioner (Jev; OpenAI Decisions with `gpt-6-luna`) | Gate, route, triage | Jev answer record: the raw response is stored and re-parsed | Text only: both APIs accept images, `jevdecision` sends none | On request |
 | The decisioner as a reranker (one `Noul` per candidate) | Which candidates pass a probability cutoff | Jev answer record with one question per candidate | `jev-decision-eval` has no per-query NDCG or MRR | On request |
 | LLM or agent proposing an action | A tool call that needs approval | decision-control; LangGraph example (P-026) | `Recommendation.model` and `probability` are labels the caller supplies; the LLM output behind them is not in the record | P-034 |
-| LLM judge or guardrail | Release an output or not | Jev answer record when Jev is the judge | No backend for other LLM judges | On request |
-| Model the operator trains and hosts (classifier, regressor, forecaster) | Approve/decline, flag, threshold | None per decision; RELIA trains this kind only inside its synthetic benchmark | No record, although the score could be recomputed from the model file | P-033 |
-| Bandit or RL policy | Which offer or price | None | A sampled action cannot be recomputed without its probability and the random draw | P-035 |
+| LLM judge, reward model or guardrail | Release an output or not | Jev answer record when Jev is the judge | No backend for other LLM judges or reward models | On request |
+| Calibrator or conformal wrapper over a decisioner or predictor | Answer, abstain or defer to a human | None: decision-control abstains below `min_probability` on the probability the caller supplies; `jev-decision-eval` reports ECE but fits no calibrator | The calibration-set digest, the fitted map or conformal quantile and the target coverage are not recorded, so a threshold on provider confidence carries no calibration evidence | On request |
+| Model the operator trains and hosts (classifier, regressor, forecaster, uplift model, anomaly detector including GAN or diffusion reconstruction scores) | Approve/decline, flag, threshold, whom to treat | None per decision; RELIA trains this kind only inside its synthetic benchmark | No record, although the score could be recomputed from the model file. An uplift score has no per-case outcome to check against; only an online test (expgate) validates the targeting policy. GAN and diffusion scores need their framework to re-score | P-033 |
+| Optimizer or solver (LP, MIP, constraint solver) | Which allocation, schedule or price set | None | A deterministic solve could be recomputed from the inputs, constraints, objective, solver version and seed, none of which is recorded | On request |
+| Bandit, RL or diffusion policy | Which offer, price or robot action | None | A sampled action cannot be recomputed without its probability and the random draw; a diffusion policy also needs its noise seed and sampler settings | P-035 |
+| Generative image, audio or video model (GAN, diffusion) | None of its own; releasing an output is the judge's decision | Jev answer record when Jev judges a text description; `jevdecision` sends no images | The output digest, seed and sampler settings are not recorded. GPU sampling is not bit-exact across hardware, so replay would check the stored output rather than regenerate it, as Jev re-parses its stored response | Not planned |
+| Simulator, world model or synthetic-data generator (including GAN or diffusion) | None per request; feeds offline release gates | RELIA's synthetic benchmark (byte-reproducible in its pinned environment) | Outside RELIA, nothing records the generator version and seed behind a scenario or synthetic dataset | Not planned |
+| Perception or extraction model (OCR, speech-to-text, vision) | None; it produces the state a decision reads | Jev answer record stores the state text it was sent | Neither the source document's digest nor the extractor's version is recorded, so replay cannot tell an extraction error from a decision error | Not planned |
 | Dedicated reranker, recommender or embedding model | None per request; replacing the model is the decision | expgate (online test) or RELIA's ranking gate (offline) | None | Not planned |
 
 P-033 to P-035 belong to no phase and are not `agent` rows, so the
@@ -246,7 +254,7 @@ each phase file carries a status table for every row of that phase.
 | P-032 | Blocked on owner | Needs a pilot team (P-027) and its written permission. Due 2027-05-15 |
 | P-033 | Proposed 2026-10-22; gated on an outside user | **Record for a score from an operator-hosted model**: features, model-file digest, calibrator, threshold policy, score and decision, with a verifier that recomputes the score ([decisions.md](decisions.md)). Starts when a pilot team (P-027) or an outside issue brings such a decision; a pilot that needs it freezes its protocol only after it ships. Owner recruits; agent builds |
 | P-034 | Proposed 2026-10-22; gated on an outside user | **Bind LLM proposals in decision-control**: store the raw tool-call response that produced a `Recommendation` and re-derive the recommendation on replay, as Jev does for its answers. Needs record schema 6; the LangGraph example carries thread ids in the review note because the record has no metadata member. Starts when an outside decision-control user must show which model output produced an action. Agent builds |
-| P-035 | Proposed 2026-10-22; gated on an outside user | **Record for a sampled action from a bandit or RL policy**: the action probabilities and the random draw, so the choice can be recomputed; logged probabilities would also let expgate approve a policy from off-policy evaluation instead of an online test. The owner's RL-pricing repository can serve as a test bed but is not outside evidence. Agent builds |
+| P-035 | Proposed 2026-10-22; gated on an outside user | **Record for a sampled action from a bandit, RL or diffusion policy**: the action probabilities and the random draw (for a diffusion policy, the noise seed and sampler settings), so the choice can be recomputed; logged probabilities would also let expgate approve a policy from off-policy evaluation instead of an online test. The owner's RL-pricing repository can serve as a test bed but is not outside evidence. Agent builds |
 
 ## Completed
 
