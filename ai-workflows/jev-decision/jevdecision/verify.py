@@ -14,8 +14,8 @@ retained `questions.json`, the retained `requirements.json` and the expected ans
 `cases.jsonl`. Nothing is sent to a provider. Recomputed metric floats must agree with
 `evaluation.json` within a relative 1e-9 (math.log and NormalDist.inv_cdf differ in the last digits
 between platform math libraries); everything else compares exactly. Schema 3 directories also hold
-`calibration.json`: a fitted one is refitted from the directory's responses and labels (map numbers
-must agree within 1e-9, relative above 1 and absolute below), and an applied one is re-applied to
+`calibration.json`: a fitted one is refitted from the directory's responses and labels (isotonic maps
+exactly; Platt maps by their calibrated probabilities at the fitted probabilities, within 1e-9), and an applied one is re-applied to
 recompute the `calibrated_*` metrics after checking it was fitted on none of the directory's cases.
 Hashes detect change; they do not authenticate who wrote a record, and a record edited together with
 its digests cannot be told from the original except through the re-derived content.
@@ -230,22 +230,32 @@ def _close(expected: Any, recorded: Any, exact_keys: frozenset = frozenset()) ->
     return type(expected) is type(recorded) and expected == recorded
 
 
-def _near(expected: Any, recorded: Any) -> bool:
-    """Structural equality where floats match within 1e-9, relative above 1 and absolute below.
+def _same_fit(refit: dict, recorded: dict, questions: tuple, cases: list, answers: dict) -> bool:
+    """Whether a recorded calibration is the refit one.
 
-    For calibration maps: a refitted Platt parameter whose optimum is 0 ends wherever Newton's method
-    stopped, a few 1e-13 away, so a purely relative bound would compare rounding noise.
+    Everything but the maps compares exactly, and so do isotonic maps (integer counts, one division per
+    block, probabilities copied). A Platt map is compared by what it does: its calibrated probability at
+    every distinct probability it was fitted on must be within 1e-9, because its parameters move with
+    last-digit libm differences wherever the fit is ill-conditioned (nearly equal probabilities).
     """
-    if isinstance(expected, dict):
-        return (isinstance(recorded, dict) and set(expected) == set(recorded)
-                and all(_near(expected[key], recorded[key]) for key in expected))
-    if isinstance(expected, list):
-        return (isinstance(recorded, list) and len(expected) == len(recorded)
-                and all(_near(left, right) for left, right in zip(expected, recorded)))
-    if isinstance(expected, float) and type(recorded) in (int, float):
-        return abs(recorded - expected) <= FLOAT_TOLERANCE * max(1.0, abs(expected))
-    return type(expected) is type(recorded) and expected == recorded
+    def without_maps(document: dict) -> dict:
+        return {**document, "questions": {name: {key: value for key, value in entry.items() if key != "map"}
+                                          for name, entry in document["questions"].items()}}
 
+    if not _exact(without_maps(refit), without_maps(recorded)):
+        return False
+    by_name = {question.name: question for question in questions}
+    for name, entry in refit["questions"].items():
+        expected, actual = entry["map"], recorded["questions"][name]["map"]
+        if refit["method"] == "isotonic":
+            if not _exact(expected, actual):
+                return False
+            continue
+        points = {probability for probability, _ in calibrators.labeled_pairs(by_name[name], cases, answers)}
+        if any(abs(calibrators.apply_map("platt", expected, p) - calibrators.apply_map("platt", actual, p))
+               > FLOAT_TOLERANCE for p in points):
+            return False
+    return True
 
 
 def _input_bytes(name: str, contents: dict[str, bytes], recorded: dict | None, supplied: Path | None,
@@ -354,7 +364,7 @@ def verify_evaluation_dir(directory: Path, questions_file: Path | None = None,
         else:
             basis = calibrators.fitted_on(contents["cases.jsonl"], contents["responses.jsonl"], cases)
             refit = calibrators.fit(document.method, questions, cases, answers, basis, report["produced_by"])
-            if not _near(refit, document.document):
+            if not _same_fit(refit, document.document, questions, cases, answers):
                 mismatches.append(calibrators.FILENAME)
     models = sorted({str(r.get("model")) for r in raw.values() if isinstance(r, dict) and r.get("model")})
     expected = {"schema_version": version, "produced_by": report["produced_by"],

@@ -54,6 +54,20 @@ class FittingTests(unittest.TestCase):
         self.assertAlmostEqual(apply_map("platt", mapping, 0.9), 0.6, delta=0.01)
         self.assertAlmostEqual(apply_map("platt", mapping, 0.1), 0.4, delta=0.01)
 
+    def test_platt_reaches_the_optimum_from_a_far_start(self):
+        # Confidently wrong both ways: the smoothed targets are 11/12 at 0.02 and 1/12 at 0.98.
+        pairs = [(0.02, True)] * 10 + [(0.98, False)] * 10
+        mapping = fit_platt(pairs)
+        self.assertAlmostEqual(apply_map("platt", mapping, 0.02), 11 / 12, places=9)
+        self.assertAlmostEqual(apply_map("platt", mapping, 0.98), 1 / 12, places=9)
+
+    def test_platt_on_one_distinct_probability_is_the_constant_target(self):
+        # a and b are not identifiable from one probability; the map is the smoothed hit rate everywhere.
+        mapping = fit_platt([(0.02, True)] * 12)
+        self.assertEqual(mapping["a"], 0.0)
+        for probability in (0.02, 0.5, 0.99):
+            self.assertAlmostEqual(apply_map("platt", mapping, probability), 13 / 14, places=12)
+
     def test_refusals_are_left_out_of_the_fit(self):
         cases, answers = noul_set([(0.2, False), (None, True), (0.8, True)], "f")
         document = fit("isotonic", [REFUND], cases, answers, BASIS, PRODUCER)
@@ -129,6 +143,16 @@ class CommandTests(unittest.TestCase):
         self.assertEqual(code, 2)
         self.assertIn("held-out", err)
         self.assertFalse((self.root / "in-sample").exists())
+
+    def test_malformed_calibration_file_is_invalid_input(self):
+        self.evaluate("fit", "fitted", "--fit-calibration", "isotonic")
+        document = json.loads((self.root / "fitted" / "calibration.json").read_text())
+        document["questions"]["refund"]["type"] = ["noul"]
+        bad = self.root / "bad-calibration.json"
+        bad.write_text(json.dumps(document))
+        code, _, err = self.evaluate("held", "bad", "--calibration", bad)
+        self.assertEqual(code, 2)
+        self.assertIn("invalid type", err)
 
     def test_edited_platt_parameter_fails_the_refit(self):
         self.evaluate("fit", "fitted", "--fit-calibration", "platt")

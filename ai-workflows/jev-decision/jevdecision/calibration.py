@@ -138,17 +138,25 @@ def _softplus(value):
 
 
 def fit_platt(pairs, max_iterations=100):
-    """Newton's method with backtracking on Platt's smoothed targets (Lin, Lin and Weng, 2007)."""
+    """Newton's method with backtracking on Platt's smoothed targets (Lin, Lin and Weng, 2007).
+
+    It starts where Lin, Lin and Weng do, at the constant map (a = 0, b = logit of the mean target),
+    where the Hessian is well conditioned. With a single distinct probability, a and b cannot both be
+    identified, so that constant map is the answer. A fit that does not reach a near-zero gradient is an
+    error rather than a map.
+    """
     positives = sum(1 for _, outcome in pairs if outcome)
     high, low = (positives + 1) / (positives + 2), 1 / (len(pairs) - positives + 2)
     data = [(_logit(probability), high if outcome else low) for probability, outcome in pairs]
+    mean = math.fsum(t for _, t in data) / len(data)
+    a, b = 0.0, math.log(mean / (1 - mean))
+    if len({z for z, _ in data}) == 1:
+        return {"a": a, "b": b}
 
     def loss(a, b):
         return math.fsum(t * _softplus(-(a * z + b)) + (1 - t) * _softplus(a * z + b) for z, t in data)
 
-    a, b, ridge = 1.0, 0.0, 1e-12
-    current = loss(a, b)
-    for _ in range(max_iterations):
+    def gradient(a, b):
         ga = gb = haa = hab = hbb = 0.0
         for z, t in data:
             p = _sigmoid(a * z + b)
@@ -158,6 +166,11 @@ def fit_platt(pairs, max_iterations=100):
             haa += weight * z * z
             hab += weight * z
             hbb += weight
+        return ga, gb, haa, hab, hbb
+
+    ridge, current = 1e-12, loss(a, b)
+    for _ in range(max_iterations):
+        ga, gb, haa, hab, hbb = gradient(a, b)
         if max(abs(ga), abs(gb)) <= 1e-12 * len(data):
             break
         haa, hbb = haa + ridge, hbb + ridge
@@ -170,8 +183,11 @@ def fit_platt(pairs, max_iterations=100):
                 break
             step /= 2
         else:
-            break  # no decrease left: converged to rounding
+            break  # no decrease left: at the optimum to rounding, checked below
         a, b, current = a + step * da, b + step * db, candidate
+    ga, gb, *_ = gradient(a, b)
+    if max(abs(ga), abs(gb)) > 1e-8 * len(data):
+        raise DatasetError(f"calibration: the platt fit did not converge (gradient {max(abs(ga), abs(gb)):.3g})")
     return {"a": a, "b": b}
 
 
@@ -281,7 +297,8 @@ def check(document):
     for name, entry in fitted.items():
         where = f"questions.{name}"
         _fields(entry, _QUESTION_FIELDS, where)
-        if entry["type"] not in TARGETS or entry["target"] != TARGETS[entry["type"]]:
+        if not isinstance(entry["type"], str) or entry["type"] not in TARGETS \
+                or entry["target"] != TARGETS[entry["type"]]:
             raise DatasetError(f"calibration {where}: invalid type or target")
         n, positives = entry["n"], entry["positives"]
         if type(n) is not int or type(positives) is not int or n < 1 or not 0 <= positives <= n:
