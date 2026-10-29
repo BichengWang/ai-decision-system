@@ -482,7 +482,7 @@ python3 -m jevdecision.evaluation --questions examples/support-ticket.json \
 - `isotonic` is pool-adjacent-violators: a nondecreasing step map, interpolated between steps. It can
   return 0 or 1 and needs a few hundred cases before its steps mean much.
 - `platt` fits `sigmoid(a * logit(p) + b)` on Platt's smoothed targets: two parameters, so it suits
-  small sets. When the question's probabilities all lie within 1e-4 of each other, no slope can be fitted
+  small sets. When the question's probabilities span less than 1e-4, no slope can be fitted
   reproducibly and the map is the constant smoothed hit rate (`a = 0`).
 - Refused answers are left out of the fit. A question whose answers lack the probability its `ece`
   needs is not calibrated, and a held-out refusal makes its calibrated metrics unmeasured, as for the
@@ -500,7 +500,7 @@ which provenance lists as an output; the applying run also records it as input `
 a copy. `jev-decision-verify --evaluation` refits a fitted calibration from the directory (isotonic maps
 must match exactly; a Platt map must give the same calibrated probability within 1e-8 at every probability
 it was fitted on, since its parameters move with last-digit math-library differences, and a Platt map fitted
-on probabilities that all lie within 1e-4 of each other must be the constant `a = 0`) and re-applies an applied one. The two directories are linked
+on probabilities that span less than 1e-4 must be the constant `a = 0`) and re-applies an applied one. The two directories are linked
 by hash: the applying run's `inputs.calibration` equals the fitting run's `outputs["calibration.json"]`.
 
 To apply a calibration where the decision is made:

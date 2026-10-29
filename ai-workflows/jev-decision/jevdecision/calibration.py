@@ -141,8 +141,8 @@ def fit_platt(pairs, max_iterations=100, strict=True):
     """Newton's method with backtracking on Platt's smoothed targets (Lin, Lin and Weng, 2007).
 
     It starts where Lin, Lin and Weng do, at the constant map (a = 0, b = logit of the mean target),
-    where the Hessian is well conditioned. When every probability lies within `PLATT_MIN_SPREAD` of the
-    others (after clipping), a slope is not determined (with one probability) or not reproducible across
+    where the Hessian is well conditioned. When the probabilities span less than `PLATT_MIN_SPREAD`
+    (after clipping), a slope is not determined (with one probability) or not reproducible across
     math libraries (with nearly equal ones), so that constant map is the answer. Near the optimum the loss
     changes by less than its rounding, so a step whose loss is unchanged to rounding is also taken when
     it shrinks the gradient.

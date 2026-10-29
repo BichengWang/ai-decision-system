@@ -68,7 +68,7 @@ class FittingTests(unittest.TestCase):
         self.assertEqual(mapping["a"], 0.0)
         for probability in (0.02, 0.5, 0.99):
             self.assertAlmostEqual(apply_map("platt", mapping, probability), 13 / 14, places=12)
-        # Probabilities within 1e-4 of each other fix no reproducible slope either.
+        # Probabilities spanning less than 1e-4 fix no reproducible slope either.
         self.assertEqual(fit_platt([(0.9, True)] * 5 + [(0.90005, False)] * 5)["a"], 0.0)
 
     def test_refusals_are_left_out_of_the_fit(self):
