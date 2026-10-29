@@ -197,8 +197,11 @@ member order; score levels stay ordered because they are a list. A response cont
 beyond 2^53-1 or non-finite numbers cannot be recorded canonically, and `jev-decision` then exits 1.
 
 ```bash
+# Live provider call: needs TYPESAFE_API_KEY (or --backend openai with OPENAI_API_KEY)
 python3 -m jevdecision --questions examples/support-ticket.json --state "My payouts are failing." > answer.json
 jev-decision-verify answer.json            # python3 -m jevdecision.verify answer.json
+# Without a key, verify a committed record instead
+jev-decision-verify conformance/valid/answer-v2-jev.json
 ```
 
 `jev-decision-verify` re-parses the embedded response with the embedded question definitions (the
