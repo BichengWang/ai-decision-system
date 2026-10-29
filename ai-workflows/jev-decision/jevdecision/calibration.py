@@ -141,18 +141,20 @@ def fit_platt(pairs, max_iterations=100, strict=True):
     """Newton's method with backtracking on Platt's smoothed targets (Lin, Lin and Weng, 2007).
 
     It starts where Lin, Lin and Weng do, at the constant map (a = 0, b = logit of the mean target),
-    where the Hessian is well conditioned. With a single distinct probability, a and b cannot both be
-    identified, so that constant map is the answer. Once the loss stops changing above rounding, full
-    Newton steps continue while they shrink the gradient. With `strict`, a fit that does not reach a
-    near-zero gradient is an error rather than a map; a verifier refitting a recorded map passes False
-    and compares the result instead.
+    where the Hessian is well conditioned. When every probability lies within `PLATT_MIN_SPREAD` of the
+    others (after clipping), a slope is not determined (with one probability) or not reproducible across
+    math libraries (with nearly equal ones), so that constant map is the answer. Near the optimum the loss
+    changes by less than its rounding, so a step whose loss is unchanged to rounding is also taken when
+    it shrinks the gradient.
+    With `strict`, a fit whose gradient stays above 1e-6 per case is an error rather than a map; a
+    verifier refitting a recorded map passes False and compares the result instead.
     """
     positives = sum(1 for _, outcome in pairs if outcome)
     high, low = (positives + 1) / (positives + 2), 1 / (len(pairs) - positives + 2)
     data = [(_logit(probability), high if outcome else low) for probability, outcome in pairs]
     mean = math.fsum(t for _, t in data) / len(data)
     a, b = 0.0, math.log(mean / (1 - mean))
-    if len({z for z, _ in data}) == 1:
+    if not platt_identifiable(pairs):
         return {"a": a, "b": b}
 
     def loss(a, b):
@@ -173,7 +175,8 @@ def fit_platt(pairs, max_iterations=100, strict=True):
     ridge, current = 1e-12, loss(a, b)
     for _ in range(max_iterations):
         ga, gb, haa, hab, hbb = gradient(a, b)
-        if max(abs(ga), abs(gb)) <= 1e-12 * len(data):
+        size = max(abs(ga), abs(gb))
+        if size <= 1e-12 * len(data):
             break
         haa, hbb = haa + ridge, hbb + ridge
         determinant = haa * hbb - hab * hab
@@ -183,26 +186,28 @@ def fit_platt(pairs, max_iterations=100, strict=True):
             candidate = loss(a + step * da, b + step * db)
             if candidate <= current + 1e-4 * step * slope:
                 break
+            if candidate <= current + 1e-12 * abs(current) \
+                    and max(map(abs, gradient(a + step * da, b + step * db)[:2])) < size:
+                break
             step /= 2
         else:
-            # The loss no longer changes above rounding: finish with full Newton steps while they help.
-            ga_next, gb_next, *_ = gradient(a + da, b + db)
-            if max(abs(ga_next), abs(gb_next)) >= max(abs(ga), abs(gb)):
-                break
-            a, b = a + da, b + db
-            current = loss(a, b)
-            continue
+            break  # no step helps: the optimum to rounding (checked below)
         a, b, current = a + step * da, b + step * db, candidate
     ga, gb, *_ = gradient(a, b)
-    if strict and max(abs(ga), abs(gb)) > 1e-8 * len(data):
+    if strict and max(abs(ga), abs(gb)) > 1e-6 * len(data):
         raise DatasetError(f"calibration: the platt fit did not converge (gradient {max(abs(ga), abs(gb)):.3g})")
     return {"a": a, "b": b}
 
 
+PLATT_MIN_SPREAD = 1e-4
+
+
 def platt_identifiable(pairs):
-    """Whether pairs determine both Platt parameters: two or more distinct clipped logits. Otherwise
-    `fit_platt` returns the constant map (a = 0)."""
-    return len({_logit(probability) for probability, _ in pairs}) > 1
+    """Whether pairs determine a reproducible Platt slope: the clipped probabilities span at least
+    `PLATT_MIN_SPREAD`. Compared in probability space, so the answer needs no math-library call and is
+    the same on every platform. Otherwise `fit_platt` returns the constant map (a = 0)."""
+    clipped = [min(max(probability, LOGIT_CLIP), 1 - LOGIT_CLIP) for probability, _ in pairs]
+    return max(clipped) - min(clipped) >= PLATT_MIN_SPREAD
 
 
 def apply_map(method, mapping, probability):

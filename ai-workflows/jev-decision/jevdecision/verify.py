@@ -16,7 +16,7 @@ retained `questions.json`, the retained `requirements.json` and the expected ans
 between platform math libraries); everything else compares exactly. Schema 3 directories also hold
 `calibration.json`: a fitted one is refitted from the directory's responses and labels (isotonic maps
 exactly; Platt maps by their calibrated probabilities at the fitted probabilities, within 1e-8, and as the
-constant a = 0 when fitted on one distinct probability), and an applied one is re-applied to
+constant a = 0 when its fitted probabilities all lie within 1e-4), and an applied one is re-applied to
 recompute the `calibrated_*` metrics after checking it was fitted on none of the directory's cases.
 Hashes detect change; they do not authenticate who wrote a record, and a record edited together with
 its digests cannot be told from the original except through the re-derived content.
