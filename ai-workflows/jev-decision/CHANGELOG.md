@@ -68,6 +68,8 @@ evaluation record schema numbers are unchanged.
 ### Fixed
 - `urllib_transport` closes the HTTP error response after reading its body and headers; it was left for
   garbage collection, which emitted `ResourceWarning`.
+- A provider response body that is not valid UTF-8 is reported as a non-JSON response (`jev-decision` exits
+  1, no retry); it escaped as an uncaught `UnicodeDecodeError`.
 
 ### Security
 - Signed records and `--require-signature` bind a record to a key: an edited record whose `record_sha256` was
