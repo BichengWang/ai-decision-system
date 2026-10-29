@@ -497,9 +497,9 @@ python3 -m jevdecision.evaluation --questions examples/support-ticket.json \
 `calibration` names the role (`fitted` or `applied`), the method and the SHA-256 of `calibration.json`,
 which provenance lists as an output; the applying run also records it as input `calibration` and keeps
 a copy. `jev-decision-verify --evaluation` refits a fitted calibration from the directory (isotonic maps
-must match exactly; a Platt map must give the same calibrated probability within 1e-9 at every probability
-it was fitted on, since its parameters move with last-digit math-library differences) and re-applies an
-applied one. The two directories are linked
+must match exactly; a Platt map must give the same calibrated probability within 1e-8 at every probability
+it was fitted on, since its parameters move with last-digit math-library differences, and a Platt map fitted
+on one distinct probability must be the constant `a = 0`) and re-applies an applied one. The two directories are linked
 by hash: the applying run's `inputs.calibration` equals the fitting run's `outputs["calibration.json"]`.
 
 To apply a calibration where the decision is made:

@@ -137,13 +137,15 @@ def _softplus(value):
     return value + math.log1p(math.exp(-value)) if value > 0 else math.log1p(math.exp(value))
 
 
-def fit_platt(pairs, max_iterations=100):
+def fit_platt(pairs, max_iterations=100, strict=True):
     """Newton's method with backtracking on Platt's smoothed targets (Lin, Lin and Weng, 2007).
 
     It starts where Lin, Lin and Weng do, at the constant map (a = 0, b = logit of the mean target),
     where the Hessian is well conditioned. With a single distinct probability, a and b cannot both be
-    identified, so that constant map is the answer. A fit that does not reach a near-zero gradient is an
-    error rather than a map.
+    identified, so that constant map is the answer. Once the loss stops changing above rounding, full
+    Newton steps continue while they shrink the gradient. With `strict`, a fit that does not reach a
+    near-zero gradient is an error rather than a map; a verifier refitting a recorded map passes False
+    and compares the result instead.
     """
     positives = sum(1 for _, outcome in pairs if outcome)
     high, low = (positives + 1) / (positives + 2), 1 / (len(pairs) - positives + 2)
@@ -183,15 +185,24 @@ def fit_platt(pairs, max_iterations=100):
                 break
             step /= 2
         else:
-            break  # no decrease left: at the optimum to rounding, checked below
+            # The loss no longer changes above rounding: finish with full Newton steps while they help.
+            ga_next, gb_next, *_ = gradient(a + da, b + db)
+            if max(abs(ga_next), abs(gb_next)) >= max(abs(ga), abs(gb)):
+                break
+            a, b = a + da, b + db
+            current = loss(a, b)
+            continue
         a, b, current = a + step * da, b + step * db, candidate
     ga, gb, *_ = gradient(a, b)
-    if max(abs(ga), abs(gb)) > 1e-8 * len(data):
+    if strict and max(abs(ga), abs(gb)) > 1e-8 * len(data):
         raise DatasetError(f"calibration: the platt fit did not converge (gradient {max(abs(ga), abs(gb)):.3g})")
     return {"a": a, "b": b}
 
 
-FITTERS = {"isotonic": fit_isotonic, "platt": fit_platt}
+def platt_identifiable(pairs):
+    """Whether pairs determine both Platt parameters: two or more distinct clipped logits. Otherwise
+    `fit_platt` returns the constant map (a = 0)."""
+    return len({_logit(probability) for probability, _ in pairs}) > 1
 
 
 def apply_map(method, mapping, probability):
@@ -209,8 +220,9 @@ def apply_map(method, mapping, probability):
     return ys[i] + (ys[i + 1] - ys[i]) * (probability - xs[i]) / (xs[i + 1] - xs[i])
 
 
-def fit(method, questions, cases, answers, fitted_on, produced_by):
-    """The calibration document for every question with labeled probabilities; DatasetError if none has."""
+def fit(method, questions, cases, answers, fitted_on, produced_by, strict=True):
+    """The calibration document for every question with labeled probabilities; DatasetError if none has.
+    `strict=False` (for a verifier's refit) returns a Platt fit even if it stopped short of convergence."""
     if method not in METHODS:
         raise DatasetError(f"calibration method must be one of {list(METHODS)}")
     fitted = {}
@@ -220,7 +232,7 @@ def fit(method, questions, cases, answers, fitted_on, produced_by):
             continue
         fitted[question.name] = {"type": question.type, "target": TARGETS[question.type], "n": len(pairs),
                                  "positives": sum(1 for _, outcome in pairs if outcome),
-                                 "map": FITTERS[method](pairs)}
+                                 "map": fit_platt(pairs, strict=strict) if method == "platt" else fit_isotonic(pairs)}
     if not fitted:
         raise DatasetError("calibration: no question has answered, labeled cases with probabilities to fit")
     return {"schema_version": SCHEMA_VERSION, "produced_by": produced_by, "method": method,

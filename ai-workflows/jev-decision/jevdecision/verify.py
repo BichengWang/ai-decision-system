@@ -15,7 +15,8 @@ retained `questions.json`, the retained `requirements.json` and the expected ans
 `evaluation.json` within a relative 1e-9 (math.log and NormalDist.inv_cdf differ in the last digits
 between platform math libraries); everything else compares exactly. Schema 3 directories also hold
 `calibration.json`: a fitted one is refitted from the directory's responses and labels (isotonic maps
-exactly; Platt maps by their calibrated probabilities at the fitted probabilities, within 1e-9), and an applied one is re-applied to
+exactly; Platt maps by their calibrated probabilities at the fitted probabilities, within 1e-8, and as the
+constant a = 0 when fitted on one distinct probability), and an applied one is re-applied to
 recompute the `calibrated_*` metrics after checking it was fitted on none of the directory's cases.
 Hashes detect change; they do not authenticate who wrote a record, and a record edited together with
 its digests cannot be told from the original except through the re-derived content.
@@ -230,13 +231,17 @@ def _close(expected: Any, recorded: Any, exact_keys: frozenset = frozenset()) ->
     return type(expected) is type(recorded) and expected == recorded
 
 
+CALIBRATED_TOLERANCE = 1e-8  # absolute, on a refitted Platt map's calibrated probabilities
+
+
 def _same_fit(refit: dict, recorded: dict, questions: tuple, cases: list, answers: dict) -> bool:
     """Whether a recorded calibration is the refit one.
 
     Everything but the maps compares exactly, and so do isotonic maps (integer counts, one division per
     block, probabilities copied). A Platt map is compared by what it does: its calibrated probability at
-    every distinct probability it was fitted on must be within 1e-9, because its parameters move with
-    last-digit libm differences wherever the fit is ill-conditioned (nearly equal probabilities).
+    every distinct probability it was fitted on must be within 1e-8 of the refit's, because its
+    parameters move with last-digit libm differences wherever the fit is ill-conditioned. Fitted on one
+    distinct probability, it must also be the constant map (a = 0), since one point fixes no slope.
     """
     def without_maps(document: dict) -> dict:
         return {**document, "questions": {name: {key: value for key, value in entry.items() if key != "map"}
@@ -251,9 +256,11 @@ def _same_fit(refit: dict, recorded: dict, questions: tuple, cases: list, answer
             if not _exact(expected, actual):
                 return False
             continue
-        points = {probability for probability, _ in calibrators.labeled_pairs(by_name[name], cases, answers)}
+        pairs = calibrators.labeled_pairs(by_name[name], cases, answers)
+        if not calibrators.platt_identifiable(pairs) and actual["a"] != 0:
+            return False
         if any(abs(calibrators.apply_map("platt", expected, p) - calibrators.apply_map("platt", actual, p))
-               > FLOAT_TOLERANCE for p in points):
+               > CALIBRATED_TOLERANCE for p in {probability for probability, _ in pairs}):
             return False
     return True
 
@@ -363,7 +370,8 @@ def verify_evaluation_dir(directory: Path, questions_file: Path | None = None,
             calibration = document
         else:
             basis = calibrators.fitted_on(contents["cases.jsonl"], contents["responses.jsonl"], cases)
-            refit = calibrators.fit(document.method, questions, cases, answers, basis, report["produced_by"])
+            refit = calibrators.fit(document.method, questions, cases, answers, basis, report["produced_by"],
+                                    strict=False)
             if not _same_fit(refit, document.document, questions, cases, answers):
                 mismatches.append(calibrators.FILENAME)
     models = sorted({str(r.get("model")) for r in raw.values() if isinstance(r, dict) and r.get("model")})

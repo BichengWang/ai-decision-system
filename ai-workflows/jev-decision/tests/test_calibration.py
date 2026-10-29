@@ -2,6 +2,7 @@ import base64
 import hashlib
 import io
 import json
+import math
 import tempfile
 import unittest
 from contextlib import redirect_stderr, redirect_stdout
@@ -154,11 +155,10 @@ class CommandTests(unittest.TestCase):
         self.assertEqual(code, 2)
         self.assertIn("invalid type", err)
 
-    def test_edited_platt_parameter_fails_the_refit(self):
-        self.evaluate("fit", "fitted", "--fit-calibration", "platt")
-        directory = self.root / "fitted"
+    def reseal_calibration(self, directory, edit):
+        """Edit calibration.json, then rewrite every hash that covers it, as a forger would."""
         document = json.loads((directory / "calibration.json").read_text())
-        document["questions"]["refund"]["map"]["a"] += 1e-6
+        edit(document["questions"]["refund"]["map"])
         data = json.dumps(document, sort_keys=True, separators=(",", ":")).encode()
         (directory / "calibration.json").write_bytes(data)
         report = json.loads((directory / "evaluation.json").read_text())
@@ -168,7 +168,26 @@ class CommandTests(unittest.TestCase):
         for name in ("calibration.json", "evaluation.json"):
             provenance["outputs"][name]["sha256"] = hashlib.sha256((directory / name).read_bytes()).hexdigest()
         (directory / "provenance.json").write_text(json.dumps(provenance, sort_keys=True, separators=(",", ":")))
-        code, out, _ = run(verify_main, "--evaluation", directory)
+        return run(verify_main, "--evaluation", directory)
+
+    def test_edited_platt_parameter_fails_the_refit(self):
+        self.evaluate("fit", "fitted", "--fit-calibration", "platt")
+        code, out, _ = self.reseal_calibration(self.root / "fitted",
+                                               lambda mapping: mapping.update(a=mapping["a"] + 1e-6))
+        self.assertEqual(code, 1)
+        self.assertIn("calibration.json", out)
+
+    def test_slope_added_to_a_one_probability_platt_fit_fails_the_refit(self):
+        # One case: the fit is the constant map. A slope through the same point keeps the value there
+        # but changes every other probability's calibrated value, so it must not verify.
+        (self.root / "one-cases.jsonl").write_text((self.root / "fit-cases.jsonl").read_text().splitlines(True)[0])
+        (self.root / "one-responses.jsonl").write_text(
+            (self.root / "fit-responses.jsonl").read_text().splitlines(True)[0])
+        self.assertEqual(self.evaluate("one", "fitted", "--fit-calibration", "platt")[0], 3)
+        raw = 0.08  # t01's raw refund probability in the example responses
+        logit = math.log(raw / (1 - raw))
+        code, out, _ = self.reseal_calibration(
+            self.root / "fitted", lambda mapping: mapping.update(a=1.0, b=mapping["b"] - logit))
         self.assertEqual(code, 1)
         self.assertIn("calibration.json", out)
 
