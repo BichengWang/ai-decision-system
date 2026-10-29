@@ -425,7 +425,8 @@ to re-score without calling a provider. The bundled replay produces byte-identic
 metrics remain the same, but the report's `source` changes.
 
 Answer records use `schema_version: 2` (1 from 0.1.0 remains readable but cannot be verified);
-evaluation and provenance records use `schema_version: 2`. They carry `produced_by: {"name": "jevdecision", "version": "0.2.0"}`.
+evaluation and provenance records use `schema_version: 2`, or 3 for runs that fit or apply a calibration
+([below](#calibrating-the-probabilities)). They carry `produced_by: {"name": "jevdecision", "version": "0.2.0"}`.
 Raw provider response replay remains compatible with existing unversioned fixtures.
 JSON records use sorted keys, compact separators and UTF-8 without ASCII escaping;
 SHA-256 digests are lowercase hexadecimal. JSONL rows use the same encoding.
@@ -456,11 +457,64 @@ report says nothing about any model's quality.
 
 From the repository root, `make jev-eval` runs the example into a temporary directory.
 
+### Calibrating the probabilities
+
+A low `ece` is not something a provider promises: a model that says 0.95 and is right 70% of the time
+makes any threshold on its confidence (decision-control's `min_probability`, Jev's `min_confidence`)
+meaningless. Fit a monotone map per question on one labeled set and measure it on another:
+
+```bash
+# Fit on one labeled set: writes fit-run/calibration.json (isotonic or platt)
+python3 -m jevdecision.evaluation --questions examples/support-ticket.json \
+    --cases fit-cases.jsonl --responses fit-responses.jsonl --fit-calibration platt --out fit-run
+
+# Apply it to held-out cases; requirements may bound calibrated_* metrics
+python3 -m jevdecision.evaluation --questions examples/support-ticket.json \
+    --cases held-out-cases.jsonl --responses held-out-responses.jsonl \
+    --calibration fit-run/calibration.json --require calibrated-requirements.json --out held-out-run
+```
+
+| Type | Calibrated probability | Metrics added by `--calibration` |
+|---|---|---|
+| `noul` | probability of yes, against the label | `calibrated_brier`, `calibrated_log_loss`, `calibrated_ece` |
+| `choice`, `score` | probability of the chosen answer, against its correctness | `calibrated_ece` |
+
+- `isotonic` is pool-adjacent-violators: a nondecreasing step map, interpolated between steps. It can
+  return 0 or 1 and needs a few hundred cases before its steps mean much.
+- `platt` fits `sigmoid(a * logit(p) + b)` on Platt's smoothed targets: two parameters, so it suits
+  small sets.
+- Refused answers are left out of the fit. A question whose answers lack the probability its `ece`
+  needs is not calibrated, and a held-out refusal makes its calibrated metrics unmeasured, as for the
+  raw ones.
+- The fitting run reports no calibrated metrics: measured on the cases they were fitted on, they would
+  look better than they are. `--calibration` refuses a file fitted on any case id of the evaluation
+  (exit 2), and requirements on `calibrated_*` fail in a run without `--calibration`. Calibration can
+  make held-out metrics worse; that result is the reason to measure it.
+
+`calibration.json` (schema 1, compact sorted-key JSON) holds the method, one map per question with its
+`n` and positive count, and `fitted_on`: the SHA-256 of the fitting run's `cases.jsonl` and
+`responses.jsonl` and its case ids. Both runs write `evaluation.json` and `provenance.json` schema 3:
+`calibration` names the role (`fitted` or `applied`), the method and the SHA-256 of `calibration.json`,
+which provenance lists as an output; the applying run also records it as input `calibration` and keeps
+a copy. `jev-decision-verify --evaluation` refits a fitted calibration from the directory (numbers within
+1e-9, relative above 1 and absolute below) and re-applies an applied one. The two directories are linked
+by hash: the applying run's `inputs.calibration` equals the fitting run's `outputs["calibration.json"]`.
+
+To apply a calibration where the decision is made:
+
+```python
+from pathlib import Path
+from jevdecision.calibration import load
+
+calibration = load(Path("fit-run/calibration.json").read_bytes())
+p = calibration.calibrate("refund", decision["refund"].probability)  # then compare p with your threshold
+```
+
 ## JSON Schemas and conformance vectors
 
 Every record version the readers accept has a JSON Schema (draft 2020-12), shipped in the wheel as
-package data under `jevdecision/schema/`: `answer.v1.json`, `answer.v2.json`, `evaluation.v2.json` and
-`provenance.v2.json`. Each `$id` is
+package data under `jevdecision/schema/`: `answer.v1.json`, `answer.v2.json`, `evaluation.v2.json`,
+`evaluation.v3.json`, `provenance.v2.json`, `provenance.v3.json` and `calibration.v1.json`. Each `$id` is
 `https://github.com/BichengWang/ai-decision-system/schema/jevdecision/<file>` (a stable name, not a URL
 that must resolve) and its `$comment` states the canonicalization and what each digest covers: RFC 8785
 for `record_sha256` in answer schema 2; none for provenance, whose digests are SHA-256 of exact file
@@ -497,6 +551,8 @@ records the commands produce against the schemas; without it those tests skip.
   field mapping against the provider references before you depend on it in
   production.
 - Image inputs and per-request options beyond the model are not modeled yet.
+- Calibration maps one probability per question; there is no conformal or abstention-coverage
+  guarantee, and a map fitted on one period or population says nothing about another.
 - Unit tests use recorded response shapes and never call a provider.
 - Only accuracy carries a confidence interval. Brier, log loss, calibration
   error and MAE are point estimates, which are noisy with a few dozen cases, so set

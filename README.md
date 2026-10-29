@@ -38,7 +38,8 @@ The three small packages require Python 3.11+ and use only the standard library
 at runtime. decision-control is a trusted local SDK/CLI, not an identity service
 or external executor. Experiment gate consumes summaries; it does not run an
 experiment or deploy a model. Jev supports Jev and OpenAI Decisions backends;
-provider-reported confidence is not a calibrated safety guarantee.
+provider-reported confidence is not a calibrated safety guarantee, so on `main`
+`jev-decision-eval` can fit a calibration on one labeled set and measure it on held-out cases.
 
 Since 0.1.0, `main` also has (all unreleased; see each CHANGELOG): JSON Schemas and
 conformance vectors for every record type, re-checked by an independent Node job

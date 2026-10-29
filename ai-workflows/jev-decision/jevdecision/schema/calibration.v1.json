@@ -1,0 +1,234 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://github.com/BichengWang/ai-decision-system/schema/jevdecision/calibration.v1.json",
+  "title": "jevdecision calibration, schema 1",
+  "$comment": "Canonicalization: python-json-v1 (sorted keys, separators , and :, ensure_ascii false, UTF-8) is how calibration.json is written; it carries no digest of its own: the provenance.json of the evaluation directory that fitted or applied it lists the SHA-256 of its exact bytes. `fitted_on` hashes the fitting run's cases.jsonl and responses.jsonl and lists its case ids; an evaluation refuses a calibration fitted on any of its case ids. Not expressible here: isotonic `x` increases strictly and `y` never decreases, and jev-decision-verify refits a fitted calibration from its directory (numbers within 1e-9, relative above 1 and absolute below).",
+  "type": "object",
+  "properties": {
+    "schema_version": {
+      "const": 1
+    },
+    "produced_by": {
+      "$ref": "#/$defs/producedBy"
+    },
+    "method": {
+      "enum": [
+        "isotonic",
+        "platt"
+      ]
+    },
+    "fitted_on": {
+      "type": "object",
+      "properties": {
+        "cases_sha256": {
+          "type": "string",
+          "pattern": "^[0-9a-f]{64}$"
+        },
+        "responses_sha256": {
+          "type": "string",
+          "pattern": "^[0-9a-f]{64}$"
+        },
+        "case_ids": {
+          "type": "array",
+          "minItems": 1,
+          "uniqueItems": true,
+          "items": {
+            "type": "string",
+            "minLength": 1
+          }
+        }
+      },
+      "required": [
+        "cases_sha256",
+        "responses_sha256",
+        "case_ids"
+      ],
+      "additionalProperties": false
+    },
+    "questions": {
+      "type": "object",
+      "minProperties": 1,
+      "additionalProperties": {
+        "$ref": "#/$defs/question"
+      }
+    }
+  },
+  "required": [
+    "schema_version",
+    "produced_by",
+    "method",
+    "fitted_on",
+    "questions"
+  ],
+  "additionalProperties": false,
+  "allOf": [
+    {
+      "if": {
+        "properties": {
+          "method": {
+            "const": "isotonic"
+          }
+        }
+      },
+      "then": {
+        "properties": {
+          "questions": {
+            "additionalProperties": {
+              "properties": {
+                "map": {
+                  "$ref": "#/$defs/isotonicMap"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    {
+      "if": {
+        "properties": {
+          "method": {
+            "const": "platt"
+          }
+        }
+      },
+      "then": {
+        "properties": {
+          "questions": {
+            "additionalProperties": {
+              "properties": {
+                "map": {
+                  "$ref": "#/$defs/plattMap"
+                }
+              }
+            }
+          }
+        }
+      }
+    }
+  ],
+  "$defs": {
+    "producedBy": {
+      "type": "object",
+      "properties": {
+        "name": {
+          "const": "jevdecision"
+        },
+        "version": {
+          "type": "string"
+        }
+      },
+      "required": [
+        "name",
+        "version"
+      ],
+      "additionalProperties": false
+    },
+    "question": {
+      "type": "object",
+      "properties": {
+        "type": {
+          "enum": [
+            "noul",
+            "choice",
+            "score"
+          ]
+        },
+        "target": {
+          "enum": [
+            "yes",
+            "chosen"
+          ]
+        },
+        "n": {
+          "type": "integer",
+          "minimum": 1
+        },
+        "positives": {
+          "type": "integer",
+          "minimum": 0
+        },
+        "map": {
+          "type": "object"
+        }
+      },
+      "required": [
+        "type",
+        "target",
+        "n",
+        "positives",
+        "map"
+      ],
+      "additionalProperties": false,
+      "oneOf": [
+        {
+          "properties": {
+            "type": {
+              "const": "noul"
+            },
+            "target": {
+              "const": "yes"
+            }
+          }
+        },
+        {
+          "properties": {
+            "type": {
+              "enum": [
+                "choice",
+                "score"
+              ]
+            },
+            "target": {
+              "const": "chosen"
+            }
+          }
+        }
+      ]
+    },
+    "isotonicMap": {
+      "type": "object",
+      "properties": {
+        "x": {
+          "type": "array",
+          "minItems": 1,
+          "items": {
+            "type": "number",
+            "minimum": 0,
+            "maximum": 1
+          }
+        },
+        "y": {
+          "type": "array",
+          "minItems": 1,
+          "items": {
+            "type": "number",
+            "minimum": 0,
+            "maximum": 1
+          }
+        }
+      },
+      "required": [
+        "x",
+        "y"
+      ],
+      "additionalProperties": false
+    },
+    "plattMap": {
+      "type": "object",
+      "properties": {
+        "a": {
+          "type": "number"
+        },
+        "b": {
+          "type": "number"
+        }
+      },
+      "required": [
+        "a",
+        "b"
+      ],
+      "additionalProperties": false
+    }
+  }
+}

@@ -13,9 +13,12 @@ An evaluation directory is checked by hashing every retained file listed in
 retained `questions.json`, the retained `requirements.json` and the expected answers recorded in
 `cases.jsonl`. Nothing is sent to a provider. Recomputed metric floats must agree with
 `evaluation.json` within a relative 1e-9 (math.log and NormalDist.inv_cdf differ in the last digits
-between platform math libraries); everything else compares exactly. Hashes detect change; they do not
-authenticate who wrote a record, and a record edited together with its digests
-cannot be told from the original except through the re-derived content.
+between platform math libraries); everything else compares exactly. Schema 3 directories also hold
+`calibration.json`: a fitted one is refitted from the directory's responses and labels (map numbers
+must agree within 1e-9, relative above 1 and absolute below), and an applied one is re-applied to
+recompute the `calibrated_*` metrics after checking it was fitted on none of the directory's cases.
+Hashes detect change; they do not authenticate who wrote a record, and a record edited together with
+its digests cannot be told from the original except through the re-derived content.
 
 With `--require-signature` (and `--key KEYFILE [--signature ENVELOPE]`, or `--sigstore-bundle BUNDLE
 --certificate-identity ID --certificate-oidc-issuer URL`) the signature over the exact file bytes is
@@ -35,7 +38,7 @@ import sys
 from pathlib import Path
 from typing import Any
 
-from . import attestation, signing
+from . import attestation, calibration as calibrators, signing
 from .backends import BACKENDS, create_backend
 from .errors import DecisionError
 from .evaluation import Case, _expected, case_results, evaluate, replay
@@ -47,13 +50,15 @@ ANSWER_FIELDS = frozenset({"schema_version", "produced_by", "backend", "model", 
                            "answers", "questions", "response", DIGEST_FIELD})
 PROVENANCE_FIELDS = frozenset({"schema_version", "produced_by", "response_mode", "response_origin",
                                "inputs", "outputs"})
-INPUT_NAMES = frozenset({"questions", "cases", "requirements", "responses"})
+INPUT_NAMES = {2: frozenset({"questions", "cases", "requirements", "responses"})}
+INPUT_NAMES[3] = INPUT_NAMES[2] | {"calibration"}
 OUTPUT_NAMES = ("evaluation.json", "EVALUATION.md", "responses.jsonl", "cases.jsonl")
 # Inputs retained next to the outputs, by provenance input name.
 RETAINED_INPUTS = {"questions": "questions.json", "requirements": "requirements.json"}
-EVALUATION_FIELDS = frozenset({"schema_version", "produced_by", "jevdecision_version", "backend", "model",
-                               "source", "cases", "answered", "errors", "error_rate", "questions",
-                               "requirements", "status"})
+EVALUATION_FIELDS = {2: frozenset({"schema_version", "produced_by", "jevdecision_version", "backend", "model",
+                                   "source", "cases", "answered", "errors", "error_rate", "questions",
+                                   "requirements", "status"})}
+EVALUATION_FIELDS[3] = EVALUATION_FIELDS[2] | {"calibration"}
 
 
 def _differs(left: Any, right: Any) -> bool:
@@ -135,25 +140,27 @@ def _sha256_entry(value: Any, where: str) -> str:
 
 
 def _check_provenance(provenance: Any) -> dict[str, str]:
-    """Validate provenance.json; return {retained file name: sha256}."""
+    """Validate provenance.json (schema 2 or 3); return {retained file name: sha256}."""
     if not isinstance(provenance, dict):
         raise ValueError("provenance.json must be a JSON object")
-    if not _is_int(provenance.get("schema_version"), 2):
-        raise ValueError("unsupported provenance schema_version; expected 2")
+    version = provenance.get("schema_version")
+    if type(version) is not int or version not in INPUT_NAMES:
+        raise ValueError("unsupported provenance schema_version; expected 2 or 3")
     _check_fields(provenance, PROVENANCE_FIELDS, "provenance")
     _check_producer(provenance["produced_by"], "provenance")
     if provenance["response_mode"] not in ("live", "replay") or not isinstance(provenance["response_origin"], str):
         raise ValueError("provenance: invalid response_mode or response_origin")
     inputs = provenance["inputs"]
-    if not isinstance(inputs, dict) or set(inputs) != INPUT_NAMES:
-        raise ValueError(f"provenance inputs must name exactly {sorted(INPUT_NAMES)}")
+    if not isinstance(inputs, dict) or set(inputs) != INPUT_NAMES[version]:
+        raise ValueError(f"provenance inputs must name exactly {sorted(INPUT_NAMES[version])}")
     for name, entry in inputs.items():
         if entry is not None:
             _sha256_entry(entry, f"inputs.{name}")
     outputs = provenance["outputs"]
-    allowed = set(OUTPUT_NAMES) | set(RETAINED_INPUTS.values())
-    if not isinstance(outputs, dict) or not set(OUTPUT_NAMES) <= set(outputs) <= allowed:
-        raise ValueError(f"provenance outputs must name {list(OUTPUT_NAMES)} and optionally "
+    required = set(OUTPUT_NAMES) | ({calibrators.FILENAME} if version == 3 else set())
+    allowed = required | set(RETAINED_INPUTS.values())
+    if not isinstance(outputs, dict) or not required <= set(outputs) <= allowed:
+        raise ValueError(f"provenance outputs must name {sorted(required)} and optionally "
                          f"{sorted(RETAINED_INPUTS.values())}")
     return {name: _sha256_entry(entry, f"outputs.{name}") for name, entry in outputs.items()}
 
@@ -223,6 +230,24 @@ def _close(expected: Any, recorded: Any, exact_keys: frozenset = frozenset()) ->
     return type(expected) is type(recorded) and expected == recorded
 
 
+def _near(expected: Any, recorded: Any) -> bool:
+    """Structural equality where floats match within 1e-9, relative above 1 and absolute below.
+
+    For calibration maps: a refitted Platt parameter whose optimum is 0 ends wherever Newton's method
+    stopped, a few 1e-13 away, so a purely relative bound would compare rounding noise.
+    """
+    if isinstance(expected, dict):
+        return (isinstance(recorded, dict) and set(expected) == set(recorded)
+                and all(_near(expected[key], recorded[key]) for key in expected))
+    if isinstance(expected, list):
+        return (isinstance(recorded, list) and len(expected) == len(recorded)
+                and all(_near(left, right) for left, right in zip(expected, recorded)))
+    if isinstance(expected, float) and type(recorded) in (int, float):
+        return abs(recorded - expected) <= FLOAT_TOLERANCE * max(1.0, abs(expected))
+    return type(expected) is type(recorded) and expected == recorded
+
+
+
 def _input_bytes(name: str, contents: dict[str, bytes], recorded: dict | None, supplied: Path | None,
                  mismatches: list[str]) -> bytes | None:
     """The bytes of an input the run read, from the retained copy or a supplied file; None when absent.
@@ -279,9 +304,10 @@ def verify_evaluation_dir(directory: Path, questions_file: Path | None = None,
 
     questions = check_question_set(questions_from_spec(loads_strict(question_bytes.decode("utf-8"))))
     report = loads_strict(contents["evaluation.json"].decode("utf-8"))
-    if not isinstance(report, dict) or not _is_int(report.get("schema_version"), 2):
-        raise ValueError("unsupported evaluation schema_version; expected 2")
-    _check_fields(report, EVALUATION_FIELDS, "evaluation.json")
+    version = provenance["schema_version"]
+    if not isinstance(report, dict) or not _is_int(report.get("schema_version"), version):
+        raise ValueError(f"unsupported evaluation schema_version; expected {version}, as provenance.json")
+    _check_fields(report, EVALUATION_FIELDS[version], "evaluation.json")
     _check_producer(report["produced_by"], "evaluation.json")
     if (report["produced_by"]["version"] != report["jevdecision_version"] or report["backend"] not in BACKENDS
             or report["source"] not in ("live", "replay") or not isinstance(report["model"], str)
@@ -313,11 +339,28 @@ def verify_evaluation_dir(directory: Path, questions_file: Path | None = None,
     if report["source"] == "live":  # a failed request leaves no response to re-derive its message from
         errors = [{**error, "error": recorded_errors.get(error["id"], error["error"])}
                   if error["error"] == "no recorded response" else error for error in errors]
+    calibration, summary = None, {}
+    if version == 3:
+        calibration_bytes = contents[calibrators.FILENAME]
+        document = calibrators.load(calibration_bytes)
+        applied = inputs["calibration"] is not None
+        summary = {"calibration": {"role": "applied" if applied else "fitted", "method": document.method,
+                                   "sha256": hashlib.sha256(calibration_bytes).hexdigest()}}
+        if applied:
+            if summary["calibration"]["sha256"] != inputs["calibration"]["sha256"]:
+                return [f"{calibrators.FILENAME} (differs from the calibration input hashed in provenance.json)"]
+            document.check_applicable(questions, cases)
+            calibration = document
+        else:
+            basis = calibrators.fitted_on(contents["cases.jsonl"], contents["responses.jsonl"], cases)
+            refit = calibrators.fit(document.method, questions, cases, answers, basis, report["produced_by"])
+            if not _near(refit, document.document):
+                mismatches.append(calibrators.FILENAME)
     models = sorted({str(r.get("model")) for r in raw.values() if isinstance(r, dict) and r.get("model")})
-    expected = {"schema_version": 2, "produced_by": report["produced_by"],
+    expected = {"schema_version": version, "produced_by": report["produced_by"],
                 "jevdecision_version": report["jevdecision_version"], "backend": report["backend"],
                 "model": ", ".join(models) or report["model"], "source": report["source"],
-                **evaluate(questions, cases, answers, errors, requirements)}
+                **evaluate(questions, cases, answers, errors, requirements, calibration), **summary}
     mismatches += [f"evaluation.json:{key}" for key, value in expected.items()
                    if not _close(value, report[key], frozenset({"limit"}))]
     if not _exact(case_results(questions, cases, answers, errors), case_rows):
@@ -337,11 +380,21 @@ def _check_answer_file(path: Path, options: argparse.Namespace) -> list[str]:
     return verify_answer_record(record)
 
 
+def _provenance_version(data: bytes) -> int:
+    """The predicate version for provenance.json bytes: its schema version, or 2 when it has no supported
+    one, so the signature is still checked before the file is rejected as malformed."""
+    try:
+        return attestation.provenance_version(loads_strict(data.decode("utf-8")))
+    except (UnicodeDecodeError, ValueError, RecursionError):
+        return 2
+
+
 def _check_evaluation_dir(directory: Path, options: argparse.Namespace) -> list[str]:
     """With a signature requirement: provenance.json's signature first, then its hashes, then re-scoring."""
     data = (directory / attestation.PROVENANCE).read_bytes()
     if options.require_signature:
-        attestation.require_signature(directory / attestation.PROVENANCE, data, "provenance", 2, options)
+        attestation.require_signature(directory / attestation.PROVENANCE, data, "provenance",
+                                      _provenance_version(data), options)
     return verify_evaluation_dir(directory, options.questions, options.requirements, data)
 
 
@@ -374,7 +427,8 @@ def _write_predicate(args: argparse.Namespace) -> int:
             data = args.answers[0].read_bytes()
             kind, version = "answer", attestation.answer_version(loads_strict(data.decode("utf-8")))
         else:
-            kind, version = "provenance", 2
+            data = (args.evaluation[0] / attestation.PROVENANCE).read_bytes()
+            kind, version = "provenance", attestation.provenance_version(loads_strict(data.decode("utf-8")))
         with open(args.predicate_out, "x", encoding="utf-8") as stream:
             json.dump(attestation.predicate(kind, version), stream, indent=2)
             stream.write("\n")

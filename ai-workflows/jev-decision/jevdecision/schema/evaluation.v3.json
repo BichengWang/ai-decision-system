@@ -1,0 +1,470 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://github.com/BichengWang/ai-decision-system/schema/jevdecision/evaluation.v3.json",
+  "title": "jevdecision evaluation report, schema 3",
+  "$comment": "Canonicalization: python-json-v1 (sorted keys, separators , and :, ensure_ascii false, UTF-8) is how evaluation.json is written, but the file carries no digest of its own: its SHA-256 over the exact file bytes is listed in provenance.json (`outputs`), and jev-decision-verify --evaluation re-scores the retained responses against it. The schema checks shape only. Schema 3 is written by runs that fit (`--fit-calibration`) or apply (`--calibration`) a calibration: `calibration` names its role, method and the SHA-256 of the directory's calibration.json, and an applied calibration adds `calibrated_*` metrics to every question. jev-decision-verify refits a fitted calibration and re-applies an applied one.",
+  "type": "object",
+  "properties": {
+    "schema_version": {
+      "const": 3
+    },
+    "produced_by": {
+      "$ref": "#/$defs/producedBy"
+    },
+    "jevdecision_version": {
+      "type": "string"
+    },
+    "backend": {
+      "enum": [
+        "jev",
+        "openai"
+      ]
+    },
+    "model": {
+      "type": "string"
+    },
+    "source": {
+      "enum": [
+        "live",
+        "replay"
+      ]
+    },
+    "cases": {
+      "type": "integer",
+      "minimum": 1
+    },
+    "answered": {
+      "type": "integer",
+      "minimum": 0
+    },
+    "errors": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "properties": {
+          "id": {
+            "type": "string"
+          },
+          "error": {
+            "type": "string"
+          }
+        },
+        "required": [
+          "id",
+          "error"
+        ],
+        "additionalProperties": false
+      }
+    },
+    "error_rate": {
+      "type": "number",
+      "minimum": 0,
+      "maximum": 1
+    },
+    "questions": {
+      "type": "object",
+      "additionalProperties": {
+        "oneOf": [
+          {
+            "$ref": "#/$defs/noulMetrics"
+          },
+          {
+            "$ref": "#/$defs/choiceMetrics"
+          },
+          {
+            "$ref": "#/$defs/scoreMetrics"
+          }
+        ]
+      }
+    },
+    "requirements": {
+      "type": "array",
+      "minItems": 1,
+      "items": {
+        "type": "object",
+        "properties": {
+          "check": {
+            "type": "string"
+          },
+          "bound": {
+            "enum": [
+              "min",
+              "max"
+            ]
+          },
+          "limit": {
+            "type": "number"
+          },
+          "value": {
+            "type": [
+              "number",
+              "null"
+            ]
+          },
+          "pass": {
+            "type": "boolean"
+          }
+        },
+        "required": [
+          "check",
+          "bound",
+          "limit",
+          "value",
+          "pass"
+        ],
+        "additionalProperties": false
+      }
+    },
+    "status": {
+      "enum": [
+        "PASS",
+        "FAIL",
+        "UNGATED"
+      ]
+    },
+    "calibration": {
+      "type": "object",
+      "properties": {
+        "role": {
+          "enum": [
+            "fitted",
+            "applied"
+          ]
+        },
+        "method": {
+          "enum": [
+            "isotonic",
+            "platt"
+          ]
+        },
+        "sha256": {
+          "type": "string",
+          "pattern": "^[0-9a-f]{64}$"
+        }
+      },
+      "required": [
+        "role",
+        "method",
+        "sha256"
+      ],
+      "additionalProperties": false
+    }
+  },
+  "required": [
+    "schema_version",
+    "produced_by",
+    "jevdecision_version",
+    "backend",
+    "model",
+    "source",
+    "cases",
+    "answered",
+    "errors",
+    "error_rate",
+    "questions",
+    "requirements",
+    "status",
+    "calibration"
+  ],
+  "additionalProperties": false,
+  "$defs": {
+    "producedBy": {
+      "type": "object",
+      "properties": {
+        "name": {
+          "const": "jevdecision"
+        },
+        "version": {
+          "type": "string"
+        }
+      },
+      "required": [
+        "name",
+        "version"
+      ],
+      "additionalProperties": false
+    },
+    "noulMetrics": {
+      "type": "object",
+      "properties": {
+        "type": {
+          "const": "noul"
+        },
+        "n": {
+          "type": "integer",
+          "minimum": 0
+        },
+        "accuracy": {
+          "type": [
+            "number",
+            "null"
+          ]
+        },
+        "accuracy_lower": {
+          "type": [
+            "number",
+            "null"
+          ]
+        },
+        "accuracy_upper": {
+          "type": [
+            "number",
+            "null"
+          ]
+        },
+        "brier": {
+          "type": [
+            "number",
+            "null"
+          ]
+        },
+        "log_loss": {
+          "type": [
+            "number",
+            "null"
+          ]
+        },
+        "ece": {
+          "type": [
+            "number",
+            "null"
+          ]
+        },
+        "base_rate": {
+          "type": [
+            "number",
+            "null"
+          ]
+        },
+        "mean_probability": {
+          "type": [
+            "number",
+            "null"
+          ]
+        },
+        "calibrated_brier": {
+          "type": [
+            "number",
+            "null"
+          ]
+        },
+        "calibrated_log_loss": {
+          "type": [
+            "number",
+            "null"
+          ]
+        },
+        "calibrated_ece": {
+          "type": [
+            "number",
+            "null"
+          ]
+        },
+        "refusals": {
+          "type": "integer",
+          "minimum": 0
+        },
+        "refusal_rate": {
+          "type": [
+            "number",
+            "null"
+          ]
+        }
+      },
+      "required": [
+        "type",
+        "n",
+        "accuracy",
+        "accuracy_lower",
+        "accuracy_upper",
+        "brier",
+        "log_loss",
+        "ece",
+        "base_rate",
+        "mean_probability",
+        "refusals",
+        "refusal_rate"
+      ],
+      "additionalProperties": false
+    },
+    "choiceMetrics": {
+      "type": "object",
+      "properties": {
+        "type": {
+          "const": "choice"
+        },
+        "n": {
+          "type": "integer",
+          "minimum": 0
+        },
+        "accuracy": {
+          "type": [
+            "number",
+            "null"
+          ]
+        },
+        "accuracy_lower": {
+          "type": [
+            "number",
+            "null"
+          ]
+        },
+        "accuracy_upper": {
+          "type": [
+            "number",
+            "null"
+          ]
+        },
+        "brier": {
+          "type": [
+            "number",
+            "null"
+          ]
+        },
+        "log_loss": {
+          "type": [
+            "number",
+            "null"
+          ]
+        },
+        "ece": {
+          "type": [
+            "number",
+            "null"
+          ]
+        },
+        "confusion": {
+          "type": "object",
+          "additionalProperties": {
+            "type": "object",
+            "additionalProperties": {
+              "type": "integer",
+              "minimum": 1
+            }
+          }
+        },
+        "calibrated_ece": {
+          "type": [
+            "number",
+            "null"
+          ]
+        },
+        "refusals": {
+          "type": "integer",
+          "minimum": 0
+        },
+        "refusal_rate": {
+          "type": [
+            "number",
+            "null"
+          ]
+        }
+      },
+      "required": [
+        "type",
+        "n",
+        "accuracy",
+        "accuracy_lower",
+        "accuracy_upper",
+        "brier",
+        "log_loss",
+        "ece",
+        "confusion",
+        "refusals",
+        "refusal_rate"
+      ],
+      "additionalProperties": false
+    },
+    "scoreMetrics": {
+      "type": "object",
+      "properties": {
+        "type": {
+          "const": "score"
+        },
+        "n": {
+          "type": "integer",
+          "minimum": 0
+        },
+        "accuracy": {
+          "type": [
+            "number",
+            "null"
+          ]
+        },
+        "accuracy_lower": {
+          "type": [
+            "number",
+            "null"
+          ]
+        },
+        "accuracy_upper": {
+          "type": [
+            "number",
+            "null"
+          ]
+        },
+        "within_one": {
+          "type": [
+            "number",
+            "null"
+          ]
+        },
+        "mae": {
+          "type": [
+            "number",
+            "null"
+          ]
+        },
+        "brier": {
+          "type": [
+            "number",
+            "null"
+          ]
+        },
+        "log_loss": {
+          "type": [
+            "number",
+            "null"
+          ]
+        },
+        "ece": {
+          "type": [
+            "number",
+            "null"
+          ]
+        },
+        "calibrated_ece": {
+          "type": [
+            "number",
+            "null"
+          ]
+        },
+        "refusals": {
+          "type": "integer",
+          "minimum": 0
+        },
+        "refusal_rate": {
+          "type": [
+            "number",
+            "null"
+          ]
+        }
+      },
+      "required": [
+        "type",
+        "n",
+        "accuracy",
+        "accuracy_lower",
+        "accuracy_upper",
+        "within_one",
+        "mae",
+        "brier",
+        "log_loss",
+        "ece",
+        "refusals",
+        "refusal_rate"
+      ],
+      "additionalProperties": false
+    }
+  }
+}

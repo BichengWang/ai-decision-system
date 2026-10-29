@@ -260,7 +260,8 @@ def eval_digests(files, extra):
                         "canonicalization": "bytes", "covers_file": name})
     for role, entry in provenance["inputs"].items():
         if entry is not None:
-            covers = {"questions": "questions.json", "requirements": "requirements.json"}.get(role, extra.get(role))
+            covers = {"questions": "questions.json", "requirements": "requirements.json",
+                      "calibration": "calibration.json"}.get(role, extra.get(role))
             entries.append({"document": "provenance.json", "value": f"/inputs/{role}/sha256",
                             "canonicalization": "bytes", "covers_file": covers})
             assert sha(files[covers]) == entry["sha256"], role
@@ -275,6 +276,11 @@ def add_dir(tree, kind, name, files, command_note, digests=None, documents=None)
 
 EVAL_DOCUMENTS = [document("evaluation.v2.json", True, "evaluation.json"),
                   document("provenance.v2.json", True, "provenance.json")]
+CALIBRATED_DOCUMENTS = [document("evaluation.v3.json", True, "evaluation.json"),
+                        document("provenance.v3.json", True, "provenance.json"),
+                        document("calibration.v1.json", True, "calibration.json")]
+# Requirements of the applied-calibration vector: a held-out bound on a calibrated metric.
+CALIBRATED_REQUIREMENTS = {"questions": {"refund": {"n": {"min": 6}, "calibrated_ece": {"max": 0.15}}}}
 
 
 def add_evaluations(tree):
@@ -400,6 +406,77 @@ def add_evaluations(tree):
                 "the cases.jsonl entry removed from provenance.json outputs",
                 None, [document("provenance.v2.json", False, "provenance.json")])
 
+        add_calibrations(tree, tmp, extra_names)
+
+
+def add_calibrations(tree, tmp, extra_names):
+    """Fit an isotonic calibration on cases t01-t06 and apply it to t07-t12. Isotonic fitting uses only
+    integer counts and one division per block, so calibration.json is the same bytes on every platform."""
+    cases, responses = (path.read_text(encoding="utf-8").splitlines(True) for path in (CASES_FILE, RESPONSES_FILE))
+    halves = {}
+    for name, rows in (("fit", slice(0, 6)), ("held-out", slice(6, 12))):
+        halves[name] = tuple("".join(lines[rows]).encode("utf-8") for lines in (cases, responses))
+        for suffix, data in zip(("cases", "responses"), halves[name]):
+            (tmp / f"{name}-{suffix}.jsonl").write_bytes(data)
+    (tmp / "calibrated-requirements.json").write_text(compact(CALIBRATED_REQUIREMENTS), encoding="utf-8")
+    assert run_eval(["--questions", QUESTIONS_FILE, "--cases", tmp / "fit-cases.jsonl",
+                     "--responses", tmp / "fit-responses.jsonl", "--fit-calibration", "isotonic",
+                     "--out", tmp / "fitted"]) == 3
+    assert run_eval(["--questions", QUESTIONS_FILE, "--cases", tmp / "held-out-cases.jsonl",
+                     "--responses", tmp / "held-out-responses.jsonl", "--calibration", tmp / "fitted" / "calibration.json",
+                     "--require", tmp / "calibrated-requirements.json", "--out", tmp / "applied"]) == 0
+
+    def with_inputs(path, half):
+        files = read_dir(path)
+        files["input-cases.jsonl"], files["input-responses.jsonl"] = halves[half]
+        return files
+
+    fitted, applied = with_inputs(tmp / "fitted", "fit"), with_inputs(tmp / "applied", "held-out")
+    for name, files, note in (
+            ("evaluation-calibration-fitted", fitted, "isotonic calibration fitted on example cases t01-t06 "
+             "(schema 3, UNGATED); the verifier refits calibration.json from responses.jsonl and cases.jsonl"),
+            ("evaluation-calibration-applied", applied, "the fitted calibration applied to held-out cases t07-t12 "
+             "with a calibrated_ece bound (PASS); calibration.json is the retained calibration input")):
+        add_dir(tree, "valid", name, files, note, eval_digests(files, extra_names), CALIBRATED_DOCUMENTS)
+
+    def rewrite_calibration(files, edit, rehash_input=False):
+        document = json.loads(files["calibration.json"])
+        edit(document)
+        files["calibration.json"] = compact(document).encode("utf-8")
+        report = json.loads(files["evaluation.json"])
+        report["calibration"]["sha256"] = sha(files["calibration.json"])
+        files["evaluation.json"] = compact(report).encode("utf-8")
+
+        def rehash(provenance):
+            if rehash_input:
+                provenance["inputs"]["calibration"]["sha256"] = sha(files["calibration.json"])
+
+        reseal_dir(files, rehash)
+
+    files = dict(fitted)
+    rewrite_calibration(files, lambda d: d["questions"]["refund"]["map"].update(y=[0.0, 0.25, 1.0, 1.0]))
+    add_dir(tree, "tampered", "evaluation-calibration-refit-differs", files,
+            "calibration.json refund map y changed from [0, 0, 1, 1] to [0, 0.25, 1, 1], and the calibration "
+            "hash in evaluation.json and provenance.json recomputed; refitting gives the original map",
+            None, CALIBRATED_DOCUMENTS)
+
+    files = dict(applied)
+    report = json.loads(files["evaluation.json"])
+    report["questions"]["refund"]["calibrated_ece"] = 0.01
+    files["evaluation.json"] = compact(report).encode("utf-8")
+    reseal_dir(files)
+    add_dir(tree, "tampered", "evaluation-calibrated-metric-edited-resealed", files,
+            "evaluation.json refund calibrated_ece changed to 0.01 and its provenance hash recomputed; "
+            "re-applying calibration.json disagrees", None, CALIBRATED_DOCUMENTS)
+
+    files = dict(applied)
+    rewrite_calibration(files, lambda d: d["fitted_on"].update(case_ids=sorted(d["fitted_on"]["case_ids"] + ["t07"])),
+                        rehash_input=True)
+    add_dir(tree, "invalid", "evaluation-calibration-overlap", files,
+            "held-out case t07 added to calibration.json fitted_on.case_ids, with every calibration hash "
+            "recomputed: a calibration fitted on a case of the evaluation it is applied to is refused",
+            None, CALIBRATED_DOCUMENTS)
+
 
 def generate():
     tree = Tree()
@@ -423,13 +500,17 @@ def require(condition, message):
 DIGEST_LINE = re.compile(rb"(- evaluation\.json SHA-256: `)[0-9a-f]{64}(`)")
 # Vectors whose provenance.json deliberately lists a hash that is not that of the committed file.
 STALE_BY_DESIGN = {"evaluation-markdown-edited": ("EVALUATION.md", lambda data: data[:-1])}
-# Every tampered and invalid evaluation vector is derived from this valid one by a named edit; only the
-# edits that change EVALUATION.md appear here, all others leave it byte-identical to the source.
+# Every tampered and invalid evaluation vector is derived from a valid one by a named edit: this one, or
+# its entry in SOURCE_VECTORS. Only the edits that change EVALUATION.md appear in MARKDOWN_EDITS; all
+# others leave it byte-identical to the source.
 SOURCE_VECTOR = "evaluation-replay-gated"
+SOURCE_VECTORS = {"evaluation-calibration-refit-differs": "evaluation-calibration-fitted",
+                  "evaluation-calibrated-metric-edited-resealed": "evaluation-calibration-applied",
+                  "evaluation-calibration-overlap": "evaluation-calibration-applied"}
 MARKDOWN_EDITS = {"evaluation-markdown-edited": lambda data: data + b"\n"}
 EVALUATION_RULE_FILES = ("evaluation.json", "EVALUATION.md", "provenance.json")
 KINDS = ("valid", "tampered", "invalid")
-EVALUATION_DIRECTORIES = 12
+EVALUATION_DIRECTORIES = 17
 
 
 def check_derived_hashes(name, directory, files):
@@ -534,15 +615,17 @@ def tree_differences(committed, fresh):
     # A directory with a file missing on either side is already reported above; its files cannot be paired.
     pairable = {key for key, files in directories.items()
                 if all(f"{key[0]}/{key[1]}/{f}" in committed and f"{key[0]}/{key[1]}/{f}" in fresh for f in files)}
-    source_key = ("valid", SOURCE_VECTOR)
+    sources = {("valid", name) for name in (SOURCE_VECTOR, *SOURCE_VECTORS.values())}
     covered = set()
-    if source_key not in pairable:
-        return problems + [f"{source_key[0]}/{source_key[1]} (the source vector of the evaluation edits)"], covered
+    missing = sorted(sources - pairable)
+    if missing:
+        return problems + [f"{kind}/{name} (the source vector of evaluation edits)" for kind, name in missing], covered
 
     def files_of(tree, key):
         return {f: tree[f"{key[0]}/{key[1]}/{f}"] for f in directories[key]}
 
     for key in sorted(pairable):
+        source_key = ("valid", SOURCE_VECTORS.get(key[1], SOURCE_VECTOR))
         try:
             for filename in compare_evaluation_directory(
                     key[0], key[1], files_of(committed, key), files_of(fresh, key),

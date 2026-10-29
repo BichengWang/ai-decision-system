@@ -96,6 +96,196 @@
       "note": "OpenAI Decisions list-format response; backend openai"
     },
     {
+      "path": "valid/evaluation-calibration-applied",
+      "expect": "valid",
+      "verify": {
+        "command": [
+          "jev-decision-verify",
+          "--evaluation",
+          "{path}"
+        ],
+        "exit_code": 0
+      },
+      "documents": [
+        {
+          "path": "evaluation.json",
+          "schema": "jevdecision/schema/evaluation.v3.json",
+          "schema_valid": true
+        },
+        {
+          "path": "provenance.json",
+          "schema": "jevdecision/schema/provenance.v3.json",
+          "schema_valid": true
+        },
+        {
+          "path": "calibration.json",
+          "schema": "jevdecision/schema/calibration.v1.json",
+          "schema_valid": true
+        }
+      ],
+      "digests": [
+        {
+          "document": "provenance.json",
+          "value": "/outputs/EVALUATION.md/sha256",
+          "canonicalization": "bytes",
+          "covers_file": "EVALUATION.md"
+        },
+        {
+          "document": "provenance.json",
+          "value": "/outputs/calibration.json/sha256",
+          "canonicalization": "bytes",
+          "covers_file": "calibration.json"
+        },
+        {
+          "document": "provenance.json",
+          "value": "/outputs/cases.jsonl/sha256",
+          "canonicalization": "bytes",
+          "covers_file": "cases.jsonl"
+        },
+        {
+          "document": "provenance.json",
+          "value": "/outputs/evaluation.json/sha256",
+          "canonicalization": "bytes",
+          "covers_file": "evaluation.json"
+        },
+        {
+          "document": "provenance.json",
+          "value": "/outputs/questions.json/sha256",
+          "canonicalization": "bytes",
+          "covers_file": "questions.json"
+        },
+        {
+          "document": "provenance.json",
+          "value": "/outputs/requirements.json/sha256",
+          "canonicalization": "bytes",
+          "covers_file": "requirements.json"
+        },
+        {
+          "document": "provenance.json",
+          "value": "/outputs/responses.jsonl/sha256",
+          "canonicalization": "bytes",
+          "covers_file": "responses.jsonl"
+        },
+        {
+          "document": "provenance.json",
+          "value": "/inputs/calibration/sha256",
+          "canonicalization": "bytes",
+          "covers_file": "calibration.json"
+        },
+        {
+          "document": "provenance.json",
+          "value": "/inputs/cases/sha256",
+          "canonicalization": "bytes",
+          "covers_file": "input-cases.jsonl"
+        },
+        {
+          "document": "provenance.json",
+          "value": "/inputs/questions/sha256",
+          "canonicalization": "bytes",
+          "covers_file": "questions.json"
+        },
+        {
+          "document": "provenance.json",
+          "value": "/inputs/requirements/sha256",
+          "canonicalization": "bytes",
+          "covers_file": "requirements.json"
+        },
+        {
+          "document": "provenance.json",
+          "value": "/inputs/responses/sha256",
+          "canonicalization": "bytes",
+          "covers_file": "input-responses.jsonl"
+        }
+      ],
+      "note": "the fitted calibration applied to held-out cases t07-t12 with a calibrated_ece bound (PASS); calibration.json is the retained calibration input"
+    },
+    {
+      "path": "valid/evaluation-calibration-fitted",
+      "expect": "valid",
+      "verify": {
+        "command": [
+          "jev-decision-verify",
+          "--evaluation",
+          "{path}"
+        ],
+        "exit_code": 0
+      },
+      "documents": [
+        {
+          "path": "evaluation.json",
+          "schema": "jevdecision/schema/evaluation.v3.json",
+          "schema_valid": true
+        },
+        {
+          "path": "provenance.json",
+          "schema": "jevdecision/schema/provenance.v3.json",
+          "schema_valid": true
+        },
+        {
+          "path": "calibration.json",
+          "schema": "jevdecision/schema/calibration.v1.json",
+          "schema_valid": true
+        }
+      ],
+      "digests": [
+        {
+          "document": "provenance.json",
+          "value": "/outputs/EVALUATION.md/sha256",
+          "canonicalization": "bytes",
+          "covers_file": "EVALUATION.md"
+        },
+        {
+          "document": "provenance.json",
+          "value": "/outputs/calibration.json/sha256",
+          "canonicalization": "bytes",
+          "covers_file": "calibration.json"
+        },
+        {
+          "document": "provenance.json",
+          "value": "/outputs/cases.jsonl/sha256",
+          "canonicalization": "bytes",
+          "covers_file": "cases.jsonl"
+        },
+        {
+          "document": "provenance.json",
+          "value": "/outputs/evaluation.json/sha256",
+          "canonicalization": "bytes",
+          "covers_file": "evaluation.json"
+        },
+        {
+          "document": "provenance.json",
+          "value": "/outputs/questions.json/sha256",
+          "canonicalization": "bytes",
+          "covers_file": "questions.json"
+        },
+        {
+          "document": "provenance.json",
+          "value": "/outputs/responses.jsonl/sha256",
+          "canonicalization": "bytes",
+          "covers_file": "responses.jsonl"
+        },
+        {
+          "document": "provenance.json",
+          "value": "/inputs/cases/sha256",
+          "canonicalization": "bytes",
+          "covers_file": "input-cases.jsonl"
+        },
+        {
+          "document": "provenance.json",
+          "value": "/inputs/questions/sha256",
+          "canonicalization": "bytes",
+          "covers_file": "questions.json"
+        },
+        {
+          "document": "provenance.json",
+          "value": "/inputs/responses/sha256",
+          "canonicalization": "bytes",
+          "covers_file": "input-responses.jsonl"
+        }
+      ],
+      "note": "isotonic calibration fitted on example cases t01-t06 (schema 3, UNGATED); the verifier refits calibration.json from responses.jsonl and cases.jsonl"
+    },
+    {
       "path": "valid/evaluation-live-failures",
       "expect": "valid",
       "verify": {
@@ -441,6 +631,66 @@
       "note": "response.answers.refund.noul changed from 0.08 to 0.8; record_sha256 left"
     },
     {
+      "path": "tampered/evaluation-calibrated-metric-edited-resealed",
+      "expect": "tampered",
+      "verify": {
+        "command": [
+          "jev-decision-verify",
+          "--evaluation",
+          "{path}"
+        ],
+        "exit_code": 1
+      },
+      "documents": [
+        {
+          "path": "evaluation.json",
+          "schema": "jevdecision/schema/evaluation.v3.json",
+          "schema_valid": true
+        },
+        {
+          "path": "provenance.json",
+          "schema": "jevdecision/schema/provenance.v3.json",
+          "schema_valid": true
+        },
+        {
+          "path": "calibration.json",
+          "schema": "jevdecision/schema/calibration.v1.json",
+          "schema_valid": true
+        }
+      ],
+      "note": "evaluation.json refund calibrated_ece changed to 0.01 and its provenance hash recomputed; re-applying calibration.json disagrees"
+    },
+    {
+      "path": "tampered/evaluation-calibration-refit-differs",
+      "expect": "tampered",
+      "verify": {
+        "command": [
+          "jev-decision-verify",
+          "--evaluation",
+          "{path}"
+        ],
+        "exit_code": 1
+      },
+      "documents": [
+        {
+          "path": "evaluation.json",
+          "schema": "jevdecision/schema/evaluation.v3.json",
+          "schema_valid": true
+        },
+        {
+          "path": "provenance.json",
+          "schema": "jevdecision/schema/provenance.v3.json",
+          "schema_valid": true
+        },
+        {
+          "path": "calibration.json",
+          "schema": "jevdecision/schema/calibration.v1.json",
+          "schema_valid": true
+        }
+      ],
+      "note": "calibration.json refund map y changed from [0, 0, 1, 1] to [0, 0.25, 1, 1], and the calibration hash in evaluation.json and provenance.json recomputed; refitting gives the original map"
+    },
+    {
       "path": "tampered/evaluation-file-missing",
       "expect": "tampered",
       "verify": {
@@ -683,6 +933,36 @@
         }
       ],
       "note": "schema_version changed to 3"
+    },
+    {
+      "path": "invalid/evaluation-calibration-overlap",
+      "expect": "invalid",
+      "verify": {
+        "command": [
+          "jev-decision-verify",
+          "--evaluation",
+          "{path}"
+        ],
+        "exit_code": 2
+      },
+      "documents": [
+        {
+          "path": "evaluation.json",
+          "schema": "jevdecision/schema/evaluation.v3.json",
+          "schema_valid": true
+        },
+        {
+          "path": "provenance.json",
+          "schema": "jevdecision/schema/provenance.v3.json",
+          "schema_valid": true
+        },
+        {
+          "path": "calibration.json",
+          "schema": "jevdecision/schema/calibration.v1.json",
+          "schema_valid": true
+        }
+      ],
+      "note": "held-out case t07 added to calibration.json fitted_on.case_ids, with every calibration hash recomputed: a calibration fitted on a case of the evaluation it is applied to is refused"
     },
     {
       "path": "invalid/evaluation-cases-unparseable",
