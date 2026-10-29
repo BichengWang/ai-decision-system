@@ -70,10 +70,11 @@ checker both run over every vector (see [Conformance vectors](#conformance-vecto
 | decision-control exported record | 1-3: `python-json-v1`; 4 and 5: `rfc8785`. `sha256` covers `/record`; `policy_sha256` covers the frozen `/record/policy`; schema 5 adds `external_policy_sha256` over `/record/external_policy` (a frozen OPA or Cedar decision, `null` when absent) | `ai-workflows/decision-control/decisioncontrol/schema/record.v1.json` to `record.v5.json` | `ai-workflows/decision-control/conformance/` | `decision-control replay --record <vector>` |
 | decision-control `evaluation.json` | 1: `python-json-v1`; 2: `rfc8785`. `sha256` covers `/report` | `ai-workflows/decision-control/decisioncontrol/schema/evaluation.v1.json`, `evaluation.v2.json` | `ai-workflows/decision-control/conformance/` | `decision-control replay-evaluation --record <vector>` |
 | Jev typed answer record | 1: no digest, no canonical form; 2: `rfc8785`. `record_sha256` covers the whole record without that member | `ai-workflows/jev-decision/jevdecision/schema/answer.v1.json`, `answer.v2.json` | `ai-workflows/jev-decision/conformance/` | `jev-decision-verify <vector>` |
-| Jev evaluation output directory | `evaluation.json` and `provenance.json` 2: no canonical form. `provenance.json` records the SHA-256 of exact input and output file bytes (`bytes`) | `ai-workflows/jev-decision/jevdecision/schema/evaluation.v2.json`, `provenance.v2.json` | `ai-workflows/jev-decision/conformance/` | `jev-decision-verify --evaluation <vector directory>` |
+| Jev evaluation output directory | `evaluation.json` and `provenance.json` 2, and 3 for runs that fit or apply a calibration: no canonical form. `provenance.json` records the SHA-256 of exact input and output file bytes (`bytes`); schema 3 adds input `calibration` and output `calibration.json` | `ai-workflows/jev-decision/jevdecision/schema/evaluation.v2.json`, `evaluation.v3.json`, `provenance.v2.json`, `provenance.v3.json` | `ai-workflows/jev-decision/conformance/` | `jev-decision-verify --evaluation <vector directory>` |
+| Jev `calibration.json` (inside a schema 3 evaluation directory) | 1: no canonical form, no digest of its own; pinned by the directory's `provenance.json`. `fitted_on` holds the SHA-256 of the fitting run's `cases.jsonl` and `responses.jsonl` and its case ids | `ai-workflows/jev-decision/jevdecision/schema/calibration.v1.json` | `ai-workflows/jev-decision/conformance/` | `jev-decision-verify --evaluation <vector directory>` (refits a fitted calibration, re-applies an applied one) |
 
 All vectors, in every language: `cd scripts/conformance && npm ci && node verify.mjs`
-(3 manifests and 180 vectors at the time of writing).
+(3 manifests and 185 vectors at the time of writing).
 Each project's own tests run its verifier over its vectors.
 
 The [project site](https://bichengwang.github.io/ai-decision-system/) serves every
@@ -210,7 +211,7 @@ nothing else.
 | decision-control exported record, schema 1-5 | the exported file, e.g. `record.json` | `.../predicate/decisioncontrol/record/v<N>` | `.../schema/decisioncontrol/record.v<N>.json` |
 | decision-control `evaluation.json`, schema 1 and 2 | `evaluation.json` | `.../predicate/decisioncontrol/evaluation/v<N>` | `.../schema/decisioncontrol/evaluation.v<N>.json` |
 | Jev answer record, schema 1 and 2 | the `--out` file | `.../predicate/jevdecision/answer/v<N>` | `.../schema/jevdecision/answer.v<N>.json` |
-| Jev evaluation directory | `provenance.json` (it pins every other file by hash), schema 2 | `.../predicate/jevdecision/provenance/v2` | `.../schema/jevdecision/provenance.v2.json` |
+| Jev evaluation directory | `provenance.json` (it pins every other file by hash), schema 2 and 3 | `.../predicate/jevdecision/provenance/v<N>` | `.../schema/jevdecision/provenance.v<N>.json` |
 
 **Files and flags.** The HMAC envelope is written next to the file as
 `<file>.dsse.json` (for example `decision.json.dsse.json`) and read from there unless

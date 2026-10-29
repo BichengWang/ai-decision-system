@@ -135,8 +135,9 @@ in the JSON Schema files shipped with each package (paths under
 | --- | --- |
 | expgate `decision.json` (3) | `experiment-gate/expgate/schema/decision.v3.json` |
 | Jev typed answer (2) | `jev-decision/jevdecision/schema/answer.v2.json` |
-| Jev `evaluation.json` (2) | `jev-decision/jevdecision/schema/evaluation.v2.json` |
-| Jev `provenance.json` (2) | `jev-decision/jevdecision/schema/provenance.v2.json` |
+| Jev `evaluation.json` (2; 3 with a calibration) | `jev-decision/jevdecision/schema/evaluation.v2.json`, `evaluation.v3.json` |
+| Jev `provenance.json` (2; 3 with a calibration) | `jev-decision/jevdecision/schema/provenance.v2.json`, `provenance.v3.json` |
+| Jev `calibration.json` (1) | `jev-decision/jevdecision/schema/calibration.v1.json` |
 | decision-control exported record (4: `record` + `sha256`) | `decision-control/decisioncontrol/schema/record.v4.json` |
 | decision-control `evaluation.json` (2: `report` + `sha256`) | `decision-control/decisioncontrol/schema/evaluation.v2.json` |
 

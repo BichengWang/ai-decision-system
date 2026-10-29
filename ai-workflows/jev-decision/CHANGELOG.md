@@ -7,8 +7,8 @@ This project uses [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
 ### Compatibility and upgrading
 
-Breaking for scripts that parse the `jev-decision` command's standard output; the Python API and the
-evaluation record schema numbers are unchanged.
+Breaking for scripts that parse the `jev-decision` command's standard output; the Python API is unchanged,
+and evaluations without a calibration keep their schema numbers.
 
 - **`jev-decision` prints a different record by default.** It writes an answer record of
   `schema_version: 2` as RFC 8785 canonical JSON: it embeds the `questions` and the raw provider `response`
@@ -25,7 +25,8 @@ evaluation record schema numbers are unchanged.
 - **Replay tolerance.** Recomputed metric floats compare with a relative tolerance of 1e-9; everything else
   compares exactly.
 - **Unchanged:** Python 3.11 or later, no runtime dependencies, `DecisionModel` and the question and answer
-  types, evaluation and provenance `schema_version: 2`, `jev-decision-eval` options.
+  types, evaluation and provenance `schema_version: 2` for runs without a calibration, and every 0.1.0
+  `jev-decision-eval` option.
 
 ### Added
 - `jev-decision-verify answer.json` re-parses the embedded raw provider response with the embedded question
@@ -59,6 +60,16 @@ evaluation record schema numbers are unchanged.
   (exit 1 and the differing paths on stderr; evaluation `evaluation.json` floats compare with the
   verifier's 1e-9 tolerance, so a tree generated on another platform passes), `--out DIR` writes or checks
   another directory, and unknown arguments exit 2. Run without arguments it still rewrites the tree.
+- Calibration (`jevdecision/calibration.py`): `jev-decision-eval --fit-calibration isotonic|platt` fits one
+  monotone map per question on the run's labeled cases (Noul: probability of yes; Choice and Score:
+  probability of the chosen answer) and writes `calibration.json` (schema 1) with the SHA-256 of the
+  run's `cases.jsonl` and `responses.jsonl` and its case ids. `--calibration FILE` applies it to other cases
+  and adds `calibrated_brier`, `calibrated_log_loss` and `calibrated_ece` (Noul) or `calibrated_ece`
+  (Choice, Score), which requirements can bound; a file fitted on any of the run's case ids exits 2. Both
+  write `evaluation.json` and `provenance.json` schema 3 (signed as predicate `provenance/v3`), and
+  `jev-decision-verify --evaluation` refits or re-applies the calibration. `calibration.load()` applies a
+  calibration outside an evaluation. JSON Schemas `evaluation.v3.json`, `provenance.v3.json` and
+  `calibration.v1.json`; five conformance vectors (two valid, two tampered, one invalid).
 
 ### Changed
 - `jev-decision` prints schema 2 answer records by default (see Compatibility and upgrading).

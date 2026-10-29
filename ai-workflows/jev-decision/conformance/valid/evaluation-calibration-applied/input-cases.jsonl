@@ -1,0 +1,6 @@
+{"id": "t07", "state": "We'd like to upgrade from Team to Business before the next billing cycle.", "labels": {"refund": false, "department": "sales", "frustration": "Calm"}}
+{"id": "t08", "state": "Third time writing. Cancel my subscription and refund every cent or I am calling my bank.", "labels": {"refund": true, "department": "billing", "frustration": "Very angry"}}
+{"id": "t09", "state": "The SDK throws a timeout when uploading files over 2 GB.", "labels": {"refund": false, "department": "technical", "frustration": "Calm"}}
+{"id": "t10", "state": "Do you offer a discount for nonprofits? If not, I'd want a refund of my trial upgrade.", "labels": {"refund": true, "department": "sales", "frustration": "Calm"}}
+{"id": "t11", "state": "Login has been broken for two days and support hasn't answered.", "labels": {"refund": false, "department": "technical", "frustration": "Frustrated"}}
+{"id": "t12", "state": "Your price increase is outrageous. Downgrade me and refund the difference.", "labels": {"refund": true, "department": "billing", "frustration": "Very angry"}}

@@ -27,7 +27,8 @@ except ImportError:  # dev-only dependency; CI installs the pin from requirement
 COMPONENT = Path(__file__).resolve().parents[1]
 CONFORMANCE = COMPONENT / "conformance"
 MANIFEST = json.loads((CONFORMANCE / "manifest.json").read_text(encoding="utf-8"))
-SCHEMAS = ("answer.v1.json", "answer.v2.json", "evaluation.v2.json", "provenance.v2.json")
+SCHEMAS = ("answer.v1.json", "answer.v2.json", "evaluation.v2.json", "evaluation.v3.json", "provenance.v2.json",
+           "provenance.v3.json", "calibration.v1.json")
 EXIT_CODES = {"valid": 0, "tampered": 1, "invalid": 2}
 EXAMPLES = COMPONENT / "examples"
 SCHEMA_ID_BASE = "https://github.com/BichengWang/ai-decision-system/schema/jevdecision/"
@@ -375,6 +376,20 @@ class SchemaTests(unittest.TestCase):
                                "--out", str(out_dir), *extra])
                 for filename, schema in (("evaluation.json", "evaluation.v2.json"),
                                          ("provenance.json", "provenance.v2.json")):
+                    self.validator(schema).validate(json.loads((out_dir / filename).read_text(encoding="utf-8")))
+            # A Platt fit and its application (the committed vectors are isotonic).
+            fitted, applied = Path(tmp) / "fitted", Path(tmp) / "applied"
+            for out_dir, cases, extra in ((fitted, "valid/evaluation-calibration-fitted", ["--fit-calibration", "platt"]),
+                                          (applied, "valid/evaluation-calibration-applied",
+                                           ["--calibration", str(fitted / "calibration.json")])):
+                with redirect_stdout(io.StringIO()), redirect_stderr(io.StringIO()):
+                    eval_main(["--questions", str(EXAMPLES / "support-ticket.json"),
+                               "--cases", str(CONFORMANCE / cases / "input-cases.jsonl"),
+                               "--responses", str(CONFORMANCE / cases / "input-responses.jsonl"),
+                               "--out", str(out_dir), *extra])
+                for filename, schema in (("evaluation.json", "evaluation.v3.json"),
+                                         ("provenance.json", "provenance.v3.json"),
+                                         ("calibration.json", "calibration.v1.json")):
                     self.validator(schema).validate(json.loads((out_dir / filename).read_text(encoding="utf-8")))
         self.assertEqual(len(questions_from_spec(spec)), 3)
 

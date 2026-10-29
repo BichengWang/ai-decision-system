@@ -19,7 +19,7 @@ from . import signing
 
 PREDICATE_BASE = "https://github.com/BichengWang/ai-decision-system/predicate/jevdecision/"
 SCHEMA_BASE = "https://github.com/BichengWang/ai-decision-system/schema/jevdecision/"
-SUPPORTED = {"answer": (1, 2), "provenance": (2,)}
+SUPPORTED = {"answer": (1, 2), "provenance": (2, 3)}
 ENVELOPE_SUFFIX = ".dsse.json"
 BUNDLE_SUFFIX = ".sigstore.json"
 PROVENANCE = "provenance.json"
@@ -35,9 +35,19 @@ def predicate(kind: str, version: int) -> dict[str, str]:
 
 def answer_version(record: Any) -> int:
     """Schema version of an answer record; anything unsupported is an input error (ValueError)."""
+    return _version(record, "answer", "answer record")
+
+
+def provenance_version(record: Any) -> int:
+    """Schema version of an evaluation directory's provenance.json; unsupported is a ValueError."""
+    return _version(record, "provenance")
+
+
+def _version(record: Any, kind: str, label: str = "provenance") -> int:
     version = record.get("schema_version") if isinstance(record, dict) else None
-    if type(version) is not int or version not in SUPPORTED["answer"]:
-        raise ValueError("unsupported answer record schema_version; expected 1 or 2")
+    if type(version) is not int or version not in SUPPORTED[kind]:
+        raise ValueError(f"unsupported {label} schema_version; expected "
+                         + " or ".join(str(supported) for supported in SUPPORTED[kind]))
     return version
 
 

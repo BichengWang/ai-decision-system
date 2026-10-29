@@ -30,6 +30,12 @@ A case whose request or response fails counts as an error, not as a wrong answer
 Each run also writes `cases.jsonl`, one row per case with every labeled question's expected
 and predicted answer (or the case's error), and EVALUATION.md lists the incorrect answers.
 
+Calibration (see `jevdecision.calibration`): `--fit-calibration isotonic|platt` fits one map per
+question on this run's labeled cases and writes `calibration.json`; `--calibration FILE` applies such
+a file to a run on other cases and adds `calibrated_*` metrics, which requirements can bound. Both
+write `evaluation.json` and `provenance.json` schema 3 (with a `calibration` member and input);
+runs without calibration write schema 2.
+
 Command line: exit 0 for PASS, 1 for FAIL/provider errors, 2 for invalid input,
 and 3 for UNGATED (no explicit question metric bounds). CLI runs also write provenance.json
 with exact input and output file SHA-256 hashes, separately from evaluation metrics, and a
@@ -55,7 +61,7 @@ from dataclasses import dataclass
 from pathlib import Path
 from statistics import NormalDist
 
-from . import __version__, attestation, signing
+from . import __version__, attestation, calibration as calibrators, signing
 from .backends import BACKENDS, _check_state, create_backend
 from .errors import APIError, DatasetError, DecisionError, ResponseError
 from .answers import RefusalAnswer
@@ -179,7 +185,7 @@ def load_requirements(spec, questions):
     for name, metrics in per_question.items():
         if name not in by_name:
             raise DatasetError(f"requirements: unknown question {name!r}")
-        allowed = METRICS[by_name[name].type]
+        allowed = METRICS[by_name[name].type] + calibrators.CALIBRATED_METRICS[by_name[name].type]
         if not isinstance(metrics, dict) or not metrics:
             raise DatasetError(f"requirements {name!r}: expected an object of metric bounds")
         for metric, bounds in metrics.items():
@@ -289,8 +295,26 @@ def _score_metrics(question, pairs):
     }
 
 
-def score_answers(questions, cases, answers):
-    """Metrics per question. `answers` maps case id to {question name: answer} for answered cases."""
+def _calibrated_metrics(question, cases, answers, calibration):
+    """Held-out metrics of the calibrated probabilities; None where the question has no calibrator,
+    a refusal, or an answer without the probability its raw `ece` needs."""
+    metrics = dict.fromkeys(calibrators.CALIBRATED_METRICS[question.type])
+    refused = any(isinstance(answers[case.id][question.name], RefusalAnswer)
+                  for case in cases if case.id in answers and question.name in case.labels)
+    pairs = None if refused or question.name not in calibration else \
+        calibrators.labeled_pairs(question, cases, answers)
+    if pairs:
+        pairs = [(calibration.calibrate(question.name, p), y) for p, y in pairs]
+        metrics["calibrated_ece"] = expected_calibration_error(pairs)
+        if isinstance(question, Noul):
+            metrics["calibrated_brier"] = _mean([(p - y) ** 2 for p, y in pairs])
+            metrics["calibrated_log_loss"] = _mean([_log_loss(p if y else 1 - p) for p, y in pairs])
+    return metrics
+
+
+def score_answers(questions, cases, answers, calibration=None):
+    """Metrics per question. `answers` maps case id to {question name: answer} for answered cases;
+    with a `calibration.Calibration`, every question also gets its `calibrated_*` metrics."""
     report = {}
     for question in questions:
         pairs = [(answers[case.id][question.name], case.labels[question.name])
@@ -312,6 +336,8 @@ def score_answers(questions, cases, answers):
             if isinstance(question, Noul):
                 metrics["base_rate"] = _mean([float(y) for _, y in pairs])
         metrics.update(n=len(pairs), refusals=refusals, refusal_rate=refusals / len(pairs) if pairs else None)
+        if calibration is not None:
+            metrics.update(_calibrated_metrics(question, cases, answers, calibration))
         report[question.name] = {"type": question.type, **metrics}
     return report
 
@@ -394,15 +420,17 @@ def run_live(backend, questions, cases, progress=None):
     return answers, raw, errors
 
 
-def evaluate(questions, cases, answers, errors, requirements=None):
-    """Apply validated bounds: FAIL on a failed check, otherwise PASS only with question bounds."""
+def evaluate(questions, cases, answers, errors, requirements=None, calibration=None):
+    """Apply validated bounds: FAIL on a failed check, otherwise PASS only with question bounds.
+
+    A bound on a `calibrated_*` metric fails unless `calibration` measured it."""
     max_error_rate, checks = load_requirements({} if requirements is None else requirements, questions)
-    metrics = score_answers(questions, cases, answers)
+    metrics = score_answers(questions, cases, answers, calibration)
     error_rate = len(errors) / len(cases)
     results = [{"check": "error_rate", "bound": "max", "limit": max_error_rate, "value": error_rate,
                 "pass": error_rate <= max_error_rate}]
     for name, metric, bound, limit in checks:
-        value = metrics[name][metric]
+        value = metrics[name].get(metric)
         ok = value is not None and (value >= limit if bound == "min" else value <= limit)
         results.append({"check": f"{name}.{metric}", "bound": bound, "limit": limit, "value": value, "pass": ok})
     return {
@@ -438,8 +466,17 @@ def render_markdown(report, digest, cases=None):
     if report["source"] == "replay":
         lines.insert(4, "- Replay origin is unverified; response model fields are supplied metadata, "
                      "not proof of provider output.\n")
+    calibration = report.get("calibration")
+    if calibration and calibration["role"] == "fitted":
+        lines.insert(4, f"- Calibration fitted ({calibration['method']}) on these cases: calibration.json SHA-256 "
+                     f"`{calibration['sha256']}`. Only a run on other cases with `--calibration` measures it.\n")
+    elif calibration:
+        lines.insert(4, f"- Calibration applied ({calibration['method']}): calibration.json SHA-256 "
+                     f"`{calibration['sha256']}`, fitted on other cases; `calibrated_*` metrics are held out.\n")
     for name, metrics in report["questions"].items():
-        shown = ", ".join(f"{key} {_fmt(metrics[key])}" for key in METRICS[metrics["type"]][1:])
+        keys = METRICS[metrics["type"]][1:] + tuple(
+            key for key in calibrators.CALIBRATED_METRICS[metrics["type"]] if key in metrics)
+        shown = ", ".join(f"{key} {_fmt(metrics[key])}" for key in keys)
         lines.append(f"| {name} | {metrics['type']} | {metrics['n']} | {shown} |")
     lines += ["\n| Requirement | Bound | Value | Result |", "|---|---|---:|---|"]
     for result in report["requirements"]:
@@ -465,18 +502,28 @@ def _write_jsonl(path, rows):
     path.write_text("".join(line + "\n" for line in lines), encoding="utf-8")
 
 
-def _write_records(report, raw, out, cases=None, preserve_streams=False):
-    """Write evaluation.json (sorted keys), EVALUATION.md, the raw responses as JSON Lines, and,
-    when `cases` (from `case_results`) is given, the per-case results as cases.jsonl."""
-    out.mkdir(parents=True, exist_ok=True)
+def _write_report(report, out, cases=None):
+    """Write evaluation.json (sorted keys) and EVALUATION.md; return evaluation.json's SHA-256."""
     blob = json.dumps(report, sort_keys=True, separators=(",", ":"), ensure_ascii=False).encode("utf-8")
     digest = hashlib.sha256(blob).hexdigest()
     (out / "evaluation.json").write_bytes(blob)
     (out / "EVALUATION.md").write_text(render_markdown(report, digest, cases), encoding="utf-8")
+    return digest
+
+
+def _write_streams(raw, out, cases=None, preserve_streams=False):
+    """Write the raw responses as JSON Lines and, when `cases` (from `case_results`) is given, the
+    per-case results as cases.jsonl; with `preserve_streams`, keep files a live run already wrote."""
     if not preserve_streams or not (out / "responses.jsonl").exists():
         _write_jsonl(out / "responses.jsonl", ({"id": case_id, "response": response} for case_id, response in raw.items()))
     if cases is not None and (not preserve_streams or not (out / "cases.jsonl").exists()):
         _write_jsonl(out / "cases.jsonl", cases)
+
+
+def _write_records(report, raw, out, cases=None, preserve_streams=False):
+    out.mkdir(parents=True, exist_ok=True)
+    digest = _write_report(report, out, cases)
+    _write_streams(raw, out, cases, preserve_streams)
     return digest
 
 
@@ -520,20 +567,32 @@ def main(argv=None):
     parser.add_argument("--base-url", help="provider or gateway base URL for a live run")
     parser.add_argument("--path", help="endpoint path for a live run")
     parser.add_argument("--timeout", type=positive_seconds, default=30.0, help="seconds for a live run (default: 30)")
+    calibration_flags = parser.add_mutually_exclusive_group()
+    calibration_flags.add_argument("--fit-calibration", choices=calibrators.METHODS, metavar="METHOD",
+                                   help="fit a calibrator per question on these cases (isotonic or platt) and "
+                                        "write OUT/calibration.json")
+    calibration_flags.add_argument("--calibration", type=Path, metavar="FILE",
+                                   help="calibration.json fitted on other cases; adds calibrated_* metrics")
     args = parser.parse_args(sys.argv[1:] if argv is None else argv)
 
     if args.out.exists() and (not args.out.is_dir() or any(args.out.iterdir())):
         parser.error("--out must be a new path or an existing empty directory")
+    calibrating = args.fit_calibration is not None or args.calibration is not None
+    schema_version = 3 if calibrating else 2
     staging = None
     try:
         key = signing.load_key(args.sign_key) if args.sign_key is not None else None  # before any work
         inputs = {name: path.read_bytes() if path else None for name, path in (
             ("questions", args.questions), ("cases", args.cases),
-            ("requirements", args.require), ("responses", args.responses))}
+            ("requirements", args.require), ("responses", args.responses),
+            *((("calibration", args.calibration),) if calibrating else ()))}
         questions = check_question_set(questions_from_spec(json.loads(inputs["questions"].decode("utf-8"))))
         cases = load_cases(inputs["cases"].decode("utf-8"), questions)
         requirements = json.loads(inputs["requirements"].decode("utf-8")) if args.require else {}
         load_requirements(requirements, questions)
+        calibration = calibrators.load(inputs["calibration"]) if args.calibration else None
+        if calibration is not None:
+            calibration.check_applicable(questions, cases)
         backend = create_backend(args.backend, model=args.model, base_url=args.base_url,
                                  path=args.path, timeout=args.timeout)
         if args.responses:
@@ -562,23 +621,36 @@ def main(argv=None):
         return 2 if isinstance(error, APIError) and error.status in (401, 403) else 1
 
     models = sorted({str(r.get("model")) for r in raw.values() if isinstance(r, dict) and r.get("model")})
-    report = {"schema_version": 2, "produced_by": {"name": "jevdecision", "version": __version__},
+    producer = {"name": "jevdecision", "version": __version__}
+    report = {"schema_version": schema_version, "produced_by": producer,
               "jevdecision_version": __version__, "backend": backend.name,
               "model": ", ".join(models) or backend.model,
               "source": "replay" if args.responses else "live",
-              **evaluate(questions, cases, answers, errors, requirements)}
+              **evaluate(questions, cases, answers, errors, requirements, calibration)}
     try:
         if staging is None:
             args.out.parent.mkdir(parents=True, exist_ok=True)
             staging = Path(tempfile.mkdtemp(prefix=f".{args.out.name}-", dir=args.out.parent))
-        digest = _write_records(report, raw, staging, case_results(questions, cases, answers, errors),
-                                preserve_streams=not args.responses)
-        retained = {"questions": "questions.json", "requirements": "requirements.json"}
+        rows = case_results(questions, cases, answers, errors)
+        _write_streams(raw, staging, rows, preserve_streams=not args.responses)
+        retained = {"questions": "questions.json", "requirements": "requirements.json",
+                    "calibration": calibrators.FILENAME}
         for role, filename in retained.items():
-            if inputs[role] is not None:
+            if inputs.get(role) is not None:
                 (staging / filename).write_bytes(inputs[role])
+        if args.fit_calibration:
+            basis = calibrators.fitted_on((staging / "cases.jsonl").read_bytes(),
+                                          (staging / "responses.jsonl").read_bytes(), cases)
+            (staging / calibrators.FILENAME).write_bytes(calibrators.dumps(
+                calibrators.fit(args.fit_calibration, questions, cases, answers, basis, producer)))
+        if calibrating:
+            report["calibration"] = {
+                "role": "fitted" if args.fit_calibration else "applied",
+                "method": args.fit_calibration or calibration.method,
+                "sha256": hashlib.sha256((staging / calibrators.FILENAME).read_bytes()).hexdigest()}
+        digest = _write_report(report, staging, rows)
         provenance = {
-            "schema_version": 2,
+            "schema_version": schema_version,
             "produced_by": {"name": "jevdecision", "version": __version__},
             "response_mode": report["source"],
             "response_origin": ("unverified: supplied replay responses may be hand-written; model fields "
@@ -588,17 +660,19 @@ def main(argv=None):
                        for name, blob in inputs.items()},
             "outputs": {name: {"sha256": hashlib.sha256((staging / name).read_bytes()).hexdigest()}
                         for name in ("evaluation.json", "EVALUATION.md", "responses.jsonl", "cases.jsonl",
-                                     *(filename for role, filename in retained.items() if inputs[role] is not None))},
+                                     *(filename for role, filename in retained.items()
+                                       if inputs.get(role) is not None),
+                                     *((calibrators.FILENAME,) if args.fit_calibration else ()))},
         }
         (staging / "provenance.json").write_text(
             json.dumps(provenance, sort_keys=True, separators=(",", ":"), ensure_ascii=False), encoding="utf-8")
         if key is not None:
             envelope = attestation.sign_bytes((staging / "provenance.json").read_bytes(), "provenance.json",
-                                              "provenance", 2, key)
+                                              "provenance", schema_version, key)
             (staging / ("provenance.json" + attestation.ENVELOPE_SUFFIX)).write_text(
                 attestation.render_envelope(envelope), encoding="utf-8")
         os.replace(staging, args.out)
-    except OSError as error:
+    except (OSError, ValueError) as error:  # ValueError: DatasetError from fitting a calibration
         print(f"error: {error}", file=sys.stderr)
         return 2
     print(f"{report['status']} {digest}")
