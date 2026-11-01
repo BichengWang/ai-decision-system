@@ -21,6 +21,13 @@ tracking issue once 0.2.0 is on PyPI.
 is **not a target**: its [CONTRIBUTING.md](https://github.com/EthicalML/awesome-production-machine-learning/blob/master/CONTRIBUTING.md)
 requires at least 500 GitHub stars per tool.
 
+Follow-up post, separate from the launch and not gated on a milestone:
+[`calibration-medium.md`](calibration-medium.md),
+[`calibration-linkedin.md`](calibration-linkedin.md) and
+[`calibration-x.md`](calibration-x.md) (a thread for X) cover probability calibration in
+`jev-decision-eval` (#293), with the run behind every number. None has been posted;
+publish the Medium story first, since the other two link it.
+
 ## Trigger
 
 [`milestones.json`](milestones.json) lists the milestones that start outreach;
@@ -263,6 +270,9 @@ posted creates neither a new discussion nor another log row.
 | 2026-10-22 | LinkedIn | [part 3](https://www.linkedin.com/feed/update/urn:li:activity:7519137578223050752/) | [ ] | [ ] | [ ] | Links Medium part 3 |
 | 2026-10-22 | LinkedIn | [part 4](https://www.linkedin.com/feed/update/urn:li:activity:7519137826282790912/) | [ ] | [ ] | [ ] | Links Medium part 4 |
 | 2026-10-22 | LinkedIn | [part 5](https://www.linkedin.com/feed/update/urn:li:activity:7519138065618120704/) | [ ] | [ ] | [ ] | Links Medium part 5 |
+| [YYYY-MM-DD] | Medium | [url] | [ ] | [ ] | [ ] | Calibration follow-up ([draft](calibration-medium.md)); not the 0.2.0 launch |
+| [YYYY-MM-DD] | LinkedIn | [url] | [ ] | [ ] | [ ] | Calibration follow-up ([draft](calibration-linkedin.md)); links the Medium post |
+| [YYYY-MM-DD] | X | [url] | [ ] | [ ] | [ ] | Calibration follow-up ([draft](calibration-x.md)); thread from @BichengW81192, links the Medium post |
 | [YYYY-MM-DD] | Hacker News (Show HN) | [url] | [ ] | [ ] | [ ] | [ ] |
 | [YYYY-MM-DD] | r/MachineLearning `[P]` | [url] | [ ] | [ ] | [ ] | [ ] |
 | [YYYY-MM-DD] | r/mlops | [url] | [ ] | [ ] | [ ] | [ ] |
