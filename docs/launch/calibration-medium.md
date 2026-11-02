@@ -1,67 +1,64 @@
-# Medium story: calibration follow-up
+# Medium story: calibration milestone
 
-Published on 2026-11-01 (U.S. Pacific; `article:published_time` 2026-11-02T06:42:31Z) as
-[Two Calibrators, Six Cases, Opposite Verdicts](https://medium.com/@bichengwang17/two-calibrators-six-cases-opposite-verdicts-27eee2999a26),
-from the Story section below as written, without the kicker. It is a follow-up to the
-2026-10-22 "Decisions you can replay" series, not the 0.2.0 launch post in
-[`medium.md`](medium.md), and it covers one feature: probability calibration in
-`jev-decision-eval` ([#293](https://github.com/BichengWang/ai-decision-system/pull/293)).
-Every number in the story comes from the [run below](#the-run-as-made).
-
-The AI-assistance line is the story's third paragraph. Medium's
-[AI content policy](https://help.medium.com/hc/en-us/articles/22576852947223-Artificial-Intelligence-AI-content-policy)
-asks for it within the first two, so move it above "So I added calibration" in the
-published story. The story reads in full logged out, and subscribers were notified.
+Published on 2026-11-01 (U.S. Pacific; `article:published_time` 2026-11-02T06:42:31Z) at
+[medium.com/@bichengwang17/…-27eee2999a26](https://medium.com/@bichengwang17/two-calibrators-six-cases-opposite-verdicts-27eee2999a26),
+first as "Two Calibrators, Six Cases, Opposite Verdicts". On 2026-11-02 the story, title,
+subtitle and cover were replaced by the ones below, without the kicker, so it announces
+the milestone; the run's analysis moved to [Run notes](#run-notes-repo-only). The URL
+slug keeps the first title. It is a follow-up to the 2026-10-22 "Decisions you can
+replay" series, not the 0.2.0 launch post in [`medium.md`](medium.md), and covers
+probability calibration in `jev-decision-eval`
+([#293](https://github.com/BichengWang/ai-decision-system/pull/293)). Every output in the
+story comes from the [run below](#the-run-as-made).
 
 ## Headline
 
 ```text
 KICKER:   Decisions you can replay
-TITLE:    Two Calibrators, Six Cases, Opposite Verdicts
-SUBTITLE: I added confidence calibration to my AI decision records. The held-out run, not the fit, decided whether a threshold could trust it.
+TITLE:    My AI Decision Records Now Calibrate Model Confidence
+SUBTITLE: jev-decision-eval fits a calibration on one labeled set, gates on held-out cases, and keeps both runs as records anyone can verify.
 ```
 
-Alternative titles, same story: "A Perfect Calibration Score From Six Cases Is a
-Warning"; "Your Model Says 0.95. Who Measured That?"
-
 Cover: [`calibration-cover.png`](calibration-cover.png), lines copied from the run below.
-Alt text: "Terminal output: with a calibration fitted on six support tickets and measured
-on six held-out tickets, isotonic passes a refund calibrated ECE gate of 0.15 and Platt
-fails it at 0.2544, followed by each held-out ticket's raw, isotonic and Platt refund
-probability."
+Alt text: "Terminal output: jev-decision-eval fits an isotonic calibration on six support
+tickets, applies it to six held-out tickets and passes a refund calibrated ECE gate of
+0.15 at 0.1139; jev-decision-verify then prints verified for both runs."
 
 Tags: Machine Learning, MLOps, AI Governance, Python, Open Source.
 
 ## Story
 
 A model answers "yes, refund this customer" with probability 0.95, and a policy acts on
-anything above 0.9. That threshold means something only if answers at 0.95 are right
-about 95% of the time. No provider promises that, and my own tools had been passing
-those numbers straight into thresholds.
-
-So I added calibration to `jev-decision-eval`: fit a monotone map on one labeled set,
-measure it on another, and keep both runs as records someone else can recompute. The
-first run surprised me. Fitted on the same six cases, isotonic regression passed my gate
-on held-out data and Platt scaling failed it.
+anything above 0.9. That threshold works when answers at 0.95 are right about 95% of the
+time. As of this week, `jev-decision-eval` can calibrate those probabilities and keep
+the proof: probability calibration has landed in ai-decision-system.
 
 This article was drafted with the help of an AI writing assistant. The commands and
-numbers come from a run on 2026-11-01 at commit `682f382`, recorded in full in the
-repository. The model answers in it are hand-written fixtures, not output from any model.
+outputs come from a run on 2026-11-01 at commit `682f382`, on the repository's bundled
+support-ticket example.
 
 A follow-up to *Decisions you can replay*, a five-part series on records for
 AI-assisted go/no-go decisions.
 
-### The setup
+### What shipped
+
+- **Two standard methods.** Isotonic regression and Platt scaling, picked with one flag:
+  `--fit-calibration isotonic` or `--fit-calibration platt`.
+- **Fit on one set, measure on another.** Calibrated ECE, Brier score and log loss are
+  reported on held-out cases, where they mean something.
+- **Gates on calibrated scores.** One line of JSON sets the bar, for example a refund
+  calibrated ECE of at most 0.15.
+- **Leak protection built in.** A calibration applied to any case it was fitted on is
+  refused.
+- **Records anyone can recompute.** `calibration.json` keeps the method, each map and the
+  SHA-256 of the data it was fitted on. `jev-decision-verify` refits it, re-applies it and
+  catches a hand-edited score.
+
+### Two commands
 
 [jev-decision](https://github.com/BichengWang/ai-decision-system/tree/682f382/ai-workflows/jev-decision)
-asks a model typed questions and records the answer. Its bundled example has 12 support
-tickets and three questions: should we refund (yes or no, with a probability), which
-department (a choice, with a probability per option) and how frustrated the customer is
-(a level on a scale). Every ticket is labeled for all three.
-
-I split the example in half. Tickets t01 to t06 fit the calibration; t07 to t12 are held
-out. The gate is one line of JSON: at least six refund cases, and a calibrated expected
-calibration error (ECE) of at most 0.15.
+asks a model typed questions and records the answers. Its bundled example has 12 labeled
+support tickets. Fit on the first six, then gate on the other six:
 
 ```text
 jev-decision-eval --questions $E/support-ticket.json \
@@ -73,101 +70,24 @@ jev-decision-eval --questions $E/support-ticket.json \
   --calibration fit-isotonic/calibration.json --require gate.json --out held-isotonic
 ```
 
-The fitting run reports no calibrated metrics at all. Scored on the cases it was fitted
-on, a calibrator looks better than it is, so the tool measures it only on cases it has
-not seen.
-
-### What the held-out run said
-
-Same six fitting cases, same six held-out cases, two methods. Lower is better in every
-row.
-
 ```text
-Held-out metric              Raw      Isotonic   Platt
-refund ECE                   0.145    0.1139     0.2544
-refund Brier                 0.06348  0.0697     0.095
-refund log loss              0.1996   0.1793     0.3298
-department ECE               0.105    0.1667     0.04167
-frustration ECE              0.2917   0          0.125
-Gate: refund ECE <= 0.15              PASS       FAIL
+PASS 9562afb6a4868ff9bf0ade8ce212523217d41e89af444e3cc3bc5f572a9e283b
+| refund.calibrated_ece | max 0.15 | 0.1139 | pass |
 ```
 
-No method won every row. Isotonic improved refund ECE and log loss but made refund Brier
-and department ECE worse. Platt made all three refund metrics worse and improved the other
-two questions.
-
-The refund probabilities, ticket by ticket, show why:
+Anyone holding the two directories can check them:
 
 ```text
-Ticket  Label  Raw    Isotonic  Platt
-t07     no     0.06   0.0       0.165
-t08     yes    0.97   1.0       0.814
-t09     no     0.02   0.0       0.101
-t10     yes    0.40   0.354     0.389
-t11     no     0.04   0.0       0.138
-t12     yes    0.88   0.962     0.676
+fit-isotonic: verified
+held-isotonic: verified
 ```
 
-Platt fits `sigmoid(a * logit(p) + b)` to smoothed targets. With two refunds and four
-non-refunds in the fitting set, those targets are 3/4 and 1/6 instead of 1 and 0, so the
-fitted slope came out at about 0.5 and pulled every confident answer toward the middle:
-0.97 became 0.814. The raw answers on these six tickets were mostly right and confident,
-so squeezing them cost more than it fixed.
+The held-out run records the hash of the calibration it applied, so the two runs stay
+linked.
 
-Isotonic went the other way. Its step map sends anything at or below 0.12 to 0 and
-anything at or above 0.91 to 1, which happened to suit these six tickets.
+### Use it where the decision is made
 
-### Six cases cannot pick a method
-
-Niculescu-Mizil and Caruana compared the two methods on eight problems and found that
-"when the calibration set is small (less than about 200-1000 cases), Platt Scaling
-outperforms Isotonic Regression"
-([ICML 2005](https://icml.cc/Conferences/2005/proceedings/papers/079_GoodProbabilities_NiculescuMizilCaruana.pdf)).
-Six held-out tickets do not overturn that. Five of six refund answers were right, and the
-95% Wilson interval on that accuracy runs from 0.44 to 0.97. One ticket, t10 (a nonprofit
-asking for a discount, and for a refund if there is none), carries much of every metric
-in the table.
-
-The run supports a narrower claim: which method passes my gate is a fact about these
-cases, and I learn it only by measuring on cases the fit never saw.
-
-### The perfect zero
-
-Isotonic scored a calibrated ECE of exactly 0 on frustration. I trust that number least.
-
-All six fitting answers for frustration were correct, so isotonic learned a flat map:
-every answer gets probability 1.0. The six held-out answers were also all correct, so a
-calibrator that says "always right" was perfectly calibrated on them. On department the
-same flat map met one wrong held-out answer (t10 again), and ECE rose from 0.105 to
-0.1667. Platt, given the same all-correct fitting set, returned a constant 0.875, its
-smoothed hit rate of 7/8.
-
-The score was perfect because the held-out set contained nothing that could fail. A
-threshold on that frustration probability would pass every answer. A gate needs a bound
-on `n` as well as on the score, and six cases are not enough for a real decision.
-
-### What the record keeps
-
-`calibration.json` holds the method, one map per question with its `n` and positive
-count, and the SHA-256 of the fitting run's `cases.jsonl` and `responses.jsonl` with their
-case ids. Both runs write `evaluation.json` and `provenance.json`. The held-out run's
-input hash for the calibration equals the fitting run's output hash, which links the two
-directories.
-
-Three checks come with it:
-
-- A calibration applied to any case it was fitted on is refused. Running it over all 12
-  tickets exits 2 with `calibration was fitted on cases of this evaluation (t01, t02, t03,
-  t04, t05 and 1 more); evaluate it on held-out cases`.
-- `jev-decision-verify --evaluation` refits a fitted calibration from its directory and
-  re-applies an applied one. Both directories print `verified`.
-- I edited the held-out refund `calibrated_ece` to 0.01 and recomputed its hash in
-  `provenance.json`. The verifier re-scored the run and printed
-  `mismatch: evaluation.json:questions`, exit 1. A hash shows that bytes changed, not
-  who changed them; signing, covered in part 2 of the series, binds a record to a key.
-
-Where the decision is made, load the calibration and compare the calibrated probability
-with your threshold:
+Load the calibration and compare the calibrated probability with your threshold:
 
 ```python
 from pathlib import Path
@@ -177,16 +97,6 @@ calibration = load(Path("fit-isotonic/calibration.json").read_bytes())
 p = calibration.calibrate("refund", decision["refund"].probability)
 ```
 
-### What this does not show
-
-- No model's calibration was measured. The 12 responses are hand-written in Jev's format
-  to exercise the code.
-- Six held-out cases cannot rank the two methods.
-- A calibration holds for the distribution it was fitted on. When the tickets change,
-  refit and measure again.
-- The feature is on `main` and unreleased until 0.2.0, which is not on PyPI yet.
-- No outside user has run it.
-
 ### Try it
 
 ```text
@@ -194,13 +104,10 @@ git clone https://github.com/BichengWang/ai-decision-system.git
 pip install ./ai-decision-system/ai-workflows/jev-decision
 ```
 
-The [full transcript](https://github.com/BichengWang/ai-decision-system/blob/9f3e253/docs/launch/calibration-medium.md#the-run-as-made)
-runs from a fresh clone, and the
-[calibration section](https://github.com/BichengWang/ai-decision-system/blob/682f382/ai-workflows/jev-decision/README.md#calibrating-the-probabilities)
+The [calibration section](https://github.com/BichengWang/ai-decision-system/blob/682f382/ai-workflows/jev-decision/README.md#calibrating-the-probabilities)
 of the README covers both methods and the record format.
 
-If you put a threshold on a model's confidence, how many labeled cases was it measured
-on? I would like to hear what your gate checks.
+If you put a threshold on model confidence, I would like to hear how you measure it.
 
 ### The series
 
@@ -212,9 +119,32 @@ Decisions you can replay, in five parts:
 4. [5 of 7 Decisions Made on a Mac Failed to Replay on Linux](https://medium.com/@bichengwang17/5-of-7-decisions-made-on-a-mac-failed-to-replay-on-linux-a9f5e5d192a8)
 5. [Your LangGraph Approval Is Not Evidence](https://medium.com/@bichengwang17/your-langgraph-approval-is-not-evidence-3bb623a387f3)
 
-*This article draws on the public ai-decision-system repository at commit 682f382 and on
-a run made on 2026-11-01. It omits adoption claims, private data and any claim about a
-real model's calibration.*
+## Run notes (repo only)
+
+Analysis from the same run, kept here rather than in the public story. The model answers
+are hand-written fixtures in Jev's format, not output from any model, so no model's
+calibration was measured. Held-out metrics, lower is better:
+
+```text
+Held-out metric              Raw      Isotonic   Platt
+refund ECE                   0.145    0.1139     0.2544
+refund Brier                 0.06348  0.0697     0.095
+refund log loss              0.1996   0.1793     0.3298
+department ECE               0.105    0.1667     0.04167
+frustration ECE              0.2917   0          0.125
+Gate: refund ECE <= 0.15              PASS       FAIL
+```
+
+- Platt's smoothed targets with 2 positives and 4 negatives are 3/4 and 1/6; its refund
+  slope came out near 0.5 and pulled 0.97 to 0.814.
+- Isotonic's frustration ECE of 0 comes from a flat "always 1.0" map meeting six
+  all-correct held-out answers; a gate needs a bound on `n` as well as the score.
+- Six held-out cases cannot rank the methods; Niculescu-Mizil and Caruana
+  ([ICML 2005](https://icml.cc/Conferences/2005/proceedings/papers/079_GoodProbabilities_NiculescuMizilCaruana.pdf))
+  found Platt ahead below roughly 200 to 1,000 calibration cases.
+- A hand-edited held-out `calibrated_ece` with a recomputed provenance hash fails
+  `jev-decision-verify` with `mismatch: evaluation.json:questions`.
+- The feature is on `main` and unreleased until 0.2.0; no outside user has run it.
 
 ## The run, as made
 
