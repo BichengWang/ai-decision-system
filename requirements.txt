@@ -128,7 +128,7 @@ cuda-toolkit==13.0.3.0
     # via torch
 cycler==0.12.1
     # via matplotlib
-datasets==5.0.1
+datasets==5.1.0
     # via -r requirements.in
 debugpy==1.8.13
     # via ipykernel
@@ -267,7 +267,6 @@ httplib2==0.32.0
     #   google-auth-httplib2
 httpx==0.28.1
     # via
-    #   datasets
     #   huggingface-hub
     #   jupyterlab
     #   openai
@@ -724,7 +723,7 @@ pyarrow==25.0.1
     #   -c (workspace)
     #   datasets
     #   streamlit
-pyasn1==0.6.4
+pyasn1==0.6.5
     # via
     #   -c (workspace)
     #   -r requirements.in
@@ -828,7 +827,6 @@ requests==2.34.2
     #   -c (workspace)
     #   -r requirements.in
     #   bilibili-api
-    #   datasets
     #   deepface
     #   gdown
     #   google-api-core
@@ -968,7 +966,7 @@ torchrec==1.1.0
     # via -r requirements.in
 torchvision==0.29.0
     # via -r requirements.in
-tornado==6.5.10
+tornado==6.6
     # via
     #   -c (workspace)
     #   ipykernel

@@ -110,7 +110,7 @@ constraint-dependencies = [
     "pillow>=13.0.0",
     "protobuf>=5.29.6",
     "pyarrow>=23.0.1",
-    "pyasn1>=0.6.4",
+    "pyasn1>=0.6.5",
     "pygments>=2.20.0",
     "python-dotenv>=1.2.2",
     "pytorch-lightning>2.6.0",
