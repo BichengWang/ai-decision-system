@@ -24,9 +24,10 @@ requires at least 500 GitHub stars per tool.
 Follow-up post, separate from the launch and not gated on a milestone:
 [`calibration-medium.md`](calibration-medium.md),
 [`calibration-linkedin.md`](calibration-linkedin.md) and
-[`calibration-x.md`](calibration-x.md) cover probability calibration in
-`jev-decision-eval` (#293), with the run behind every number. All three went out on
-2026-11-01 (rows in the [outreach log](#outreach-log)).
+[`calibration-x.md`](calibration-x.md) announce probability calibration in
+`jev-decision-eval` (#293), with the run behind every output. All three went out on
+2026-11-01 and were rewritten on 2026-11-02 to announce the milestone without the run's
+caveats (rows in the [outreach log](#outreach-log)).
 
 ## Trigger
 
@@ -270,9 +271,9 @@ posted creates neither a new discussion nor another log row.
 | 2026-10-22 | LinkedIn | [part 3](https://www.linkedin.com/feed/update/urn:li:activity:7519137578223050752/) | [ ] | [ ] | [ ] | Links Medium part 3 |
 | 2026-10-22 | LinkedIn | [part 4](https://www.linkedin.com/feed/update/urn:li:activity:7519137826282790912/) | [ ] | [ ] | [ ] | Links Medium part 4 |
 | 2026-10-22 | LinkedIn | [part 5](https://www.linkedin.com/feed/update/urn:li:activity:7519138065618120704/) | [ ] | [ ] | [ ] | Links Medium part 5 |
-| 2026-11-01 | Medium | [calibration follow-up](https://medium.com/@bichengwang17/two-calibrators-six-cases-opposite-verdicts-27eee2999a26) | [ ] | [ ] | [ ] | "Two Calibrators, Six Cases, Opposite Verdicts" ([source](calibration-medium.md)); not the 0.2.0 launch |
-| 2026-11-01 | LinkedIn | [calibration follow-up](https://www.linkedin.com/feed/update/urn:li:activity:7522911383903207424/) | [ ] | [ ] | [ ] | Links the Medium story ([source](calibration-linkedin.md)) |
-| 2026-11-01 | X | [calibration follow-up](https://x.com/BichengW81192/status/2117145930684346602) | [ ] | [ ] | [ ] | Single post from @BichengW81192 linking the Medium story ([source](calibration-x.md)) |
+| 2026-11-01 | Medium | [calibration follow-up](https://medium.com/@bichengwang17/two-calibrators-six-cases-opposite-verdicts-27eee2999a26) | [ ] | [ ] | [ ] | First "Two Calibrators, Six Cases, Opposite Verdicts"; retitled 2026-11-02 "My AI Decision Records Now Calibrate Model Confidence" ([source](calibration-medium.md)); not the 0.2.0 launch |
+| 2026-11-01 | LinkedIn | [calibration follow-up](https://www.linkedin.com/feed/update/urn:li:activity:7522911383903207424/) | [ ] | [ ] | [ ] | Links the Medium story; text edited 2026-11-02 ([source](calibration-linkedin.md)) |
+| 2026-11-02 | X | [calibration milestone](https://x.com/BichengW81192/status/2117286701119025201) | [ ] | [ ] | [ ] | Single post from @BichengW81192 linking the Medium story ([source](calibration-x.md)); replaces the deleted 2026-11-01 post `2117145930684346602` |
 | [YYYY-MM-DD] | Hacker News (Show HN) | [url] | [ ] | [ ] | [ ] | [ ] |
 | [YYYY-MM-DD] | r/MachineLearning `[P]` | [url] | [ ] | [ ] | [ ] | [ ] |
 | [YYYY-MM-DD] | r/mlops | [url] | [ ] | [ ] | [ ] | [ ] |
