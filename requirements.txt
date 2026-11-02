@@ -722,7 +722,7 @@ pyarrow==25.0.1
     #   -c (workspace)
     #   datasets
     #   streamlit
-pyasn1==0.6.4
+pyasn1==0.6.5
     # via
     #   -c (workspace)
     #   -r requirements.in
