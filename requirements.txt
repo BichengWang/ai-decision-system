@@ -160,7 +160,7 @@ face-recognition==1.3.0
     # via -r requirements.in
 face-recognition-models==0.3.0
     # via face-recognition
-faiss-cpu==1.10.0
+faiss-cpu==1.15.1
     # via -r requirements.in
 farama-notifications==0.0.6
     # via gymnasium
