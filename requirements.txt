@@ -678,7 +678,7 @@ platformdirs==4.3.7
     #   mkdocs-get-deps
     #   wandb
     #   yfinance
-pluggy==1.5.0
+pluggy==1.7.0
     # via pytest
 portalocker==3.1.1
     # via iopath
@@ -766,7 +766,7 @@ pyre-extensions==0.0.32
     # via torchrec
 pysocks==1.7.1
     # via requests
-pytest==9.1.1
+pytest==9.2.0
     # via
     #   -r requirements.in
     #   pytest-cov
