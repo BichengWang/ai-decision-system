@@ -1,12 +1,9 @@
-# LinkedIn draft: calibration follow-up
+# LinkedIn post: calibration follow-up
 
-Draft for the owner to rewrite in their own words and post from their own profile.
-Nothing here has been posted. It links the Medium follow-up in
-[`calibration-medium.md`](calibration-medium.md), so publish that first and replace
-`[Medium link]` with its URL. Every number comes from
-[the run in that file](calibration-medium.md#the-run-as-made). Check the current
-[Professional Community Policies](https://www.linkedin.com/legal/professional-community-policies)
-before posting.
+[Posted](https://www.linkedin.com/feed/update/urn:li:activity:7522911383903207424/) on
+2026-11-01 from the owner's profile, as written below with `[Medium link]` replaced by
+the [Medium story](https://medium.com/@bichengwang17/two-calibrators-six-cases-opposite-verdicts-27eee2999a26).
+Every number comes from [the run in the Medium file](calibration-medium.md#the-run-as-made).
 
 ## Post
 

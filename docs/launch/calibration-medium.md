@@ -1,24 +1,17 @@
-# Medium draft: calibration follow-up
+# Medium story: calibration follow-up
 
-Draft for the owner to rewrite in their own words and publish from their own Medium
-account. Nothing here has been published. It is a follow-up to the 2026-10-22
-"Decisions you can replay" series, not the 0.2.0 launch post in [`medium.md`](medium.md),
-and it covers one feature: probability calibration in `jev-decision-eval`
-([#293](https://github.com/BichengWang/ai-decision-system/pull/293)). Every number in
-the story comes from the [run below](#the-run-as-made).
+Published on 2026-11-01 (U.S. Pacific; `article:published_time` 2026-11-02T06:42:31Z) as
+[Two Calibrators, Six Cases, Opposite Verdicts](https://medium.com/@bichengwang17/two-calibrators-six-cases-opposite-verdicts-27eee2999a26),
+from the Story section below as written, without the kicker. It is a follow-up to the
+2026-10-22 "Decisions you can replay" series, not the 0.2.0 launch post in
+[`medium.md`](medium.md), and it covers one feature: probability calibration in
+`jev-decision-eval` ([#293](https://github.com/BichengWang/ai-decision-system/pull/293)).
+Every number in the story comes from the [run below](#the-run-as-made).
 
-Before publishing:
-
-- Medium's [AI content policy](https://help.medium.com/hc/en-us/articles/22576852947223-Artificial-Intelligence-AI-content-policy)
-  asks a story with AI assistance to say so within its first two paragraphs. The story
-  keeps the disclosure line the series used; drop it only if no AI-written text remains.
-- Medium's editor does not render Markdown tables. The two tables are code blocks so
-  they paste as monospaced text; check them after pasting.
-- In the editor, type the kicker first and format it small "t", then the title as the
-  large "T" line, then the subtitle small "t" directly under it.
-- Re-run the [commands below](#the-run-as-made) if `main` has moved past `682f382`, and
-  update the commit in the story's links and closing line.
-- Do not add counts of stars, downloads or views, or claims about users.
+The AI-assistance line is the story's third paragraph. Medium's
+[AI content policy](https://help.medium.com/hc/en-us/articles/22576852947223-Artificial-Intelligence-AI-content-policy)
+asks for it within the first two, so move it above "So I added calibration" in the
+published story. The story reads in full logged out, and subscribers were notified.
 
 ## Headline
 
@@ -31,9 +24,11 @@ SUBTITLE: I added confidence calibration to my AI decision records. The held-out
 Alternative titles, same story: "A Perfect Calibration Score From Six Cases Is a
 Warning"; "Your Model Says 0.95. Who Measured That?"
 
-Cover: a screenshot of the first table below (held-out metrics). Alt text: "Table of
-held-out calibration metrics on six support tickets: raw, isotonic and Platt. Isotonic
-passes a refund ECE gate of 0.15 at 0.1139; Platt fails it at 0.2544."
+Cover: [`calibration-cover.png`](calibration-cover.png), lines copied from the run below.
+Alt text: "Terminal output: with a calibration fitted on six support tickets and measured
+on six held-out tickets, isotonic passes a refund calibrated ECE gate of 0.15 and Platt
+fails it at 0.2544, followed by each held-out ticket's raw, isotonic and Platt refund
+probability."
 
 Tags: Machine Learning, MLOps, AI Governance, Python, Open Source.
 
@@ -199,7 +194,7 @@ git clone https://github.com/BichengWang/ai-decision-system.git
 pip install ./ai-decision-system/ai-workflows/jev-decision
 ```
 
-The [full transcript](https://github.com/BichengWang/ai-decision-system/blob/main/docs/launch/calibration-medium.md#the-run-as-made)
+The [full transcript](https://github.com/BichengWang/ai-decision-system/blob/9f3e253/docs/launch/calibration-medium.md#the-run-as-made)
 runs from a fresh clone, and the
 [calibration section](https://github.com/BichengWang/ai-decision-system/blob/682f382/ai-workflows/jev-decision/README.md#calibrating-the-probabilities)
 of the README covers both methods and the record format.

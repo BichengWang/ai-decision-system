@@ -1,14 +1,14 @@
-# X draft: calibration follow-up
+# X post: calibration follow-up
 
-Draft for the owner to rewrite in their own words and post from
-[@BichengW81192](https://x.com/BichengW81192). Nothing here has been posted. It links the
-Medium follow-up in [`calibration-medium.md`](calibration-medium.md), so publish that
-first and replace `[Medium link]` with its URL. Every number comes from
-[the run in that file](calibration-medium.md#the-run-as-made).
+The [single post below](#single-post) went out on 2026-11-01 from
+[@BichengW81192](https://x.com/BichengW81192/status/2117145930684346602), with
+`[Medium link]` replaced by the
+[Medium story](https://medium.com/@bichengwang17/two-calibrators-six-cases-opposite-verdicts-27eee2999a26).
+The thread was not posted: the owner's X convention is one post with one link. Every
+number comes from [the run in the Medium file](calibration-medium.md#the-run-as-made).
 
 Each post fits the 280-character limit of an account without X Premium (X counts every
-link as 23 characters). Post them as one thread, replying to the previous post each time.
-Before posting, check the current [X Rules](https://help.x.com/en/rules-and-policies/x-rules).
+link as 23 characters).
 
 ## Thread
 
