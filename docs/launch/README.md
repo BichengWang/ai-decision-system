@@ -21,6 +21,13 @@ tracking issue once 0.2.0 is on PyPI.
 is **not a target**: its [CONTRIBUTING.md](https://github.com/EthicalML/awesome-production-machine-learning/blob/master/CONTRIBUTING.md)
 requires at least 500 GitHub stars per tool.
 
+Follow-up post, separate from the launch and not gated on a milestone:
+[`calibration-medium.md`](calibration-medium.md),
+[`calibration-linkedin.md`](calibration-linkedin.md) and
+[`calibration-x.md`](calibration-x.md) cover probability calibration in
+`jev-decision-eval` (#293), with the run behind every number. All three went out on
+2026-11-01 (rows in the [outreach log](#outreach-log)).
+
 ## Trigger
 
 [`milestones.json`](milestones.json) lists the milestones that start outreach;
@@ -263,6 +270,9 @@ posted creates neither a new discussion nor another log row.
 | 2026-10-22 | LinkedIn | [part 3](https://www.linkedin.com/feed/update/urn:li:activity:7519137578223050752/) | [ ] | [ ] | [ ] | Links Medium part 3 |
 | 2026-10-22 | LinkedIn | [part 4](https://www.linkedin.com/feed/update/urn:li:activity:7519137826282790912/) | [ ] | [ ] | [ ] | Links Medium part 4 |
 | 2026-10-22 | LinkedIn | [part 5](https://www.linkedin.com/feed/update/urn:li:activity:7519138065618120704/) | [ ] | [ ] | [ ] | Links Medium part 5 |
+| 2026-11-01 | Medium | [calibration follow-up](https://medium.com/@bichengwang17/two-calibrators-six-cases-opposite-verdicts-27eee2999a26) | [ ] | [ ] | [ ] | "Two Calibrators, Six Cases, Opposite Verdicts" ([source](calibration-medium.md)); not the 0.2.0 launch |
+| 2026-11-01 | LinkedIn | [calibration follow-up](https://www.linkedin.com/feed/update/urn:li:activity:7522911383903207424/) | [ ] | [ ] | [ ] | Links the Medium story ([source](calibration-linkedin.md)) |
+| 2026-11-01 | X | [calibration follow-up](https://x.com/BichengW81192/status/2117145930684346602) | [ ] | [ ] | [ ] | Single post from @BichengW81192 linking the Medium story ([source](calibration-x.md)) |
 | [YYYY-MM-DD] | Hacker News (Show HN) | [url] | [ ] | [ ] | [ ] | [ ] |
 | [YYYY-MM-DD] | r/MachineLearning `[P]` | [url] | [ ] | [ ] | [ ] | [ ] |
 | [YYYY-MM-DD] | r/mlops | [url] | [ ] | [ ] | [ ] | [ ] |
