@@ -6,6 +6,8 @@ Replayable, offline-verifiable records for AI-assisted go/no-go decisions.
 
 Site, schemas and conformance vectors: <https://bichengwang.github.io/ai-decision-system/>
 
+Press: [Bay Area Engineer Bicheng (Kenneth) Wang Builds the Missing Receipt for AI Decisions](https://stanfordtechreview.com/articles/bicheng-kenneth-wang-ai-decision-receipts) (Stanford Tech Review, Oct. 23, 2026)
+
 ## Why
 
 Model output is not authority. Promotions, approvals and releases need a record
