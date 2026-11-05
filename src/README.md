@@ -35,7 +35,6 @@ src/
   utils/           Requests, crawl, OpenAI, pandas helpers
   inter/           External study code (e.g. nanoGPT)
   lc/              Algorithm practice (not the decision runtime)
-docs/              Research and environment notes
 ```
 
 | Path | Role in the decision system |

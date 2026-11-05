@@ -22,10 +22,10 @@ I've also wrote a detailed tutorial in Chinese in [莫烦Python](https://mofanpy
 
 ## Training
 **Files:**
-* [data_processing.py](/data_processing.py) : download data and process to an accepted format
-* [model.py](/model.py) : training model and view result
+* [data_processing.py](data_processing.py) : download data and process to an accepted format
+* [model.py](model.py) : training model and view result
 
-![Training result](/result.png)
+![Training result](result.png)
 
 
 ## Dependencies
