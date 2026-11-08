@@ -193,6 +193,101 @@ function digestSpecs(vectors) {
   return specs;
 }
 
+// Digests a verifier checks that the manifests' `digests` entries do not declare, found by reading
+// the verifiers. Every run also scans the valid vectors for other 64-hex values and reports any it
+// cannot account for as a problem (unaccountedDigests), so a new one cannot go unnoticed.
+//   derive      the digest is the RFC 8785 SHA-256 of a value built from the same document;
+//   covers_file the digest is the SHA-256 of another file of a directory vector;
+//   neither     it covers files no edit here touches (and only replay knows which), so it is never
+//               recomputed, never mutated, and not checked by the baseline.
+const cedarProposal = (document) => {
+  // decision-control adapters/_binding.py: the document a frozen Cedar decision is bound to.
+  const record = document?.record;
+  return { action: record?.recommendation?.action, proposed_by: record?.proposed_by, ticket: record?.ticket, recommendation: record?.recommendation };
+};
+
+export const EMBEDDED_DIGESTS = {
+  "decision-control": [
+    { document: ".", value: "/record/external_policy/request/context/proposal_sha256", what: "RFC 8785 SHA-256 of the proposal a Cedar decision is bound to", derive: cedarProposal },
+  ],
+  "jev-decision": [
+    { document: "evaluation.json", value: "/calibration/sha256", what: "SHA-256 of calibration.json", covers_file: "calibration.json" },
+    { document: "calibration.json", value: "/fitted_on/cases_sha256", what: "SHA-256 of the fitting run's cases.jsonl" },
+    { document: "calibration.json", value: "/fitted_on/responses_sha256", what: "SHA-256 of the fitting run's responses.jsonl" },
+  ],
+};
+
+const SHA256_HEX = /^[0-9a-f]{64}$/;
+const present = (value) => value !== undefined && value !== null;
+const schemaVersionOf = (vector) => {
+  const match = /^(.*)\.v(\d+)\.json$/.exec(path.basename(vector.spec.documents?.[0]?.schema ?? ""));
+  return match ? { family: match[1], version: Number(match[2]) } : null;
+};
+
+/** Which canonical form each schema version uses for each declared digest, learned from the valid vectors. */
+export function canonicalForms(vectors) {
+  const forms = new Map();
+  for (const vector of vectors.filter((item) => item.expect === "valid" && !item.isDirectory)) {
+    const schema = schemaVersionOf(vector);
+    if (schema === null) continue;
+    for (const digest of (vector.spec.digests ?? []).filter((item) => item.canonicalization !== "bytes")) {
+      const key = `${vector.project}\0${schema.family}\0${digest.value}`;
+      if (!forms.has(key)) forms.set(key, new Map());
+      const known = forms.get(key).get(schema.version);
+      if (known !== undefined && known !== digest.canonicalization) {
+        throw new Error(`${vector.project} ${schema.family}.v${schema.version} ${digest.value}: valid vectors disagree on the canonical form`);
+      }
+      forms.get(key).set(schema.version, digest.canonicalization);
+    }
+  }
+  return forms;
+}
+
+/** The shallowest `schema_version` leaf holding the schema file's version, or null. */
+function versionTokens(document, version) {
+  const candidates = leafPaths(document).filter((tokens) => {
+    const value = lookup(document, toPointer(tokens));
+    return tokens[tokens.length - 1] === "schema_version" && value instanceof RawNumber && value.text === String(version);
+  });
+  return candidates.sort((a, b) => a.length - b.length)[0] ?? null;
+}
+
+/** 64-hex values in valid vectors that are neither a declared digest nor in EMBEDDED_DIGESTS. */
+export async function unaccountedDigests(valid, embedded = EMBEDDED_DIGESTS) {
+  const found = [];
+  for (const vector of valid) {
+    const accounted = new Set([...(vector.spec.digests ?? []), ...(embedded[vector.project] ?? [])].map((digest) => `${digest.document}\0${digest.value}`));
+    const names = vector.isDirectory ? (await fs.readdir(vector.abs)).filter((name) => name.endsWith(".json")).sort(byText) : ["."];
+    for (const name of names) {
+      const document = parseJson(decodeUtf8(await fs.readFile(name === "." ? vector.abs : path.join(vector.abs, name))));
+      for (const tokens of leafPaths(document)) {
+        const value = lookup(document, toPointer(tokens));
+        if (typeof value === "string" && SHA256_HEX.test(value) && !accounted.has(`${name}\0${toPointer(tokens)}`)) {
+          found.push(`${vector.project}/${vector.path}${name === "." ? "" : `/${name}`}#${toPointer(tokens)}`);
+        }
+      }
+    }
+  }
+  return found;
+}
+
+async function embeddedProblem(rule, text, base, parse) {
+  if (!rule.derive && !rule.covers_file) return null; // covers files only replay can identify
+  const document = parse(text);
+  const recorded = lookup(document, rule.value);
+  if (!present(recorded)) return null;
+  if (rule.covers_file) {
+    const bytes = await fs.readFile(contained(base, rule.covers_file, "covers_file")).catch(() => null);
+    if (bytes === null) return `${rule.covers_file} is missing`;
+    return sha256(bytes) === recorded ? null : `SHA-256 of ${rule.covers_file} differs`;
+  }
+  try {
+    return sha256(canonicalBytes(rule.derive(document), "rfc8785")) === recorded ? null : "differs";
+  } catch (error) {
+    return error.message;
+  }
+}
+
 async function digestProblem(spec, text, base, parse) {
   const legacy = spec.canonicalization === "python-json-v1";
   const document = parse(text, legacy ? { number: rawNumber } : {});
@@ -214,7 +309,7 @@ async function digestProblem(spec, text, base, parse) {
 }
 
 /** Reasons the baseline rejects a vector; empty means accepted. */
-async function baselineReasons(vector, mode, { specs, schemasFor }) {
+async function baselineReasons(vector, mode, { specs, schemasFor, embedded }) {
   const parse = (text, options = {}) => parseJson(text, mode === "strict" ? options : { ...options, duplicates: "last" });
   const documents = vector.spec.documents ?? [];
   const reasons = [];
@@ -247,6 +342,10 @@ async function baselineReasons(vector, mode, { specs, schemasFor }) {
     for (const spec of specs.get(`${vector.project}\0${document.schema}`)?.values() ?? []) {
       const problem = await digestProblem(spec, text, base, parse);
       if (problem !== null) reasons.push(`${where}digest ${spec.value}: ${problem}`);
+    }
+    for (const rule of (embedded[vector.project] ?? []).filter((item) => item.document === document.path)) {
+      const problem = await embeddedProblem(rule, text, base, parse);
+      if (problem !== null) reasons.push(`${where}digest ${rule.value}: ${problem}`);
     }
   }
   return reasons;
@@ -303,58 +402,91 @@ function splitTrailingNewlines(bytes) {
   return { body: bytes.subarray(0, end), tail: bytes.subarray(end) };
 }
 
-// A file vector: every leaf except the digests themselves. Written back in python-json-v1 form,
-// which keeps every integer an integer and every float a float for the Python readers.
-function fileTasks(vector, bytes) {
+// Seal `covered` in `form`, or report that it has no such form: an edit can leave RFC 8785's range
+// (an integer past 2^53-1), and then no one can reseal it; the digest stays stale and the run is
+// reported as unsealable instead of being counted.
+function seal(document, tokens, covered, form) {
+  try {
+    return replaceAt(document, tokens, sha256(canonicalBytes(covered, form)));
+  } catch (error) {
+    if (error instanceof CanonicalizationError) return null;
+    throw error;
+  }
+}
+
+// A file vector: every leaf except digests, declared or embedded. Written back in python-json-v1
+// form, which keeps every integer an integer and every float a float for the Python readers.
+// Resealing recomputes the embedded digests first (they sit inside what the declared ones cover),
+// then the declared ones innermost first, each in the form the edited schema_version requires.
+function fileTasks(vector, bytes, { forms, embedded }) {
   const document = parseJson(decodeUtf8(bytes), { number: rawNumber });
-  const digests = vector.spec.digests ?? [];
-  const sealed = new Set(digests.map((digest) => digest.value));
-  // Innermost digest first, so an outer digest covers the inner one's new value.
-  const order = [...digests].sort((a, b) => pointerTokens(b.value).length - pointerTokens(a.value).length);
+  const declared = vector.spec.digests ?? [];
+  const derived = (embedded[vector.project] ?? []).filter((rule) => rule.document === "." && rule.derive && present(lookup(document, rule.value)));
+  const digestLeaves = new Set([...declared, ...derived].map((digest) => digest.value));
+  const order = [...declared].sort((a, b) => pointerTokens(b.value).length - pointerTokens(a.value).length);
+  const schema = schemaVersionOf(vector);
+  const versionAt = schema === null ? null : versionTokens(document, schema.version);
   const name = path.basename(vector.abs);
   const tasks = [{ vector, mode: "control", group: null, field: "", files: [[name, serializePythonJsonV1(document)]] }];
   for (const tokens of leafPaths(document)) {
     const field = toPointer(tokens);
-    if (sealed.has(field)) continue;
+    if (digestLeaves.has(field)) continue;
     for (const mode of MODES) {
       const undo = [replaceAt(document, tokens, mutateValue(lookup(document, field)))];
+      let unsealable = false;
       if (mode === "resealed") {
-        for (const digest of order) {
-          const covered = withoutMembers(resolvePointer(document, digest.covers), digest.exclude ?? []);
-          let canonical;
-          try {
-            canonical = canonicalBytes(covered, digest.canonicalization);
-          } catch (error) {
-            // An edit can leave RFC 8785's range (an integer past 2^53-1): seal the python-json-v1 form instead.
-            if (!(error instanceof CanonicalizationError)) throw error;
-            canonical = serializePythonJsonV1(covered);
-          }
-          undo.push(replaceAt(document, pointerTokens(digest.value), sha256(canonical)));
+        const edited = versionAt === null ? undefined : lookup(document, toPointer(versionAt));
+        const version = edited instanceof RawNumber && INTEGER_LITERAL.test(edited.text) ? Number(edited.text) : undefined;
+        const steps = [
+          ...derived.map((rule) => [rule.value, () => rule.derive(document), "rfc8785"]),
+          ...order.map((digest) => [digest.value, () => withoutMembers(resolvePointer(document, digest.covers), digest.exclude ?? []),
+            forms.get(`${vector.project}\0${schema?.family}\0${digest.value}`)?.get(version) ?? digest.canonicalization]),
+        ];
+        for (const [pointer, covered, form] of steps) {
+          const restore = seal(document, pointerTokens(pointer), covered(), form);
+          if (restore === null) unsealable = true;
+          else undo.push(restore);
         }
       }
       const written = serializePythonJsonV1(document);
       for (const restore of undo.reverse()) restore();
-      tasks.push({ vector, mode, group: null, field, files: [[name, written]] });
+      tasks.push({ vector, mode, group: null, field, unsealable, files: [[name, written]] });
     }
   }
-  return tasks;
+  return { tasks, digestLeaves: [...digestLeaves].filter((pointer) => derived.some((rule) => rule.value === pointer)).length };
 }
 
 // A directory vector: every leaf of each JSON file covered by a `bytes` digest, when the file is in
 // compact sorted (python-json-v1) form so it can be rewritten as its producer writes it. Resealing
-// rewrites the edited file's SHA-256 in the hashing document (provenance.json), which is not mutated.
-function directoryTasks(vector, files, skipped) {
+// rewrites every digest of an edited file: embedded ones in other files first (evaluation.json's
+// SHA-256 of calibration.json), then the hashing document's (provenance.json, which is not mutated).
+function directoryTasks(vector, files, skipped, { embedded }) {
   const byteDigests = (vector.spec.digests ?? []).filter((digest) => digest.canonicalization === "bytes");
   const hashing = [...new Set(byteDigests.map((digest) => digest.document))].sort(byText);
-  const rehash = (newHashes) => hashing.map((name) => {
-    const raw = files.get(name);
-    const document = parseJson(decodeUtf8(raw), { number: rawNumber });
-    for (const digest of byteDigests) {
-      if (digest.document === name && newHashes.has(digest.covers_file)) replaceAt(document, pointerTokens(digest.value), newHashes.get(digest.covers_file));
+  const rules = (embedded[vector.project] ?? []).filter((rule) => rule.document !== "." && files.has(rule.document));
+  const parsed = (raw) => parseJson(decodeUtf8(raw), { number: rawNumber });
+  const rewrite = (raw, document) => Buffer.concat([serializePythonJsonV1(document), splitTrailingNewlines(raw).tail]);
+  const reseal = (changed) => {
+    for (let pass = 0; pass <= rules.length; pass += 1) {
+      for (const rule of rules.filter((item) => item.covers_file && changed.has(item.covers_file))) {
+        const raw = changed.get(rule.document) ?? files.get(rule.document);
+        const document = parsed(raw);
+        if (!present(lookup(document, rule.value))) continue;
+        replaceAt(document, pointerTokens(rule.value), sha256(changed.get(rule.covers_file)));
+        changed.set(rule.document, rewrite(raw, document));
+      }
     }
-    return [name, Buffer.concat([serializePythonJsonV1(document), splitTrailingNewlines(raw).tail])];
-  });
-  const tasks = [{ vector, mode: "control", group: null, field: "", files: rehash(new Map()) }];
+    const hashes = hashing.map((name) => {
+      const document = parsed(files.get(name));
+      for (const digest of byteDigests) {
+        if (digest.document === name && changed.has(digest.covers_file)) replaceAt(document, pointerTokens(digest.value), sha256(changed.get(digest.covers_file)));
+      }
+      return [name, rewrite(files.get(name), document)];
+    });
+    return [...changed.entries(), ...hashes];
+  };
+  const tasks = [{ vector, mode: "control", group: null, field: "", files: reseal(new Map()) }];
+  let digestLeaves = 0;
   const targets = [...new Set(byteDigests.map((digest) => digest.covers_file))].filter((name) => !hashing.includes(name)).sort(byText);
   for (const name of targets) {
     if (!name.endsWith(".json")) continue;
@@ -364,37 +496,48 @@ function directoryTasks(vector, files, skipped) {
       skipped.push({ vector: `${vector.project}/${vector.path}`, file: name, reason: "not in compact sorted JSON form" });
       continue;
     }
+    const own = new Set(rules.filter((rule) => rule.document === name).map((rule) => rule.value));
     for (const tokens of leafPaths(document)) {
       const field = toPointer(tokens);
+      if (own.has(field)) {
+        digestLeaves += 1;
+        continue;
+      }
       for (const mode of MODES) {
         const restore = replaceAt(document, tokens, mutateValue(lookup(document, field)));
         const written = Buffer.concat([serializePythonJsonV1(document), tail]);
         restore();
-        const changed = [[name, written]];
-        if (mode === "resealed") changed.push(...rehash(new Map([[name, sha256(written)]])));
-        tasks.push({ vector, mode, group: name, field, files: changed });
+        const changed = mode === "resealed" ? reseal(new Map([[name, written]])) : [[name, written]];
+        tasks.push({ vector, mode, group: name, field, unsealable: false, files: changed });
       }
     }
   }
-  return tasks;
+  return { tasks, digestLeaves };
 }
 
-async function mutationTasks(valid, skipped) {
+async function mutationTasks(valid, skipped, context) {
   const tasks = [];
+  const digestLeaves = new Map();
   for (const vector of valid) {
-    if (!vector.isDirectory) {
-      tasks.push(...fileTasks(vector, await fs.readFile(vector.abs)));
-      continue;
-    }
-    const files = new Map();
-    for (const digest of vector.spec.digests ?? []) {
-      for (const name of [digest.document, digest.covers_file].filter(Boolean)) {
-        if (!files.has(name)) files.set(name, await fs.readFile(contained(vector.abs, name, "file")));
+    let made;
+    if (vector.isDirectory) {
+      const files = new Map();
+      const names = [...(vector.spec.digests ?? []).flatMap((digest) => [digest.document, digest.covers_file]), ...(context.embedded[vector.project] ?? []).map((rule) => rule.document)];
+      for (const name of names.filter((item) => item && item !== ".")) {
+        if (!files.has(name)) {
+          const bytes = await fs.readFile(contained(vector.abs, name, "file")).catch(() => null);
+          if (bytes !== null) files.set(name, bytes);
+        }
       }
+      made = directoryTasks(vector, files, skipped, context);
+    } else {
+      made = fileTasks(vector, await fs.readFile(vector.abs), context);
     }
-    tasks.push(...directoryTasks(vector, files, skipped));
+    tasks.push(...made.tasks);
+    const key = `${vector.project}\0${vector.type}`;
+    digestLeaves.set(key, (digestLeaves.get(key) ?? 0) + made.digestLeaves);
   }
-  return tasks;
+  return { tasks, digestLeaves };
 }
 
 async function runTask(task, index, { tmp, bin, env }) {
@@ -412,15 +555,19 @@ async function runTask(task, index, { tmp, bin, env }) {
   return { code: result.code, crashed: result.crashed };
 }
 
-const emptyMode = () => ({ mutations: 0, detected: 0, undetected: 0, errors: 0, detection_percent: null, crashed: 0, exit_codes: {}, undetected_fields: new Set() });
+const emptyMode = () => ({ mutations: 0, detected: 0, undetected: 0, errors: 0, unsealable: 0, detection_percent: null, crashed: 0, exit_codes: {}, undetected_fields: new Set() });
 
-function addRun(summary, code, crashed, field) {
+// Errors (no exit code) and unsealable edits (no canonical form to reseal) are counted apart and
+// left out of the detection rate.
+function addRun(summary, code, crashed, field, unsealable = false) {
   summary.mutations += 1;
   const key = code === null ? "none" : String(code);
   summary.exit_codes[key] = (summary.exit_codes[key] ?? 0) + 1;
   if (crashed) summary.crashed += 1;
   if (code === null) {
     summary.errors += 1;
+  } else if (unsealable) {
+    summary.unsealable += 1;
   } else if (code === 0) {
     summary.undetected += 1;
     summary.undetected_fields.add(generalize(field));
@@ -435,7 +582,7 @@ function finishMode(summary) {
   return { ...summary, detection_percent: percent(summary.detected, summary.detected + summary.undetected), exit_codes: exitCodes, undetected_fields: [...summary.undetected_fields].sort(byText) };
 }
 
-function summarizeMutations(tasks, results, skipped) {
+function summarizeMutations(tasks, results, { skipped, digestLeaves, unaccounted, embedded }) {
   const groups = new Map();
   const totals = Object.fromEntries(MODES.map((mode) => [mode, emptyMode()]));
   const controls = { runs: 0, accepted: 0, rejected: [] };
@@ -453,17 +600,17 @@ function summarizeMutations(tasks, results, skipped) {
     const group = groups.get(key);
     group.vectors.add(vector.path);
     const field = task.group === null ? task.field : `${task.group}#${task.field}`;
-    addRun(group[task.mode], code, crashed, field);
-    addRun(totals[task.mode], code, crashed, `${vector.project}:${vector.type}:${field}`);
+    addRun(group[task.mode], code, crashed, field, task.unsealable);
+    addRun(totals[task.mode], code, crashed, `${vector.project}:${vector.type}:${field}`, task.unsealable);
     if (task.group !== null) {
       if (!group.files.has(task.group)) group.files.set(task.group, Object.fromEntries(MODES.map((mode) => [mode, emptyMode()])));
-      addRun(group.files.get(task.group)[task.mode], code, crashed, task.field);
+      addRun(group.files.get(task.group)[task.mode], code, crashed, task.field, task.unsealable);
     }
   });
   const byType = [...groups.values()]
     .sort((a, b) => byText(a.project, b.project) || byText(a.record_type, b.record_type))
     .map((group) => {
-      const row = { project: group.project, record_type: group.record_type, vectors: group.vectors.size };
+      const row = { project: group.project, record_type: group.record_type, vectors: group.vectors.size, embedded_digest_leaves_not_mutated: digestLeaves.get(`${group.project}\0${group.record_type}`) ?? 0 };
       for (const mode of MODES) row[mode] = finishMode(group[mode]);
       if (group.files.size > 0) {
         row.files = Object.fromEntries([...group.files.keys()].sort(byText).map((name) => [name, Object.fromEntries(MODES.map((mode) => [mode, finishMode(group.files.get(name)[mode])]))]));
@@ -474,7 +621,10 @@ function summarizeMutations(tasks, results, skipped) {
     const { undetected_fields: _fields, ...rest } = finishMode(totals[mode]);
     return [mode, rest];
   }));
-  return { controls, skipped, by_type: byType, total };
+  const embeddedRows = Object.entries(embedded).flatMap(([project, rules]) => rules.map(({ document, value, what, derive, covers_file: file }) => ({
+    project, document, value, what, resealed: Boolean(derive || file), checked_by_baseline: Boolean(derive || file),
+  })));
+  return { controls, skipped, embedded_digests: embeddedRows, unaccounted_digest_values: unaccounted, by_type: byType, total };
 }
 
 // ---------------------------------------------------------------------------------------------
@@ -520,15 +670,20 @@ async function pythonInfo(bin, packages, env) {
   }
 }
 
+// Version arguments per tool; the first line of output that names a version is recorded.
+const VERSION_ARGS = { opa: ["version"], cedar: ["--version"], cosign: ["version"] };
+
+/** Each external tool on the verifiers' PATH, as its version line, or null when absent. */
 async function toolsOnPath(env) {
   const found = {};
   for (const tool of EXTERNAL_TOOLS) {
-    found[tool] = false;
+    found[tool] = null;
     for (const dir of env.PATH.split(path.delimiter)) {
-      if (await fs.access(path.join(dir, tool), fsConstants.X_OK).then(() => true, () => false)) {
-        found[tool] = true;
-        break;
-      }
+      const file = path.join(dir, tool);
+      if (!(await fs.access(file, fsConstants.X_OK).then(() => true, () => false))) continue;
+      const output = await run(file, VERSION_ARGS[tool], { env, timeout: 30_000 }).then(({ stdout, stderr }) => `${stdout}\n${stderr}`, () => "");
+      found[tool] = output.split("\n").map((line) => line.trim()).find((line) => /\d+\.\d+/.test(line)) ?? "found (version unknown)";
+      break;
     }
   }
   return found;
@@ -595,7 +750,7 @@ async function measureLatency(valid, runs, { bin, env, tmp }) {
  * Run the whole evaluation. Options: root, bin, jobs, latencyRuns (0 skips latency), inheritPath,
  * outDir (only to keep it out of the dirty check), log (progress lines).
  */
-export async function evaluate({ root, bin, jobs = os.availableParallelism?.() ?? os.cpus().length, latencyRuns = 0, inheritPath = false, outDir = root, log = () => {} }) {
+export async function evaluate({ root, bin, jobs = os.availableParallelism?.() ?? os.cpus().length, latencyRuns = 0, inheritPath = false, outDir = root, log = () => {}, embedded = EMBEDDED_DIGESTS }) {
   const { manifests, vectors } = await loadVectors(root);
   if (vectors.length === 0) throw new UsageError(`no conformance manifests under ${root}`);
   await checkBin(vectors, bin);
@@ -626,7 +781,7 @@ export async function evaluate({ root, bin, jobs = os.availableParallelism?.() ?
     for (const [index, vector] of vectors.entries()) {
       const row = { project: vector.project, path: vector.path, expect: vector.expect, record_type: vector.type, manifest_exit_code: vector.spec.verify.exit_code, verifier_exit_code: exits[index].code };
       for (const mode of BASELINES) {
-        const reasons = await baselineReasons(vector, mode, { specs, schemasFor });
+        const reasons = await baselineReasons(vector, mode, { specs, schemasFor, embedded });
         row[`baseline_${mode}`] = reasons.length === 0 ? "accept" : "reject";
         if (reasons.length > 0) row[`baseline_${mode}_reasons`] = reasons;
       }
@@ -636,7 +791,7 @@ export async function evaluate({ root, bin, jobs = os.availableParallelism?.() ?
       vectors: rows.length,
       baseline_strict_accepts: rows.filter((row) => row.baseline_strict === "accept").length,
       baseline_json_parse_accepts: rows.filter((row) => row.baseline_json_parse === "accept").length,
-      verifier_rejects: rows.filter((row) => row.verifier_exit_code !== 0).length,
+      verifier_rejects: rows.filter((row) => row.verifier_exit_code !== null && row.verifier_exit_code !== 0).length,
       verifier_exit_code_as_manifest: rows.filter((row) => row.verifier_exit_code === row.manifest_exit_code).length,
     });
     const baseline = { by_project: {}, total: {}, vectors: perVector };
@@ -648,7 +803,8 @@ export async function evaluate({ root, bin, jobs = os.availableParallelism?.() ?
     // (c) mutations
     const valid = vectors.filter((vector) => vector.expect === "valid");
     const skipped = [];
-    const tasks = await mutationTasks(valid, skipped);
+    const { tasks, digestLeaves } = await mutationTasks(valid, skipped, { forms: canonicalForms(vectors), embedded });
+    const unaccounted = await unaccountedDigests(valid, embedded);
     log(`mutations: ${tasks.length} verifier runs (${valid.length} controls), ${jobs} at a time`);
     let done = 0;
     const results = await pool(tasks, jobs, async (task, index) => {
@@ -657,7 +813,7 @@ export async function evaluate({ root, bin, jobs = os.availableParallelism?.() ?
       if (done % 1000 === 0) log(`  ${done}/${tasks.length}`);
       return result;
     });
-    const mutations = summarizeMutations(tasks, results, skipped);
+    const mutations = summarizeMutations(tasks, results, { skipped, digestLeaves, unaccounted, embedded });
 
     // (d) sizes and latency
     const sizeRows = new Map();
@@ -713,14 +869,48 @@ export function problems(result) {
     const { errors } = result.mutations.total[mode];
     if (errors > 0) found.push(`${errors} ${mode} mutation runs ended without an exit code after ${ATTEMPTS} attempts; they are left out of the rates`);
   }
+  for (const value of result.mutations.unaccounted_digest_values) {
+    found.push(`${value}: a 64-hex value that is neither a manifest digest nor in EMBEDDED_DIGESTS, so resealing may leave it stale`);
+  }
+  if (result.caller_path) found.push(...result.caller_path.problems.map((problem) => `with the caller's PATH: ${problem}`));
   return found;
+}
+
+/**
+ * The same sweep with the caller's PATH, where OPA or Cedar may re-evaluate frozen decisions:
+ * its tools, totals, and every record type whose counts differ from the default run.
+ */
+export function callerPathComparison(base, other) {
+  const differences = [];
+  for (const row of base.mutations.by_type) {
+    const twin = other.mutations.by_type.find((item) => item.project === row.project && item.record_type === row.record_type);
+    for (const mode of MODES) {
+      if (!twin || twin[mode].detected !== row[mode].detected || twin[mode].undetected !== row[mode].undetected) {
+        differences.push({
+          project: row.project, record_type: row.record_type, mode,
+          detected: twin?.[mode].detected ?? null,
+          undetected_only_with_default_path: row[mode].undetected_fields.filter((field) => !(twin?.[mode].undetected_fields ?? []).includes(field)),
+          undetected_only_with_caller_path: (twin?.[mode].undetected_fields ?? []).filter((field) => !row[mode].undetected_fields.includes(field)),
+        });
+      }
+    }
+  }
+  return {
+    verifier_path: other.environment.verifier_path,
+    external_tools_on_path: other.environment.external_tools_on_path,
+    total: other.mutations.total,
+    baseline_total: other.baseline.total,
+    differences,
+    problems: problems(other),
+  };
 }
 
 // ---------------------------------------------------------------------------------------------
 // RESULTS.md
 
 const number = (value) => value.toLocaleString("en-US");
-const rate = (summary) => `${number(summary.detected)}/${number(summary.mutations)} (${summary.detection_percent?.toFixed(1) ?? "-"}%)`;
+const rate = (summary) => `${number(summary.detected)}/${number(summary.detected + summary.undetected)} (${summary.detection_percent?.toFixed(1) ?? "-"}%)`;
+const toolList = (tools) => Object.entries(tools).filter(([, version]) => version).map(([tool, version]) => `${tool} (${version})`);
 const fields = (list) => (list.length === 0 ? "none" : list.map((field) => `\`${field}\``).join(", "));
 
 export function renderMarkdown(result) {
@@ -728,7 +918,7 @@ export function renderMarkdown(result) {
   const add = (...items) => lines.push(...items);
   const { source, environment: env, counts, baseline, mutations, sizes, latency } = result;
   const packages = Object.entries(env.packages).map(([name, version]) => `${name} ${version ?? "(not installed)"}`).join(", ");
-  const tools = Object.entries(env.external_tools_on_path).filter(([, found]) => found).map(([tool]) => tool);
+  const tools = toolList(env.external_tools_on_path);
 
   add("# Offline evaluation results", "");
   add(`Generated by \`${result.generated_by}\` (\`npm run evaluate\`). Every number below is in \`results.json\` next to this file.`, "");
@@ -743,7 +933,7 @@ export function renderMarkdown(result) {
   add(`| **All** | | ${counts.total.valid} | ${counts.total.tampered} | ${counts.total.invalid} | ${counts.total.total} |`);
 
   add("", "## (b) Hash + JSON Schema baseline against the verifiers", "");
-  add("The baseline accepts a vector when every document it declares validates against its committed JSON Schema (Ajv 2020-12, set up as in `verify.mjs`) and every digest the record carries recomputes. It checks every digest that the valid vectors of the same schema declare: RFC 8785, python-json-v1 or file bytes. It replays nothing. *Strict* reads JSON as `verify.mjs` does, rejecting duplicate keys. *JSON.parse* keeps the last of duplicate keys. Both reject NaN and Infinity; Python's `json.loads` accepts them by default. *Verifier rejects* counts exit codes other than 0.", "");
+  add("The baseline accepts a vector when every document it declares validates against its committed JSON Schema (Ajv 2020-12, set up as in `verify.mjs`) and every digest it can recompute from the vector alone matches. Those are the digests the valid vectors of the same schema declare in the manifests (RFC 8785, python-json-v1 or file bytes), plus the embedded digests listed under (c) as checked by the baseline. It does not check digests that name files outside the vector, and it replays nothing. *Strict* reads JSON as `verify.mjs` does, rejecting duplicate keys. *JSON.parse* keeps the last of duplicate keys. Both reject NaN and Infinity; Python's `json.loads` accepts them by default. *Verifier rejects* counts exit codes other than 0; a run without an exit code counts as neither.", "");
   add("| Project | Kind | Vectors | Baseline accepts (strict) | Baseline accepts (JSON.parse) | Verifier rejects | Verifier exit code as in manifest |", "| --- | --- | --- | --- | --- | --- | --- |");
   const baselineRow = (label, kind, row) => add(`| ${label} | ${kind} | ${row.vectors} | ${row.baseline_strict_accepts} | ${row.baseline_json_parse_accepts} | ${row.verifier_rejects} | ${row.verifier_exit_code_as_manifest} |`);
   for (const [project, kinds] of Object.entries(baseline.by_project)) for (const kind of KINDS) baselineRow(project, kind, kinds[kind]);
@@ -754,13 +944,28 @@ export function renderMarkdown(result) {
   }
 
   add("", "## (c) Single-leaf mutations", "");
-  add("Every JSON leaf of every valid vector is changed once: integer +1, float +0.125 (x2 when |x| >= 1e6), string + `x`, boolean flipped, null to `x`. The edited record goes through its verifier; *detected* means an exit code other than 0. **Stale** leaves every digest as it was. **Resealed** recomputes every digest the manifest declares for that vector, innermost first, as someone who edits a record and re-hashes it would; in a directory vector it rewrites the edited file's SHA-256 in `provenance.json`. Digest fields are not mutated. In directory vectors only JSON files in compact sorted form are mutated; JSONL files and `provenance.json` are not.", "");
+  add("Every JSON leaf of every valid vector is changed once: integer +1, float +0.125 (x2 when |x| >= 1e6), string + `x`, boolean flipped, null to `x`. The edited record goes through its verifier; *detected* means an exit code other than 0.", "");
+  add("- **Stale** leaves every digest as it was.");
+  add("- **Resealed** recomputes every digest the verifier checks, as someone who edits a record and re-hashes it would. The embedded digests below come first, then the manifest's digests, innermost first. Each digest uses the canonical form the edited record's `schema_version` requires; which version uses which form is learned from the valid vectors, so an edit from decision-control record schema 3 to 4 is resealed in RFC 8785. In a directory vector, the SHA-256s in `provenance.json` come last.");
+  add("- Resealing rewrites digests, not copies. An OPA input or a Cedar request repeats parts of the proposal, so an edit to a repeated field is caught by that comparison.");
+  add("- Digest fields, declared or embedded, are not mutated. In directory vectors only JSON files in compact sorted form are mutated; JSONL files and `provenance.json` are not.", "");
+  add("Digests the verifiers check that the manifests do not declare:", "", "| Project | Document | Digest | Of | Resealed and checked by the baseline |", "| --- | --- | --- | --- | --- |");
+  for (const rule of mutations.embedded_digests) add(`| ${rule.project} | \`${rule.document}\` | \`${rule.value}\` | ${rule.what} | ${rule.resealed ? "yes" : "no: no edit here changes those files, and only replay knows which run they belong to"} |`);
+  const notMutated = mutations.by_type.reduce((sum, row) => sum + row.embedded_digest_leaves_not_mutated, 0);
+  add("", `${notMutated} embedded digest leaves in the valid vectors are left unmutated. ${mutations.unaccounted_digest_values.length === 0 ? "A scan of the valid vectors finds no other 64-hex value." : `Unaccounted 64-hex values: ${mutations.unaccounted_digest_values.map((value) => `\`${value}\``).join(", ")}.`}`, "");
   add("| Project | Record type | Vectors | Mutations per mode | Stale detected | Resealed detected |", "| --- | --- | --- | --- | --- | --- |");
   for (const row of mutations.by_type) {
     add(`| ${row.project} | ${row.record_type} | ${row.vectors} | ${number(row.stale.mutations)} | ${rate(row.stale)} | ${rate(row.resealed)} |`);
     for (const [name, file] of Object.entries(row.files ?? {})) add(`| | ${row.record_type}: ${name} | | ${number(file.stale.mutations)} | ${rate(file.stale)} | ${rate(file.resealed)} |`);
   }
   add(`| **All** | | ${counts.total.valid} | ${number(mutations.total.stale.mutations)} | **${rate(mutations.total.stale)}** | **${rate(mutations.total.resealed)}** |`, "");
+  const caller = result.caller_path;
+  if (caller) {
+    const callerTools = toolList(caller.external_tools_on_path);
+    add(`With the caller's PATH (${callerTools.length === 0 ? "no external tools found" : callerTools.join(", ")}), the same sweep detects stale ${rate(caller.total.stale)} and resealed ${rate(caller.total.resealed)}.${caller.differences.length === 0 ? " No record type differs." : ` It differs in ${caller.differences.map((row) => `${row.project} ${row.record_type} ${row.mode} (${number(row.detected)} detected${row.undetected_only_with_default_path.length ? `; caught only with the caller's PATH: ${fields(row.undetected_only_with_default_path)}` : ""}${row.undetected_only_with_caller_path.length ? `; missed only with it: ${fields(row.undetected_only_with_caller_path)}` : ""})`).join("; ")}.`}`, "");
+  }
+  const unsealable = mutations.total.resealed.unsealable;
+  add(unsealable === 0 ? "Every resealed edit could be resealed." : `${unsealable} resealed edits have no canonical form to reseal, because they leave RFC 8785's range. Their digests stay stale, and the rates leave them out.`);
   const crashed = MODES.map((mode) => mutations.total[mode].crashed).reduce((a, b) => a + b, 0);
   const errors = MODES.map((mode) => mutations.total[mode].errors).reduce((a, b) => a + b, 0);
   add(`Controls: ${mutations.controls.accepted} of ${mutations.controls.runs} valid vectors still verify after being rewritten unmutated, so the rewrite itself is not what the verifiers detect.${mutations.controls.rejected.length ? ` Rejected: ${mutations.controls.rejected.join(", ")}.` : ""} ${crashed === 0 ? "No run ended in an uncaught Python exception." : `${crashed} runs ended in an uncaught Python exception; they count as detected.`} ${errors === 0 ? "Every run returned an exit code (a run killed before it exits is retried up to three times)." : `${errors} runs never returned an exit code; the rates leave them out.`}`);
@@ -773,7 +978,7 @@ export function renderMarkdown(result) {
   }
 
   add("", "### What the mutation rates show, and what they do not", "");
-  add("- Digests detect change, not forgery: whoever edits a record can recompute its hashes ([DECISION_RECORDS.md](../../../docs/DECISION_RECORDS.md#compatibility-and-limits)). A resealed edit is caught only when replay recomputes something from the edited field.");
+  add("- Digests detect change, not forgery: whoever edits a record can recompute its hashes ([DECISION_RECORDS.md](../../../docs/DECISION_RECORDS.md#compatibility-and-limits)). A resealed edit is caught when replay recomputes something from the edited field, or finds that it no longer matches a copy elsewhere in the record.");
   add("- Fields no recomputation depends on stay bound only by a signature (`--require-signature`): free text such as review and event notes or question instructions, caller-supplied labels such as `recommendation.model`, `question_version`, `proposed_by` and `produced_by.version`, and inputs whose edit leaves the recomputed verdict unchanged. The lists above name them for this corpus.");
   add("- One edit per value type, one leaf at a time, on vectors written by the same authors as the verifiers. The rates describe this corpus and operator, not records in general or an adversary who edits several fields together.");
 

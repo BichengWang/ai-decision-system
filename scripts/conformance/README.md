@@ -43,11 +43,15 @@ python3 -m venv /tmp/ads-venv
 npm run evaluate -- --bin /tmp/ads-venv/bin --out /tmp/ads-eval   # ~8,700 runs, minutes
 ```
 
-Verifiers get a PATH of `--bin`, `/usr/bin` and `/bin` only, so OPA and Cedar
-decisions replay digest-only; `--inherit-path` passes the caller's PATH instead.
-`--latency-runs 0` skips latency. [`results/`](results/RESULTS.md) holds one run
-without latency, which is deterministic; regenerate it with `--out results
---latency-runs 0` when vectors or verifiers change. It names the manifests'
+Resealing recomputes every digest a verifier checks: the manifests' and the
+embedded ones listed in `EMBEDDED_DIGESTS` (`checks/evaluate.mjs`). A run fails if
+a valid vector holds a 64-hex value that neither accounts for. Verifiers get a PATH
+of `--bin`, `/usr/bin` and `/bin` only, so OPA and Cedar decisions replay
+digest-only; `--inherit-path` passes the caller's PATH instead, and
+`--compare-inherit-path` runs the sweep both ways. `--latency-runs 0` skips
+latency. [`results/`](results/RESULTS.md) holds one run without latency, which is
+deterministic; regenerate it with `--out results --latency-runs 0
+--compare-inherit-path` when vectors or verifiers change. It names the manifests'
 SHA-256s, the source commit and the git tree ids of the packages and the
 evaluator, which stay the same after a squash merge. `node --test` covers the
 evaluator with a stub verifier, so CI needs no Python; CI does not run the sweep.
