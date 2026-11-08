@@ -2,14 +2,14 @@
   "format": 1,
   "generated_by": "scripts/conformance/evaluate.mjs",
   "source": {
-    "commit": "86a82dd7ae33cd50b39b855aa610342cba099b63",
+    "commit": "45fcf6fc26e010d5e6a77f3e7aa3923f617db5c4",
     "dirty": false,
     "tree_ids": {
       "ai-workflows/decision-control": "280e96a04b4651a76dc652440298d40e84306c39",
       "ai-workflows/experiment-gate": "7c2ecc7dc9da5aac0dc69ffabe881a61530b3bc2",
       "ai-workflows/jev-decision": "5b112df7a96d5f6da546fb7af21ca4860df8654b",
-      "scripts/conformance/checks": "2d6c233f6dc4af263eb4daa40fe2d7f64e3c0754",
-      "scripts/conformance/evaluate.mjs": "a2a1e1e1d714ac528bcb3ed7b133b89330005f51"
+      "scripts/conformance/checks": "e0fe2f9b9c18bd6695a79cb03142d74fa76eb58c",
+      "scripts/conformance/evaluate.mjs": "05a8c13063ee7c4cc1520d50599a9659c328ef06"
     }
   },
   "manifests": [
@@ -46,9 +46,9 @@
     "node": "v26.10.0",
     "verifier_path": "--bin, /usr/bin, /bin",
     "external_tools_on_path": {
-      "opa": false,
-      "cedar": false,
-      "cosign": false
+      "opa": null,
+      "cedar": null,
+      "cosign": null
     }
   },
   "counts": {
@@ -94,8 +94,8 @@
         },
         "tampered": {
           "vectors": 41,
-          "baseline_strict_accepts": 25,
-          "baseline_json_parse_accepts": 25,
+          "baseline_strict_accepts": 23,
+          "baseline_json_parse_accepts": 23,
           "verifier_rejects": 41,
           "verifier_exit_code_as_manifest": 41
         },
@@ -164,8 +164,8 @@
       },
       "tampered": {
         "vectors": 64,
-        "baseline_strict_accepts": 38,
-        "baseline_json_parse_accepts": 38,
+        "baseline_strict_accepts": 36,
+        "baseline_json_parse_accepts": 36,
         "verifier_rejects": 64,
         "verifier_exit_code_as_manifest": 64
       },
@@ -867,8 +867,14 @@
         "record_type": "record.v5",
         "manifest_exit_code": 1,
         "verifier_exit_code": 1,
-        "baseline_strict": "accept",
-        "baseline_json_parse": "accept"
+        "baseline_strict": "reject",
+        "baseline_strict_reasons": [
+          "digest /record/external_policy/request/context/proposal_sha256: differs"
+        ],
+        "baseline_json_parse": "reject",
+        "baseline_json_parse_reasons": [
+          "digest /record/external_policy/request/context/proposal_sha256: differs"
+        ]
       },
       {
         "project": "decision-control",
@@ -887,8 +893,14 @@
         "record_type": "record.v5",
         "manifest_exit_code": 1,
         "verifier_exit_code": 1,
-        "baseline_strict": "accept",
-        "baseline_json_parse": "accept"
+        "baseline_strict": "reject",
+        "baseline_strict_reasons": [
+          "digest /record/external_policy/request/context/proposal_sha256: differs"
+        ],
+        "baseline_json_parse": "reject",
+        "baseline_json_parse_reasons": [
+          "digest /record/external_policy/request/context/proposal_sha256: differs"
+        ]
       },
       {
         "project": "decision-control",
@@ -2594,16 +2606,53 @@
         "reason": "not in compact sorted JSON form"
       }
     ],
+    "embedded_digests": [
+      {
+        "project": "decision-control",
+        "document": ".",
+        "value": "/record/external_policy/request/context/proposal_sha256",
+        "what": "RFC 8785 SHA-256 of the proposal a Cedar decision is bound to",
+        "resealed": true,
+        "checked_by_baseline": true
+      },
+      {
+        "project": "jev-decision",
+        "document": "evaluation.json",
+        "value": "/calibration/sha256",
+        "what": "SHA-256 of calibration.json",
+        "resealed": true,
+        "checked_by_baseline": true
+      },
+      {
+        "project": "jev-decision",
+        "document": "calibration.json",
+        "value": "/fitted_on/cases_sha256",
+        "what": "SHA-256 of the fitting run's cases.jsonl",
+        "resealed": false,
+        "checked_by_baseline": false
+      },
+      {
+        "project": "jev-decision",
+        "document": "calibration.json",
+        "value": "/fitted_on/responses_sha256",
+        "what": "SHA-256 of the fitting run's responses.jsonl",
+        "resealed": false,
+        "checked_by_baseline": false
+      }
+    ],
+    "unaccounted_digest_values": [],
     "by_type": [
       {
         "project": "decision-control",
         "record_type": "evaluation.v1",
         "vectors": 2,
+        "embedded_digest_leaves_not_mutated": 0,
         "stale": {
           "mutations": 481,
           "detected": 481,
           "undetected": 0,
           "errors": 0,
+          "unsealable": 0,
           "detection_percent": 100,
           "crashed": 0,
           "exit_codes": {
@@ -2613,14 +2662,15 @@
         },
         "resealed": {
           "mutations": 481,
-          "detected": 371,
-          "undetected": 110,
+          "detected": 369,
+          "undetected": 112,
           "errors": 0,
-          "detection_percent": 77.1,
+          "unsealable": 0,
+          "detection_percent": 76.7,
           "crashed": 0,
           "exit_codes": {
-            "0": 110,
-            "1": 336,
+            "0": 112,
+            "1": 334,
             "2": 35
           },
           "undetected_fields": [
@@ -2635,7 +2685,8 @@
             "/report/case_results/[]/case/ticket/department",
             "/report/case_results/[]/case/ticket/revision",
             "/report/policy/reviewers/[]",
-            "/report/policy/version"
+            "/report/policy/version",
+            "/report/schema_version"
           ]
         }
       },
@@ -2643,11 +2694,13 @@
         "project": "decision-control",
         "record_type": "evaluation.v2",
         "vectors": 3,
+        "embedded_digest_leaves_not_mutated": 0,
         "stale": {
           "mutations": 738,
           "detected": 738,
           "undetected": 0,
           "errors": 0,
+          "unsealable": 0,
           "detection_percent": 100,
           "crashed": 0,
           "exit_codes": {
@@ -2661,6 +2714,7 @@
           "detected": 573,
           "undetected": 165,
           "errors": 0,
+          "unsealable": 0,
           "detection_percent": 77.6,
           "crashed": 0,
           "exit_codes": {
@@ -2688,11 +2742,13 @@
         "project": "decision-control",
         "record_type": "record.v1",
         "vectors": 2,
+        "embedded_digest_leaves_not_mutated": 0,
         "stale": {
           "mutations": 67,
           "detected": 67,
           "undetected": 0,
           "errors": 0,
+          "unsealable": 0,
           "detection_percent": 100,
           "crashed": 0,
           "exit_codes": {
@@ -2705,6 +2761,7 @@
           "detected": 50,
           "undetected": 17,
           "errors": 0,
+          "unsealable": 0,
           "detection_percent": 74.6,
           "crashed": 0,
           "exit_codes": {
@@ -2729,11 +2786,13 @@
         "project": "decision-control",
         "record_type": "record.v2",
         "vectors": 2,
+        "embedded_digest_leaves_not_mutated": 0,
         "stale": {
           "mutations": 67,
           "detected": 67,
           "undetected": 0,
           "errors": 0,
+          "unsealable": 0,
           "detection_percent": 100,
           "crashed": 0,
           "exit_codes": {
@@ -2746,6 +2805,7 @@
           "detected": 50,
           "undetected": 17,
           "errors": 0,
+          "unsealable": 0,
           "detection_percent": 74.6,
           "crashed": 0,
           "exit_codes": {
@@ -2771,11 +2831,13 @@
         "project": "decision-control",
         "record_type": "record.v3",
         "vectors": 3,
+        "embedded_digest_leaves_not_mutated": 0,
         "stale": {
           "mutations": 107,
           "detected": 107,
           "undetected": 0,
           "errors": 0,
+          "unsealable": 0,
           "detection_percent": 100,
           "crashed": 0,
           "exit_codes": {
@@ -2785,14 +2847,15 @@
         },
         "resealed": {
           "mutations": 107,
-          "detected": 78,
-          "undetected": 29,
+          "detected": 77,
+          "undetected": 30,
           "errors": 0,
-          "detection_percent": 72.9,
+          "unsealable": 0,
+          "detection_percent": 72,
           "crashed": 0,
           "exit_codes": {
-            "0": 29,
-            "1": 43,
+            "0": 30,
+            "1": 42,
             "2": 35
           },
           "undetected_fields": [
@@ -2814,11 +2877,13 @@
         "project": "decision-control",
         "record_type": "record.v4",
         "vectors": 6,
+        "embedded_digest_leaves_not_mutated": 0,
         "stale": {
           "mutations": 201,
           "detected": 201,
           "undetected": 0,
           "errors": 0,
+          "unsealable": 0,
           "detection_percent": 100,
           "crashed": 0,
           "exit_codes": {
@@ -2831,6 +2896,7 @@
           "detected": 139,
           "undetected": 62,
           "errors": 0,
+          "unsealable": 0,
           "detection_percent": 69.2,
           "crashed": 0,
           "exit_codes": {
@@ -2860,29 +2926,32 @@
         "project": "decision-control",
         "record_type": "record.v5",
         "vectors": 15,
+        "embedded_digest_leaves_not_mutated": 4,
         "stale": {
-          "mutations": 774,
-          "detected": 774,
+          "mutations": 770,
+          "detected": 770,
           "undetected": 0,
           "errors": 0,
+          "unsealable": 0,
           "detection_percent": 100,
           "crashed": 0,
           "exit_codes": {
-            "1": 759,
+            "1": 755,
             "2": 15
           },
           "undetected_fields": []
         },
         "resealed": {
-          "mutations": 774,
-          "detected": 543,
-          "undetected": 231,
+          "mutations": 770,
+          "detected": 527,
+          "undetected": 243,
           "errors": 0,
-          "detection_percent": 70.2,
+          "unsealable": 0,
+          "detection_percent": 68.4,
           "crashed": 0,
           "exit_codes": {
-            "0": 231,
-            "1": 305,
+            "0": 243,
+            "1": 289,
             "2": 238
           },
           "undetected_fields": [
@@ -2921,11 +2990,13 @@
         "project": "experiment-gate",
         "record_type": "decision.v2",
         "vectors": 7,
+        "embedded_digest_leaves_not_mutated": 0,
         "stale": {
           "mutations": 594,
           "detected": 580,
           "undetected": 14,
           "errors": 0,
+          "unsealable": 0,
           "detection_percent": 97.6,
           "crashed": 0,
           "exit_codes": {
@@ -2940,21 +3011,23 @@
         },
         "resealed": {
           "mutations": 594,
-          "detected": 566,
-          "undetected": 28,
+          "detected": 560,
+          "undetected": 34,
           "errors": 0,
-          "detection_percent": 95.3,
+          "unsealable": 0,
+          "detection_percent": 94.3,
           "crashed": 0,
           "exit_codes": {
-            "0": 28,
-            "1": 499,
+            "0": 34,
+            "1": 493,
             "2": 67
           },
           "undetected_fields": [
             "/expgate_version",
             "/input/description",
             "/input/seed",
-            "/produced_by/version"
+            "/produced_by/version",
+            "/schema_version"
           ]
         }
       },
@@ -2962,11 +3035,13 @@
         "project": "experiment-gate",
         "record_type": "decision.v3",
         "vectors": 8,
+        "embedded_digest_leaves_not_mutated": 0,
         "stale": {
           "mutations": 608,
           "detected": 592,
           "undetected": 16,
           "errors": 0,
+          "unsealable": 0,
           "detection_percent": 97.4,
           "crashed": 0,
           "exit_codes": {
@@ -2984,6 +3059,7 @@
           "detected": 577,
           "undetected": 31,
           "errors": 0,
+          "unsealable": 0,
           "detection_percent": 94.9,
           "crashed": 0,
           "exit_codes": {
@@ -3003,11 +3079,13 @@
         "project": "jev-decision",
         "record_type": "answer.v2",
         "vectors": 3,
+        "embedded_digest_leaves_not_mutated": 0,
         "stale": {
           "mutations": 169,
           "detected": 169,
           "undetected": 0,
           "errors": 0,
+          "unsealable": 0,
           "detection_percent": 100,
           "crashed": 0,
           "exit_codes": {
@@ -3021,6 +3099,7 @@
           "detected": 145,
           "undetected": 24,
           "errors": 0,
+          "unsealable": 0,
           "detection_percent": 85.8,
           "crashed": 0,
           "exit_codes": {
@@ -3051,81 +3130,108 @@
         "project": "jev-decision",
         "record_type": "evaluation-dir",
         "vectors": 5,
+        "embedded_digest_leaves_not_mutated": 6,
         "stale": {
-          "mutations": 418,
-          "detected": 418,
+          "mutations": 412,
+          "detected": 412,
           "undetected": 0,
           "errors": 0,
+          "unsealable": 0,
           "detection_percent": 100,
           "crashed": 0,
           "exit_codes": {
-            "1": 418
+            "1": 412
           },
           "undetected_fields": []
         },
         "resealed": {
-          "mutations": 418,
-          "detected": 418,
-          "undetected": 0,
+          "mutations": 412,
+          "detected": 399,
+          "undetected": 13,
           "errors": 0,
-          "detection_percent": 100,
+          "unsealable": 0,
+          "detection_percent": 96.8,
           "crashed": 0,
           "exit_codes": {
-            "1": 338,
-            "2": 80
+            "0": 13,
+            "1": 323,
+            "2": 76
           },
-          "undetected_fields": []
+          "undetected_fields": [
+            "calibration.json#/fitted_on/case_ids/[]",
+            "calibration.json#/produced_by/version",
+            "calibration.json#/questions/department/map/x/[]",
+            "calibration.json#/questions/department/n",
+            "calibration.json#/questions/frustration/map/x/[]",
+            "calibration.json#/questions/frustration/n",
+            "calibration.json#/questions/refund/n",
+            "calibration.json#/questions/refund/positives"
+          ]
         },
         "files": {
           "calibration.json": {
             "stale": {
-              "mutations": 80,
-              "detected": 80,
+              "mutations": 76,
+              "detected": 76,
               "undetected": 0,
               "errors": 0,
+              "unsealable": 0,
               "detection_percent": 100,
               "crashed": 0,
               "exit_codes": {
-                "1": 80
+                "1": 76
               },
               "undetected_fields": []
             },
             "resealed": {
-              "mutations": 80,
-              "detected": 80,
-              "undetected": 0,
+              "mutations": 76,
+              "detected": 63,
+              "undetected": 13,
               "errors": 0,
-              "detection_percent": 100,
+              "unsealable": 0,
+              "detection_percent": 82.9,
               "crashed": 0,
               "exit_codes": {
-                "1": 30,
-                "2": 50
+                "0": 13,
+                "1": 17,
+                "2": 46
               },
-              "undetected_fields": []
+              "undetected_fields": [
+                "/fitted_on/case_ids/[]",
+                "/produced_by/version",
+                "/questions/department/map/x/[]",
+                "/questions/department/n",
+                "/questions/frustration/map/x/[]",
+                "/questions/frustration/n",
+                "/questions/refund/n",
+                "/questions/refund/positives"
+              ]
             }
           },
           "evaluation.json": {
             "stale": {
-              "mutations": 336,
-              "detected": 336,
+              "mutations": 334,
+              "detected": 334,
               "undetected": 0,
               "errors": 0,
+              "unsealable": 0,
               "detection_percent": 100,
               "crashed": 0,
               "exit_codes": {
-                "1": 336
+                "1": 334
               },
               "undetected_fields": []
             },
             "resealed": {
-              "mutations": 336,
-              "detected": 336,
+              "mutations": 334,
+              "detected": 334,
               "undetected": 0,
               "errors": 0,
+              "unsealable": 0,
               "detection_percent": 100,
               "crashed": 0,
               "exit_codes": {
-                "1": 306,
+                "1": 304,
                 "2": 30
               },
               "undetected_fields": []
@@ -3137,6 +3243,7 @@
               "detected": 2,
               "undetected": 0,
               "errors": 0,
+              "unsealable": 0,
               "detection_percent": 100,
               "crashed": 0,
               "exit_codes": {
@@ -3149,6 +3256,7 @@
               "detected": 2,
               "undetected": 0,
               "errors": 0,
+              "unsealable": 0,
               "detection_percent": 100,
               "crashed": 0,
               "exit_codes": {
@@ -3162,29 +3270,31 @@
     ],
     "total": {
       "stale": {
-        "mutations": 4224,
-        "detected": 4194,
+        "mutations": 4214,
+        "detected": 4184,
         "undetected": 30,
         "errors": 0,
+        "unsealable": 0,
         "detection_percent": 99.3,
         "crashed": 0,
         "exit_codes": {
           "0": 30,
-          "1": 4134,
+          "1": 4124,
           "2": 60
         }
       },
       "resealed": {
-        "mutations": 4224,
-        "detected": 3510,
-        "undetected": 714,
+        "mutations": 4214,
+        "detected": 3466,
+        "undetected": 748,
         "errors": 0,
-        "detection_percent": 83.1,
+        "unsealable": 0,
+        "detection_percent": 82.2,
         "crashed": 0,
         "exit_codes": {
-          "0": 714,
-          "1": 2789,
-          "2": 721
+          "0": 748,
+          "1": 2749,
+          "2": 717
         }
       }
     }
@@ -3281,5 +3391,80 @@
         "max": 19210
       }
     ]
+  },
+  "caller_path": {
+    "verifier_path": "--bin, then the caller's PATH",
+    "external_tools_on_path": {
+      "opa": "Version: 1.21.2",
+      "cedar": null,
+      "cosign": null
+    },
+    "total": {
+      "stale": {
+        "mutations": 4214,
+        "detected": 4184,
+        "undetected": 30,
+        "errors": 0,
+        "unsealable": 0,
+        "detection_percent": 99.3,
+        "crashed": 0,
+        "exit_codes": {
+          "0": 30,
+          "1": 4124,
+          "2": 60
+        }
+      },
+      "resealed": {
+        "mutations": 4214,
+        "detected": 3474,
+        "undetected": 740,
+        "errors": 0,
+        "unsealable": 0,
+        "detection_percent": 82.4,
+        "crashed": 0,
+        "exit_codes": {
+          "0": 740,
+          "1": 2753,
+          "2": 721
+        }
+      }
+    },
+    "baseline_total": {
+      "valid": {
+        "vectors": 56,
+        "baseline_strict_accepts": 56,
+        "baseline_json_parse_accepts": 56,
+        "verifier_rejects": 0,
+        "verifier_exit_code_as_manifest": 56
+      },
+      "tampered": {
+        "vectors": 64,
+        "baseline_strict_accepts": 36,
+        "baseline_json_parse_accepts": 36,
+        "verifier_rejects": 64,
+        "verifier_exit_code_as_manifest": 64
+      },
+      "invalid": {
+        "vectors": 65,
+        "baseline_strict_accepts": 6,
+        "baseline_json_parse_accepts": 12,
+        "verifier_rejects": 65,
+        "verifier_exit_code_as_manifest": 65
+      }
+    },
+    "differences": [
+      {
+        "project": "decision-control",
+        "record_type": "record.v5",
+        "mode": "resealed",
+        "detected": 535,
+        "undetected_only_with_default_path": [
+          "/record/external_policy/modules/routing.rego",
+          "/record/external_policy/path"
+        ],
+        "undetected_only_with_caller_path": []
+      }
+    ],
+    "problems": []
   }
 }
