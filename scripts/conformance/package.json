@@ -9,7 +9,8 @@
   },
   "scripts": {
     "test": "node --test",
-    "verify": "node verify.mjs"
+    "verify": "node verify.mjs",
+    "evaluate": "node evaluate.mjs"
   },
   "dependencies": {
     "ajv": "8.20.0",

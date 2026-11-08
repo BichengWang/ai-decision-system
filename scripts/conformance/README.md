@@ -29,6 +29,27 @@ this as the `conformance (node)` check of
 [`.github/workflows/conformance.yml`](../../.github/workflows/conformance.yml) on
 every change to a manifest, vector, package `schema/` directory or this folder.
 
+## Offline evaluation
+
+`evaluate.mjs` runs every vector through its package verifier, the manifest's
+`verify.command` as a subprocess, and writes `results.json` and `RESULTS.md`:
+vector counts, a hash + JSON Schema baseline against the verifiers, a stale and a
+resealed single-leaf mutation matrix per record type, record sizes and CLI verify
+latency. It needs the three packages installed from this checkout:
+
+```sh
+python3 -m venv /tmp/ads-venv
+/tmp/ads-venv/bin/pip install ../../ai-workflows/{experiment-gate,jev-decision,decision-control}
+npm run evaluate -- --bin /tmp/ads-venv/bin --out /tmp/ads-eval   # ~8,700 runs, minutes
+```
+
+Verifiers get a PATH of `--bin`, `/usr/bin` and `/bin` only, so OPA and Cedar
+decisions replay digest-only; `--inherit-path` passes the caller's PATH instead.
+`--latency-runs 0` skips latency. [`results/`](results/RESULTS.md) holds one run
+without latency, which is deterministic; regenerate it with `--out results
+--latency-runs 0` when vectors or verifiers change. `node --test` covers the
+evaluator with a stub verifier, so CI needs no Python; CI does not run the sweep.
+
 ## Manifest rules
 
 The format is specified in [DECISION_RECORDS](../../docs/DECISION_RECORDS.md#conformance-vectors).
