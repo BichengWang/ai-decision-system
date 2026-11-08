@@ -47,7 +47,9 @@ Verifiers get a PATH of `--bin`, `/usr/bin` and `/bin` only, so OPA and Cedar
 decisions replay digest-only; `--inherit-path` passes the caller's PATH instead.
 `--latency-runs 0` skips latency. [`results/`](results/RESULTS.md) holds one run
 without latency, which is deterministic; regenerate it with `--out results
---latency-runs 0` when vectors or verifiers change. `node --test` covers the
+--latency-runs 0` when vectors or verifiers change. It names the manifests'
+SHA-256s, the source commit and the git tree ids of the packages and the
+evaluator, which stay the same after a squash merge. `node --test` covers the
 evaluator with a stub verifier, so CI needs no Python; CI does not run the sweep.
 
 ## Manifest rules

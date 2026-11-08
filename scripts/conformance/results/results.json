@@ -1,0 +1,3285 @@
+{
+  "format": 1,
+  "generated_by": "scripts/conformance/evaluate.mjs",
+  "source": {
+    "commit": "86a82dd7ae33cd50b39b855aa610342cba099b63",
+    "dirty": false,
+    "tree_ids": {
+      "ai-workflows/decision-control": "280e96a04b4651a76dc652440298d40e84306c39",
+      "ai-workflows/experiment-gate": "7c2ecc7dc9da5aac0dc69ffabe881a61530b3bc2",
+      "ai-workflows/jev-decision": "5b112df7a96d5f6da546fb7af21ca4860df8654b",
+      "scripts/conformance/checks": "2d6c233f6dc4af263eb4daa40fe2d7f64e3c0754",
+      "scripts/conformance/evaluate.mjs": "a2a1e1e1d714ac528bcb3ed7b133b89330005f51"
+    }
+  },
+  "manifests": [
+    {
+      "path": "ai-workflows/decision-control/conformance/manifest.json",
+      "project": "decision-control",
+      "package": "decisioncontrol",
+      "vectors": 114,
+      "sha256": "5ca8a7ea081c0b9ad3da9129cf8fc58f0df1536ed0d92c9a3d2a6e6b1091577f"
+    },
+    {
+      "path": "ai-workflows/experiment-gate/conformance/manifest.json",
+      "project": "experiment-gate",
+      "package": "expgate",
+      "vectors": 38,
+      "sha256": "9bbb7374288f5ab6bed6b19bcec5f4000fb2f513491ece721719dae7e356a6a7"
+    },
+    {
+      "path": "ai-workflows/jev-decision/conformance/manifest.json",
+      "project": "jev-decision",
+      "package": "jevdecision",
+      "vectors": 33,
+      "sha256": "1a616d318a364d13c90feab503ec84b2f9b3cac334a7bc48994c24fb0c5babac"
+    }
+  ],
+  "environment": {
+    "python": "3.13.16",
+    "implementation": "CPython",
+    "packages": {
+      "decisioncontrol": "0.2.0",
+      "expgate": "0.2.0",
+      "jevdecision": "0.2.0"
+    },
+    "node": "v26.10.0",
+    "verifier_path": "--bin, /usr/bin, /bin",
+    "external_tools_on_path": {
+      "opa": false,
+      "cedar": false,
+      "cosign": false
+    }
+  },
+  "counts": {
+    "by_project": {
+      "decision-control": {
+        "package": "decisioncontrol",
+        "valid": 33,
+        "tampered": 41,
+        "invalid": 40,
+        "total": 114
+      },
+      "experiment-gate": {
+        "package": "expgate",
+        "valid": 15,
+        "tampered": 10,
+        "invalid": 13,
+        "total": 38
+      },
+      "jev-decision": {
+        "package": "jevdecision",
+        "valid": 8,
+        "tampered": 13,
+        "invalid": 12,
+        "total": 33
+      }
+    },
+    "total": {
+      "valid": 56,
+      "tampered": 64,
+      "invalid": 65,
+      "total": 185
+    }
+  },
+  "baseline": {
+    "by_project": {
+      "decision-control": {
+        "valid": {
+          "vectors": 33,
+          "baseline_strict_accepts": 33,
+          "baseline_json_parse_accepts": 33,
+          "verifier_rejects": 0,
+          "verifier_exit_code_as_manifest": 33
+        },
+        "tampered": {
+          "vectors": 41,
+          "baseline_strict_accepts": 25,
+          "baseline_json_parse_accepts": 25,
+          "verifier_rejects": 41,
+          "verifier_exit_code_as_manifest": 41
+        },
+        "invalid": {
+          "vectors": 40,
+          "baseline_strict_accepts": 0,
+          "baseline_json_parse_accepts": 3,
+          "verifier_rejects": 40,
+          "verifier_exit_code_as_manifest": 40
+        }
+      },
+      "experiment-gate": {
+        "valid": {
+          "vectors": 15,
+          "baseline_strict_accepts": 15,
+          "baseline_json_parse_accepts": 15,
+          "verifier_rejects": 0,
+          "verifier_exit_code_as_manifest": 15
+        },
+        "tampered": {
+          "vectors": 10,
+          "baseline_strict_accepts": 6,
+          "baseline_json_parse_accepts": 6,
+          "verifier_rejects": 10,
+          "verifier_exit_code_as_manifest": 10
+        },
+        "invalid": {
+          "vectors": 13,
+          "baseline_strict_accepts": 2,
+          "baseline_json_parse_accepts": 4,
+          "verifier_rejects": 13,
+          "verifier_exit_code_as_manifest": 13
+        }
+      },
+      "jev-decision": {
+        "valid": {
+          "vectors": 8,
+          "baseline_strict_accepts": 8,
+          "baseline_json_parse_accepts": 8,
+          "verifier_rejects": 0,
+          "verifier_exit_code_as_manifest": 8
+        },
+        "tampered": {
+          "vectors": 13,
+          "baseline_strict_accepts": 7,
+          "baseline_json_parse_accepts": 7,
+          "verifier_rejects": 13,
+          "verifier_exit_code_as_manifest": 13
+        },
+        "invalid": {
+          "vectors": 12,
+          "baseline_strict_accepts": 4,
+          "baseline_json_parse_accepts": 5,
+          "verifier_rejects": 12,
+          "verifier_exit_code_as_manifest": 12
+        }
+      }
+    },
+    "total": {
+      "valid": {
+        "vectors": 56,
+        "baseline_strict_accepts": 56,
+        "baseline_json_parse_accepts": 56,
+        "verifier_rejects": 0,
+        "verifier_exit_code_as_manifest": 56
+      },
+      "tampered": {
+        "vectors": 64,
+        "baseline_strict_accepts": 38,
+        "baseline_json_parse_accepts": 38,
+        "verifier_rejects": 64,
+        "verifier_exit_code_as_manifest": 64
+      },
+      "invalid": {
+        "vectors": 65,
+        "baseline_strict_accepts": 6,
+        "baseline_json_parse_accepts": 12,
+        "verifier_rejects": 65,
+        "verifier_exit_code_as_manifest": 65
+      }
+    },
+    "vectors": [
+      {
+        "project": "decision-control",
+        "path": "valid/evaluation-v1-gate-fail.json",
+        "expect": "valid",
+        "record_type": "evaluation.v1",
+        "manifest_exit_code": 0,
+        "verifier_exit_code": 0,
+        "baseline_strict": "accept",
+        "baseline_json_parse": "accept"
+      },
+      {
+        "project": "decision-control",
+        "path": "valid/evaluation-v1-ungated.json",
+        "expect": "valid",
+        "record_type": "evaluation.v1",
+        "manifest_exit_code": 0,
+        "verifier_exit_code": 0,
+        "baseline_strict": "accept",
+        "baseline_json_parse": "accept"
+      },
+      {
+        "project": "decision-control",
+        "path": "valid/evaluation-v2-gate-fail.json",
+        "expect": "valid",
+        "record_type": "evaluation.v2",
+        "manifest_exit_code": 0,
+        "verifier_exit_code": 0,
+        "baseline_strict": "accept",
+        "baseline_json_parse": "accept"
+      },
+      {
+        "project": "decision-control",
+        "path": "valid/evaluation-v2-gate-pass.json",
+        "expect": "valid",
+        "record_type": "evaluation.v2",
+        "manifest_exit_code": 0,
+        "verifier_exit_code": 0,
+        "baseline_strict": "accept",
+        "baseline_json_parse": "accept"
+      },
+      {
+        "project": "decision-control",
+        "path": "valid/evaluation-v2-ungated.json",
+        "expect": "valid",
+        "record_type": "evaluation.v2",
+        "manifest_exit_code": 0,
+        "verifier_exit_code": 0,
+        "baseline_strict": "accept",
+        "baseline_json_parse": "accept"
+      },
+      {
+        "project": "decision-control",
+        "path": "valid/record-v1-allow-executed.json",
+        "expect": "valid",
+        "record_type": "record.v1",
+        "manifest_exit_code": 0,
+        "verifier_exit_code": 0,
+        "baseline_strict": "accept",
+        "baseline_json_parse": "accept"
+      },
+      {
+        "project": "decision-control",
+        "path": "valid/record-v1-review-approved-executed.json",
+        "expect": "valid",
+        "record_type": "record.v1",
+        "manifest_exit_code": 0,
+        "verifier_exit_code": 0,
+        "baseline_strict": "accept",
+        "baseline_json_parse": "accept"
+      },
+      {
+        "project": "decision-control",
+        "path": "valid/record-v2-review-approved-by-proposer.json",
+        "expect": "valid",
+        "record_type": "record.v2",
+        "manifest_exit_code": 0,
+        "verifier_exit_code": 0,
+        "baseline_strict": "accept",
+        "baseline_json_parse": "accept"
+      },
+      {
+        "project": "decision-control",
+        "path": "valid/record-v2-review-cancelled.json",
+        "expect": "valid",
+        "record_type": "record.v2",
+        "manifest_exit_code": 0,
+        "verifier_exit_code": 0,
+        "baseline_strict": "accept",
+        "baseline_json_parse": "accept"
+      },
+      {
+        "project": "decision-control",
+        "path": "valid/record-v3-allow-executed.json",
+        "expect": "valid",
+        "record_type": "record.v3",
+        "manifest_exit_code": 0,
+        "verifier_exit_code": 0,
+        "baseline_strict": "accept",
+        "baseline_json_parse": "accept"
+      },
+      {
+        "project": "decision-control",
+        "path": "valid/record-v3-review-approved-executed.json",
+        "expect": "valid",
+        "record_type": "record.v3",
+        "manifest_exit_code": 0,
+        "verifier_exit_code": 0,
+        "baseline_strict": "accept",
+        "baseline_json_parse": "accept"
+      },
+      {
+        "project": "decision-control",
+        "path": "valid/record-v3-whole-number-float-executed.json",
+        "expect": "valid",
+        "record_type": "record.v3",
+        "manifest_exit_code": 0,
+        "verifier_exit_code": 0,
+        "baseline_strict": "accept",
+        "baseline_json_parse": "accept"
+      },
+      {
+        "project": "decision-control",
+        "path": "valid/record-v4-allow-executed.json",
+        "expect": "valid",
+        "record_type": "record.v4",
+        "manifest_exit_code": 0,
+        "verifier_exit_code": 0,
+        "baseline_strict": "accept",
+        "baseline_json_parse": "accept"
+      },
+      {
+        "project": "decision-control",
+        "path": "valid/record-v4-deny-denied.json",
+        "expect": "valid",
+        "record_type": "record.v4",
+        "manifest_exit_code": 0,
+        "verifier_exit_code": 0,
+        "baseline_strict": "accept",
+        "baseline_json_parse": "accept"
+      },
+      {
+        "project": "decision-control",
+        "path": "valid/record-v4-review-approved-executed.json",
+        "expect": "valid",
+        "record_type": "record.v4",
+        "manifest_exit_code": 0,
+        "verifier_exit_code": 0,
+        "baseline_strict": "accept",
+        "baseline_json_parse": "accept"
+      },
+      {
+        "project": "decision-control",
+        "path": "valid/record-v4-review-cancelled.json",
+        "expect": "valid",
+        "record_type": "record.v4",
+        "manifest_exit_code": 0,
+        "verifier_exit_code": 0,
+        "baseline_strict": "accept",
+        "baseline_json_parse": "accept"
+      },
+      {
+        "project": "decision-control",
+        "path": "valid/record-v4-review-pending.json",
+        "expect": "valid",
+        "record_type": "record.v4",
+        "manifest_exit_code": 0,
+        "verifier_exit_code": 0,
+        "baseline_strict": "accept",
+        "baseline_json_parse": "accept"
+      },
+      {
+        "project": "decision-control",
+        "path": "valid/record-v4-whole-number-float-executed.json",
+        "expect": "valid",
+        "record_type": "record.v4",
+        "manifest_exit_code": 0,
+        "verifier_exit_code": 0,
+        "baseline_strict": "accept",
+        "baseline_json_parse": "accept"
+      },
+      {
+        "project": "decision-control",
+        "path": "valid/record-v5-allow-executed.json",
+        "expect": "valid",
+        "record_type": "record.v5",
+        "manifest_exit_code": 0,
+        "verifier_exit_code": 0,
+        "baseline_strict": "accept",
+        "baseline_json_parse": "accept"
+      },
+      {
+        "project": "decision-control",
+        "path": "valid/record-v5-cedar-priority-review-approved-executed.json",
+        "expect": "valid",
+        "record_type": "record.v5",
+        "manifest_exit_code": 0,
+        "verifier_exit_code": 0,
+        "baseline_strict": "accept",
+        "baseline_json_parse": "accept"
+      },
+      {
+        "project": "decision-control",
+        "path": "valid/record-v5-cedar-reassign-allow-executed.json",
+        "expect": "valid",
+        "record_type": "record.v5",
+        "manifest_exit_code": 0,
+        "verifier_exit_code": 0,
+        "baseline_strict": "accept",
+        "baseline_json_parse": "accept"
+      },
+      {
+        "project": "decision-control",
+        "path": "valid/record-v5-cedar-reassign-denied.json",
+        "expect": "valid",
+        "record_type": "record.v5",
+        "manifest_exit_code": 0,
+        "verifier_exit_code": 0,
+        "baseline_strict": "accept",
+        "baseline_json_parse": "accept"
+      },
+      {
+        "project": "decision-control",
+        "path": "valid/record-v5-cedar-reassign-forbidden.json",
+        "expect": "valid",
+        "record_type": "record.v5",
+        "manifest_exit_code": 0,
+        "verifier_exit_code": 0,
+        "baseline_strict": "accept",
+        "baseline_json_parse": "accept"
+      },
+      {
+        "project": "decision-control",
+        "path": "valid/record-v5-deny-denied.json",
+        "expect": "valid",
+        "record_type": "record.v5",
+        "manifest_exit_code": 0,
+        "verifier_exit_code": 0,
+        "baseline_strict": "accept",
+        "baseline_json_parse": "accept"
+      },
+      {
+        "project": "decision-control",
+        "path": "valid/record-v5-opa-priority-allow-executed.json",
+        "expect": "valid",
+        "record_type": "record.v5",
+        "manifest_exit_code": 0,
+        "verifier_exit_code": 0,
+        "baseline_strict": "accept",
+        "baseline_json_parse": "accept"
+      },
+      {
+        "project": "decision-control",
+        "path": "valid/record-v5-opa-reassign-allow-executed.json",
+        "expect": "valid",
+        "record_type": "record.v5",
+        "manifest_exit_code": 0,
+        "verifier_exit_code": 0,
+        "baseline_strict": "accept",
+        "baseline_json_parse": "accept"
+      },
+      {
+        "project": "decision-control",
+        "path": "valid/record-v5-opa-reassign-denied.json",
+        "expect": "valid",
+        "record_type": "record.v5",
+        "manifest_exit_code": 0,
+        "verifier_exit_code": 0,
+        "baseline_strict": "accept",
+        "baseline_json_parse": "accept"
+      },
+      {
+        "project": "decision-control",
+        "path": "valid/record-v5-opa-reassign-review-approved-executed.json",
+        "expect": "valid",
+        "record_type": "record.v5",
+        "manifest_exit_code": 0,
+        "verifier_exit_code": 0,
+        "baseline_strict": "accept",
+        "baseline_json_parse": "accept"
+      },
+      {
+        "project": "decision-control",
+        "path": "valid/record-v5-priority-allow-executed.json",
+        "expect": "valid",
+        "record_type": "record.v5",
+        "manifest_exit_code": 0,
+        "verifier_exit_code": 0,
+        "baseline_strict": "accept",
+        "baseline_json_parse": "accept"
+      },
+      {
+        "project": "decision-control",
+        "path": "valid/record-v5-priority-review-approved-executed.json",
+        "expect": "valid",
+        "record_type": "record.v5",
+        "manifest_exit_code": 0,
+        "verifier_exit_code": 0,
+        "baseline_strict": "accept",
+        "baseline_json_parse": "accept"
+      },
+      {
+        "project": "decision-control",
+        "path": "valid/record-v5-review-approved-executed.json",
+        "expect": "valid",
+        "record_type": "record.v5",
+        "manifest_exit_code": 0,
+        "verifier_exit_code": 0,
+        "baseline_strict": "accept",
+        "baseline_json_parse": "accept"
+      },
+      {
+        "project": "decision-control",
+        "path": "valid/record-v5-review-pending.json",
+        "expect": "valid",
+        "record_type": "record.v5",
+        "manifest_exit_code": 0,
+        "verifier_exit_code": 0,
+        "baseline_strict": "accept",
+        "baseline_json_parse": "accept"
+      },
+      {
+        "project": "decision-control",
+        "path": "valid/record-v5-whole-number-float-executed.json",
+        "expect": "valid",
+        "record_type": "record.v5",
+        "manifest_exit_code": 0,
+        "verifier_exit_code": 0,
+        "baseline_strict": "accept",
+        "baseline_json_parse": "accept"
+      },
+      {
+        "project": "decision-control",
+        "path": "tampered/evaluation-v1-label-flip-recomputed.json",
+        "expect": "tampered",
+        "record_type": "evaluation.v1",
+        "manifest_exit_code": 1,
+        "verifier_exit_code": 1,
+        "baseline_strict": "accept",
+        "baseline_json_parse": "accept"
+      },
+      {
+        "project": "decision-control",
+        "path": "tampered/evaluation-v1-metric-edit-stale-checksum.json",
+        "expect": "tampered",
+        "record_type": "evaluation.v1",
+        "manifest_exit_code": 1,
+        "verifier_exit_code": 1,
+        "baseline_strict": "reject",
+        "baseline_strict_reasons": [
+          "digest /sha256: differs"
+        ],
+        "baseline_json_parse": "reject",
+        "baseline_json_parse_reasons": [
+          "digest /sha256: differs"
+        ]
+      },
+      {
+        "project": "decision-control",
+        "path": "tampered/evaluation-v1-rfc8785-checksum.json",
+        "expect": "tampered",
+        "record_type": "evaluation.v1",
+        "manifest_exit_code": 1,
+        "verifier_exit_code": 1,
+        "baseline_strict": "reject",
+        "baseline_strict_reasons": [
+          "digest /sha256: differs"
+        ],
+        "baseline_json_parse": "reject",
+        "baseline_json_parse_reasons": [
+          "digest /sha256: differs"
+        ]
+      },
+      {
+        "project": "decision-control",
+        "path": "tampered/evaluation-v2-disposition-edit-recomputed.json",
+        "expect": "tampered",
+        "record_type": "evaluation.v2",
+        "manifest_exit_code": 1,
+        "verifier_exit_code": 1,
+        "baseline_strict": "accept",
+        "baseline_json_parse": "accept"
+      },
+      {
+        "project": "decision-control",
+        "path": "tampered/evaluation-v2-label-flip-recomputed.json",
+        "expect": "tampered",
+        "record_type": "evaluation.v2",
+        "manifest_exit_code": 1,
+        "verifier_exit_code": 1,
+        "baseline_strict": "accept",
+        "baseline_json_parse": "accept"
+      },
+      {
+        "project": "decision-control",
+        "path": "tampered/evaluation-v2-metric-edit-recomputed.json",
+        "expect": "tampered",
+        "record_type": "evaluation.v2",
+        "manifest_exit_code": 1,
+        "verifier_exit_code": 1,
+        "baseline_strict": "accept",
+        "baseline_json_parse": "accept"
+      },
+      {
+        "project": "decision-control",
+        "path": "tampered/evaluation-v2-metric-edit-stale-checksum.json",
+        "expect": "tampered",
+        "record_type": "evaluation.v2",
+        "manifest_exit_code": 1,
+        "verifier_exit_code": 1,
+        "baseline_strict": "reject",
+        "baseline_strict_reasons": [
+          "digest /sha256: differs"
+        ],
+        "baseline_json_parse": "reject",
+        "baseline_json_parse_reasons": [
+          "digest /sha256: differs"
+        ]
+      },
+      {
+        "project": "decision-control",
+        "path": "tampered/evaluation-v2-python-json-checksum.json",
+        "expect": "tampered",
+        "record_type": "evaluation.v2",
+        "manifest_exit_code": 1,
+        "verifier_exit_code": 1,
+        "baseline_strict": "reject",
+        "baseline_strict_reasons": [
+          "digest /sha256: differs"
+        ],
+        "baseline_json_parse": "reject",
+        "baseline_json_parse_reasons": [
+          "digest /sha256: differs"
+        ]
+      },
+      {
+        "project": "decision-control",
+        "path": "tampered/record-v1-self-label-edit-recomputed.json",
+        "expect": "tampered",
+        "record_type": "record.v1",
+        "manifest_exit_code": 1,
+        "verifier_exit_code": 1,
+        "baseline_strict": "accept",
+        "baseline_json_parse": "accept"
+      },
+      {
+        "project": "decision-control",
+        "path": "tampered/record-v1-status-edit-stale-checksum.json",
+        "expect": "tampered",
+        "record_type": "record.v1",
+        "manifest_exit_code": 1,
+        "verifier_exit_code": 1,
+        "baseline_strict": "reject",
+        "baseline_strict_reasons": [
+          "digest /sha256: differs"
+        ],
+        "baseline_json_parse": "reject",
+        "baseline_json_parse_reasons": [
+          "digest /sha256: differs"
+        ]
+      },
+      {
+        "project": "decision-control",
+        "path": "tampered/record-v2-status-edit-stale-checksum.json",
+        "expect": "tampered",
+        "record_type": "record.v2",
+        "manifest_exit_code": 1,
+        "verifier_exit_code": 1,
+        "baseline_strict": "reject",
+        "baseline_strict_reasons": [
+          "digest /sha256: differs"
+        ],
+        "baseline_json_parse": "reject",
+        "baseline_json_parse_reasons": [
+          "digest /sha256: differs"
+        ]
+      },
+      {
+        "project": "decision-control",
+        "path": "tampered/record-v2-unauthorized-reviewer-recomputed.json",
+        "expect": "tampered",
+        "record_type": "record.v2",
+        "manifest_exit_code": 1,
+        "verifier_exit_code": 1,
+        "baseline_strict": "accept",
+        "baseline_json_parse": "accept"
+      },
+      {
+        "project": "decision-control",
+        "path": "tampered/record-v3-frozen-policy-edit-recomputed.json",
+        "expect": "tampered",
+        "record_type": "record.v3",
+        "manifest_exit_code": 1,
+        "verifier_exit_code": 1,
+        "baseline_strict": "reject",
+        "baseline_strict_reasons": [
+          "digest /record/policy_sha256: differs"
+        ],
+        "baseline_json_parse": "reject",
+        "baseline_json_parse_reasons": [
+          "digest /record/policy_sha256: differs"
+        ]
+      },
+      {
+        "project": "decision-control",
+        "path": "tampered/record-v3-review-note-edit-stale-checksum.json",
+        "expect": "tampered",
+        "record_type": "record.v3",
+        "manifest_exit_code": 1,
+        "verifier_exit_code": 1,
+        "baseline_strict": "reject",
+        "baseline_strict_reasons": [
+          "digest /sha256: differs"
+        ],
+        "baseline_json_parse": "reject",
+        "baseline_json_parse_reasons": [
+          "digest /sha256: differs"
+        ]
+      },
+      {
+        "project": "decision-control",
+        "path": "tampered/record-v3-rfc8785-checksum.json",
+        "expect": "tampered",
+        "record_type": "record.v3",
+        "manifest_exit_code": 1,
+        "verifier_exit_code": 1,
+        "baseline_strict": "reject",
+        "baseline_strict_reasons": [
+          "digest /sha256: differs"
+        ],
+        "baseline_json_parse": "reject",
+        "baseline_json_parse_reasons": [
+          "digest /sha256: differs"
+        ]
+      },
+      {
+        "project": "decision-control",
+        "path": "tampered/record-v3-self-approval-recomputed.json",
+        "expect": "tampered",
+        "record_type": "record.v3",
+        "manifest_exit_code": 1,
+        "verifier_exit_code": 1,
+        "baseline_strict": "accept",
+        "baseline_json_parse": "accept"
+      },
+      {
+        "project": "decision-control",
+        "path": "tampered/record-v4-approval-erased-recomputed.json",
+        "expect": "tampered",
+        "record_type": "record.v4",
+        "manifest_exit_code": 1,
+        "verifier_exit_code": 1,
+        "baseline_strict": "accept",
+        "baseline_json_parse": "accept"
+      },
+      {
+        "project": "decision-control",
+        "path": "tampered/record-v4-execution-without-approval-recomputed.json",
+        "expect": "tampered",
+        "record_type": "record.v4",
+        "manifest_exit_code": 1,
+        "verifier_exit_code": 1,
+        "baseline_strict": "accept",
+        "baseline_json_parse": "accept"
+      },
+      {
+        "project": "decision-control",
+        "path": "tampered/record-v4-forged-execution-result-recomputed.json",
+        "expect": "tampered",
+        "record_type": "record.v4",
+        "manifest_exit_code": 1,
+        "verifier_exit_code": 1,
+        "baseline_strict": "accept",
+        "baseline_json_parse": "accept"
+      },
+      {
+        "project": "decision-control",
+        "path": "tampered/record-v4-frozen-policy-and-digest-recomputed.json",
+        "expect": "tampered",
+        "record_type": "record.v4",
+        "manifest_exit_code": 1,
+        "verifier_exit_code": 1,
+        "baseline_strict": "accept",
+        "baseline_json_parse": "accept"
+      },
+      {
+        "project": "decision-control",
+        "path": "tampered/record-v4-frozen-policy-edit-recomputed.json",
+        "expect": "tampered",
+        "record_type": "record.v4",
+        "manifest_exit_code": 1,
+        "verifier_exit_code": 1,
+        "baseline_strict": "reject",
+        "baseline_strict_reasons": [
+          "digest /record/policy_sha256: differs"
+        ],
+        "baseline_json_parse": "reject",
+        "baseline_json_parse_reasons": [
+          "digest /record/policy_sha256: differs"
+        ]
+      },
+      {
+        "project": "decision-control",
+        "path": "tampered/record-v4-python-json-checksum.json",
+        "expect": "tampered",
+        "record_type": "record.v4",
+        "manifest_exit_code": 1,
+        "verifier_exit_code": 1,
+        "baseline_strict": "reject",
+        "baseline_strict_reasons": [
+          "digest /sha256: differs"
+        ],
+        "baseline_json_parse": "reject",
+        "baseline_json_parse_reasons": [
+          "digest /sha256: differs"
+        ]
+      },
+      {
+        "project": "decision-control",
+        "path": "tampered/record-v4-review-note-edit-stale-checksum.json",
+        "expect": "tampered",
+        "record_type": "record.v4",
+        "manifest_exit_code": 1,
+        "verifier_exit_code": 1,
+        "baseline_strict": "reject",
+        "baseline_strict_reasons": [
+          "digest /sha256: differs"
+        ],
+        "baseline_json_parse": "reject",
+        "baseline_json_parse_reasons": [
+          "digest /sha256: differs"
+        ]
+      },
+      {
+        "project": "decision-control",
+        "path": "tampered/record-v4-self-approval-recomputed.json",
+        "expect": "tampered",
+        "record_type": "record.v4",
+        "manifest_exit_code": 1,
+        "verifier_exit_code": 1,
+        "baseline_strict": "accept",
+        "baseline_json_parse": "accept"
+      },
+      {
+        "project": "decision-control",
+        "path": "tampered/record-v4-self-cancellation-recomputed.json",
+        "expect": "tampered",
+        "record_type": "record.v4",
+        "manifest_exit_code": 1,
+        "verifier_exit_code": 1,
+        "baseline_strict": "accept",
+        "baseline_json_parse": "accept"
+      },
+      {
+        "project": "decision-control",
+        "path": "tampered/record-v4-unauthorized-reviewer-recomputed.json",
+        "expect": "tampered",
+        "record_type": "record.v4",
+        "manifest_exit_code": 1,
+        "verifier_exit_code": 1,
+        "baseline_strict": "accept",
+        "baseline_json_parse": "accept"
+      },
+      {
+        "project": "decision-control",
+        "path": "tampered/record-v5-cedar-decision-edit-recomputed.json",
+        "expect": "tampered",
+        "record_type": "record.v5",
+        "manifest_exit_code": 1,
+        "verifier_exit_code": 1,
+        "baseline_strict": "accept",
+        "baseline_json_parse": "accept"
+      },
+      {
+        "project": "decision-control",
+        "path": "tampered/record-v5-cedar-forbid-erased-recomputed.json",
+        "expect": "tampered",
+        "record_type": "record.v5",
+        "manifest_exit_code": 1,
+        "verifier_exit_code": 1,
+        "baseline_strict": "accept",
+        "baseline_json_parse": "accept"
+      },
+      {
+        "project": "decision-control",
+        "path": "tampered/record-v5-cedar-proposal-edit-recomputed.json",
+        "expect": "tampered",
+        "record_type": "record.v5",
+        "manifest_exit_code": 1,
+        "verifier_exit_code": 1,
+        "baseline_strict": "accept",
+        "baseline_json_parse": "accept"
+      },
+      {
+        "project": "decision-control",
+        "path": "tampered/record-v5-cedar-request-edit-recomputed.json",
+        "expect": "tampered",
+        "record_type": "record.v5",
+        "manifest_exit_code": 1,
+        "verifier_exit_code": 1,
+        "baseline_strict": "accept",
+        "baseline_json_parse": "accept"
+      },
+      {
+        "project": "decision-control",
+        "path": "tampered/record-v5-cedar-ticket-revision-edit-recomputed.json",
+        "expect": "tampered",
+        "record_type": "record.v5",
+        "manifest_exit_code": 1,
+        "verifier_exit_code": 1,
+        "baseline_strict": "accept",
+        "baseline_json_parse": "accept"
+      },
+      {
+        "project": "decision-control",
+        "path": "tampered/record-v5-opa-input-edit-recomputed.json",
+        "expect": "tampered",
+        "record_type": "record.v5",
+        "manifest_exit_code": 1,
+        "verifier_exit_code": 1,
+        "baseline_strict": "accept",
+        "baseline_json_parse": "accept"
+      },
+      {
+        "project": "decision-control",
+        "path": "tampered/record-v5-opa-input-edit-stale-checksum.json",
+        "expect": "tampered",
+        "record_type": "record.v5",
+        "manifest_exit_code": 1,
+        "verifier_exit_code": 1,
+        "baseline_strict": "reject",
+        "baseline_strict_reasons": [
+          "digest /sha256: differs",
+          "digest /record/external_policy_sha256: differs"
+        ],
+        "baseline_json_parse": "reject",
+        "baseline_json_parse_reasons": [
+          "digest /sha256: differs",
+          "digest /record/external_policy_sha256: differs"
+        ]
+      },
+      {
+        "project": "decision-control",
+        "path": "tampered/record-v5-opa-proposal-edit-recomputed.json",
+        "expect": "tampered",
+        "record_type": "record.v5",
+        "manifest_exit_code": 1,
+        "verifier_exit_code": 1,
+        "baseline_strict": "accept",
+        "baseline_json_parse": "accept"
+      },
+      {
+        "project": "decision-control",
+        "path": "tampered/record-v5-opa-result-edit-recomputed.json",
+        "expect": "tampered",
+        "record_type": "record.v5",
+        "manifest_exit_code": 1,
+        "verifier_exit_code": 1,
+        "baseline_strict": "accept",
+        "baseline_json_parse": "accept"
+      },
+      {
+        "project": "decision-control",
+        "path": "tampered/record-v5-opa-result-edit-stale-external-digest.json",
+        "expect": "tampered",
+        "record_type": "record.v5",
+        "manifest_exit_code": 1,
+        "verifier_exit_code": 1,
+        "baseline_strict": "reject",
+        "baseline_strict_reasons": [
+          "digest /record/external_policy_sha256: differs"
+        ],
+        "baseline_json_parse": "reject",
+        "baseline_json_parse_reasons": [
+          "digest /record/external_policy_sha256: differs"
+        ]
+      },
+      {
+        "project": "decision-control",
+        "path": "tampered/record-v5-priority-edit-recomputed.json",
+        "expect": "tampered",
+        "record_type": "record.v5",
+        "manifest_exit_code": 1,
+        "verifier_exit_code": 1,
+        "baseline_strict": "accept",
+        "baseline_json_parse": "accept"
+      },
+      {
+        "project": "decision-control",
+        "path": "tampered/record-v5-priority-result-forged-recomputed.json",
+        "expect": "tampered",
+        "record_type": "record.v5",
+        "manifest_exit_code": 1,
+        "verifier_exit_code": 1,
+        "baseline_strict": "accept",
+        "baseline_json_parse": "accept"
+      },
+      {
+        "project": "decision-control",
+        "path": "tampered/record-v5-python-json-checksum.json",
+        "expect": "tampered",
+        "record_type": "record.v5",
+        "manifest_exit_code": 1,
+        "verifier_exit_code": 1,
+        "baseline_strict": "reject",
+        "baseline_strict_reasons": [
+          "digest /sha256: differs"
+        ],
+        "baseline_json_parse": "reject",
+        "baseline_json_parse_reasons": [
+          "digest /sha256: differs"
+        ]
+      },
+      {
+        "project": "decision-control",
+        "path": "tampered/record-v5-review-note-edit-stale-checksum.json",
+        "expect": "tampered",
+        "record_type": "record.v5",
+        "manifest_exit_code": 1,
+        "verifier_exit_code": 1,
+        "baseline_strict": "reject",
+        "baseline_strict_reasons": [
+          "digest /sha256: differs"
+        ],
+        "baseline_json_parse": "reject",
+        "baseline_json_parse_reasons": [
+          "digest /sha256: differs"
+        ]
+      },
+      {
+        "project": "decision-control",
+        "path": "tampered/record-v5-self-approval-recomputed.json",
+        "expect": "tampered",
+        "record_type": "record.v5",
+        "manifest_exit_code": 1,
+        "verifier_exit_code": 1,
+        "baseline_strict": "accept",
+        "baseline_json_parse": "accept"
+      },
+      {
+        "project": "decision-control",
+        "path": "invalid/evaluation-v2-duplicate-keys.json",
+        "expect": "invalid",
+        "record_type": "unknown",
+        "manifest_exit_code": 2,
+        "verifier_exit_code": 2,
+        "baseline_strict": "reject",
+        "baseline_strict_reasons": [
+          "not parseable JSON"
+        ],
+        "baseline_json_parse": "accept"
+      },
+      {
+        "project": "decision-control",
+        "path": "invalid/evaluation-v2-integer-outside-safe-range.json",
+        "expect": "invalid",
+        "record_type": "evaluation.v2",
+        "manifest_exit_code": 2,
+        "verifier_exit_code": 2,
+        "baseline_strict": "reject",
+        "baseline_strict_reasons": [
+          "schema",
+          "digest /sha256: integer 9007199254740993 is outside the I-JSON range +-(2^53-1)"
+        ],
+        "baseline_json_parse": "reject",
+        "baseline_json_parse_reasons": [
+          "schema",
+          "digest /sha256: integer 9007199254740993 is outside the I-JSON range +-(2^53-1)"
+        ]
+      },
+      {
+        "project": "decision-control",
+        "path": "invalid/evaluation-v2-lone-surrogate.json",
+        "expect": "invalid",
+        "record_type": "evaluation.v2",
+        "manifest_exit_code": 2,
+        "verifier_exit_code": 2,
+        "baseline_strict": "reject",
+        "baseline_strict_reasons": [
+          "schema",
+          "digest /sha256: string contains a lone surrogate"
+        ],
+        "baseline_json_parse": "reject",
+        "baseline_json_parse_reasons": [
+          "schema",
+          "digest /sha256: string contains a lone surrogate"
+        ]
+      },
+      {
+        "project": "decision-control",
+        "path": "invalid/evaluation-v2-missing-checksum.json",
+        "expect": "invalid",
+        "record_type": "evaluation.v2",
+        "manifest_exit_code": 2,
+        "verifier_exit_code": 2,
+        "baseline_strict": "reject",
+        "baseline_strict_reasons": [
+          "schema",
+          "digest /sha256: differs"
+        ],
+        "baseline_json_parse": "reject",
+        "baseline_json_parse_reasons": [
+          "schema",
+          "digest /sha256: differs"
+        ]
+      },
+      {
+        "project": "decision-control",
+        "path": "invalid/evaluation-v2-no-cases.json",
+        "expect": "invalid",
+        "record_type": "evaluation.v2",
+        "manifest_exit_code": 2,
+        "verifier_exit_code": 2,
+        "baseline_strict": "reject",
+        "baseline_strict_reasons": [
+          "schema"
+        ],
+        "baseline_json_parse": "reject",
+        "baseline_json_parse_reasons": [
+          "schema"
+        ]
+      },
+      {
+        "project": "decision-control",
+        "path": "invalid/evaluation-v2-non-finite-number.json",
+        "expect": "invalid",
+        "record_type": "unknown",
+        "manifest_exit_code": 2,
+        "verifier_exit_code": 2,
+        "baseline_strict": "reject",
+        "baseline_strict_reasons": [
+          "not parseable JSON"
+        ],
+        "baseline_json_parse": "reject",
+        "baseline_json_parse_reasons": [
+          "not parseable JSON"
+        ]
+      },
+      {
+        "project": "decision-control",
+        "path": "invalid/evaluation-v2-not-json.json",
+        "expect": "invalid",
+        "record_type": "unknown",
+        "manifest_exit_code": 2,
+        "verifier_exit_code": 2,
+        "baseline_strict": "reject",
+        "baseline_strict_reasons": [
+          "not parseable JSON"
+        ],
+        "baseline_json_parse": "reject",
+        "baseline_json_parse_reasons": [
+          "not parseable JSON"
+        ]
+      },
+      {
+        "project": "decision-control",
+        "path": "invalid/evaluation-v2-unknown-field.json",
+        "expect": "invalid",
+        "record_type": "evaluation.v2",
+        "manifest_exit_code": 2,
+        "verifier_exit_code": 2,
+        "baseline_strict": "reject",
+        "baseline_strict_reasons": [
+          "schema"
+        ],
+        "baseline_json_parse": "reject",
+        "baseline_json_parse_reasons": [
+          "schema"
+        ]
+      },
+      {
+        "project": "decision-control",
+        "path": "invalid/evaluation-v2-unsupported-schema-version.json",
+        "expect": "invalid",
+        "record_type": "evaluation.v2",
+        "manifest_exit_code": 2,
+        "verifier_exit_code": 2,
+        "baseline_strict": "reject",
+        "baseline_strict_reasons": [
+          "schema"
+        ],
+        "baseline_json_parse": "reject",
+        "baseline_json_parse_reasons": [
+          "schema"
+        ]
+      },
+      {
+        "project": "decision-control",
+        "path": "invalid/record-v3-missing-producer.json",
+        "expect": "invalid",
+        "record_type": "record.v3",
+        "manifest_exit_code": 2,
+        "verifier_exit_code": 2,
+        "baseline_strict": "reject",
+        "baseline_strict_reasons": [
+          "schema"
+        ],
+        "baseline_json_parse": "reject",
+        "baseline_json_parse_reasons": [
+          "schema"
+        ]
+      },
+      {
+        "project": "decision-control",
+        "path": "invalid/record-v4-duplicate-keys.json",
+        "expect": "invalid",
+        "record_type": "unknown",
+        "manifest_exit_code": 2,
+        "verifier_exit_code": 2,
+        "baseline_strict": "reject",
+        "baseline_strict_reasons": [
+          "not parseable JSON"
+        ],
+        "baseline_json_parse": "accept"
+      },
+      {
+        "project": "decision-control",
+        "path": "invalid/record-v4-integer-outside-safe-range.json",
+        "expect": "invalid",
+        "record_type": "record.v4",
+        "manifest_exit_code": 2,
+        "verifier_exit_code": 2,
+        "baseline_strict": "reject",
+        "baseline_strict_reasons": [
+          "schema",
+          "digest /sha256: integer 9007199254740993 is outside the I-JSON range +-(2^53-1)"
+        ],
+        "baseline_json_parse": "reject",
+        "baseline_json_parse_reasons": [
+          "schema",
+          "digest /sha256: integer 9007199254740993 is outside the I-JSON range +-(2^53-1)"
+        ]
+      },
+      {
+        "project": "decision-control",
+        "path": "invalid/record-v4-lone-surrogate.json",
+        "expect": "invalid",
+        "record_type": "record.v4",
+        "manifest_exit_code": 2,
+        "verifier_exit_code": 2,
+        "baseline_strict": "reject",
+        "baseline_strict_reasons": [
+          "schema",
+          "digest /sha256: string contains a lone surrogate"
+        ],
+        "baseline_json_parse": "reject",
+        "baseline_json_parse_reasons": [
+          "schema",
+          "digest /sha256: string contains a lone surrogate"
+        ]
+      },
+      {
+        "project": "decision-control",
+        "path": "invalid/record-v4-missing-checksum.json",
+        "expect": "invalid",
+        "record_type": "record.v4",
+        "manifest_exit_code": 2,
+        "verifier_exit_code": 2,
+        "baseline_strict": "reject",
+        "baseline_strict_reasons": [
+          "schema",
+          "digest /sha256: differs"
+        ],
+        "baseline_json_parse": "reject",
+        "baseline_json_parse_reasons": [
+          "schema",
+          "digest /sha256: differs"
+        ]
+      },
+      {
+        "project": "decision-control",
+        "path": "invalid/record-v4-non-finite-number.json",
+        "expect": "invalid",
+        "record_type": "unknown",
+        "manifest_exit_code": 2,
+        "verifier_exit_code": 2,
+        "baseline_strict": "reject",
+        "baseline_strict_reasons": [
+          "not parseable JSON"
+        ],
+        "baseline_json_parse": "reject",
+        "baseline_json_parse_reasons": [
+          "not parseable JSON"
+        ]
+      },
+      {
+        "project": "decision-control",
+        "path": "invalid/record-v4-not-json.json",
+        "expect": "invalid",
+        "record_type": "unknown",
+        "manifest_exit_code": 2,
+        "verifier_exit_code": 2,
+        "baseline_strict": "reject",
+        "baseline_strict_reasons": [
+          "not parseable JSON"
+        ],
+        "baseline_json_parse": "reject",
+        "baseline_json_parse_reasons": [
+          "not parseable JSON"
+        ]
+      },
+      {
+        "project": "decision-control",
+        "path": "invalid/record-v4-schema-version-string.json",
+        "expect": "invalid",
+        "record_type": "record.v4",
+        "manifest_exit_code": 2,
+        "verifier_exit_code": 2,
+        "baseline_strict": "reject",
+        "baseline_strict_reasons": [
+          "schema"
+        ],
+        "baseline_json_parse": "reject",
+        "baseline_json_parse_reasons": [
+          "schema"
+        ]
+      },
+      {
+        "project": "decision-control",
+        "path": "invalid/record-v4-ticket-priority-member.json",
+        "expect": "invalid",
+        "record_type": "record.v4",
+        "manifest_exit_code": 2,
+        "verifier_exit_code": 2,
+        "baseline_strict": "reject",
+        "baseline_strict_reasons": [
+          "schema"
+        ],
+        "baseline_json_parse": "reject",
+        "baseline_json_parse_reasons": [
+          "schema"
+        ]
+      },
+      {
+        "project": "decision-control",
+        "path": "invalid/record-v4-unknown-field.json",
+        "expect": "invalid",
+        "record_type": "record.v4",
+        "manifest_exit_code": 2,
+        "verifier_exit_code": 2,
+        "baseline_strict": "reject",
+        "baseline_strict_reasons": [
+          "schema"
+        ],
+        "baseline_json_parse": "reject",
+        "baseline_json_parse_reasons": [
+          "schema"
+        ]
+      },
+      {
+        "project": "decision-control",
+        "path": "invalid/record-v4-unsupported-schema-version.json",
+        "expect": "invalid",
+        "record_type": "record.v4",
+        "manifest_exit_code": 2,
+        "verifier_exit_code": 2,
+        "baseline_strict": "reject",
+        "baseline_strict_reasons": [
+          "schema"
+        ],
+        "baseline_json_parse": "reject",
+        "baseline_json_parse_reasons": [
+          "schema"
+        ]
+      },
+      {
+        "project": "decision-control",
+        "path": "invalid/record-v4-uppercase-checksum.json",
+        "expect": "invalid",
+        "record_type": "record.v4",
+        "manifest_exit_code": 2,
+        "verifier_exit_code": 2,
+        "baseline_strict": "reject",
+        "baseline_strict_reasons": [
+          "schema",
+          "digest /sha256: differs"
+        ],
+        "baseline_json_parse": "reject",
+        "baseline_json_parse_reasons": [
+          "schema",
+          "digest /sha256: differs"
+        ]
+      },
+      {
+        "project": "decision-control",
+        "path": "invalid/record-v4-uppercase-id.json",
+        "expect": "invalid",
+        "record_type": "record.v4",
+        "manifest_exit_code": 2,
+        "verifier_exit_code": 2,
+        "baseline_strict": "reject",
+        "baseline_strict_reasons": [
+          "schema"
+        ],
+        "baseline_json_parse": "reject",
+        "baseline_json_parse_reasons": [
+          "schema"
+        ]
+      },
+      {
+        "project": "decision-control",
+        "path": "invalid/record-v4-urn-id.json",
+        "expect": "invalid",
+        "record_type": "record.v4",
+        "manifest_exit_code": 2,
+        "verifier_exit_code": 2,
+        "baseline_strict": "reject",
+        "baseline_strict_reasons": [
+          "schema"
+        ],
+        "baseline_json_parse": "reject",
+        "baseline_json_parse_reasons": [
+          "schema"
+        ]
+      },
+      {
+        "project": "decision-control",
+        "path": "invalid/record-v5-cedar-unknown-decision.json",
+        "expect": "invalid",
+        "record_type": "record.v5",
+        "manifest_exit_code": 2,
+        "verifier_exit_code": 2,
+        "baseline_strict": "reject",
+        "baseline_strict_reasons": [
+          "schema"
+        ],
+        "baseline_json_parse": "reject",
+        "baseline_json_parse_reasons": [
+          "schema"
+        ]
+      },
+      {
+        "project": "decision-control",
+        "path": "invalid/record-v5-duplicate-keys.json",
+        "expect": "invalid",
+        "record_type": "unknown",
+        "manifest_exit_code": 2,
+        "verifier_exit_code": 2,
+        "baseline_strict": "reject",
+        "baseline_strict_reasons": [
+          "not parseable JSON"
+        ],
+        "baseline_json_parse": "accept"
+      },
+      {
+        "project": "decision-control",
+        "path": "invalid/record-v5-external-unknown-engine.json",
+        "expect": "invalid",
+        "record_type": "record.v5",
+        "manifest_exit_code": 2,
+        "verifier_exit_code": 2,
+        "baseline_strict": "reject",
+        "baseline_strict_reasons": [
+          "schema"
+        ],
+        "baseline_json_parse": "reject",
+        "baseline_json_parse_reasons": [
+          "schema"
+        ]
+      },
+      {
+        "project": "decision-control",
+        "path": "invalid/record-v5-integer-outside-safe-range.json",
+        "expect": "invalid",
+        "record_type": "record.v5",
+        "manifest_exit_code": 2,
+        "verifier_exit_code": 2,
+        "baseline_strict": "reject",
+        "baseline_strict_reasons": [
+          "schema",
+          "digest /sha256: integer 9007199254740993 is outside the I-JSON range +-(2^53-1)"
+        ],
+        "baseline_json_parse": "reject",
+        "baseline_json_parse_reasons": [
+          "schema",
+          "digest /sha256: integer 9007199254740993 is outside the I-JSON range +-(2^53-1)"
+        ]
+      },
+      {
+        "project": "decision-control",
+        "path": "invalid/record-v5-lone-surrogate.json",
+        "expect": "invalid",
+        "record_type": "record.v5",
+        "manifest_exit_code": 2,
+        "verifier_exit_code": 2,
+        "baseline_strict": "reject",
+        "baseline_strict_reasons": [
+          "schema",
+          "digest /sha256: string contains a lone surrogate"
+        ],
+        "baseline_json_parse": "reject",
+        "baseline_json_parse_reasons": [
+          "schema",
+          "digest /sha256: string contains a lone surrogate"
+        ]
+      },
+      {
+        "project": "decision-control",
+        "path": "invalid/record-v5-missing-checksum.json",
+        "expect": "invalid",
+        "record_type": "record.v5",
+        "manifest_exit_code": 2,
+        "verifier_exit_code": 2,
+        "baseline_strict": "reject",
+        "baseline_strict_reasons": [
+          "schema",
+          "digest /sha256: differs"
+        ],
+        "baseline_json_parse": "reject",
+        "baseline_json_parse_reasons": [
+          "schema",
+          "digest /sha256: differs"
+        ]
+      },
+      {
+        "project": "decision-control",
+        "path": "invalid/record-v5-missing-external-policy-digest.json",
+        "expect": "invalid",
+        "record_type": "record.v5",
+        "manifest_exit_code": 2,
+        "verifier_exit_code": 2,
+        "baseline_strict": "reject",
+        "baseline_strict_reasons": [
+          "schema"
+        ],
+        "baseline_json_parse": "reject",
+        "baseline_json_parse_reasons": [
+          "schema"
+        ]
+      },
+      {
+        "project": "decision-control",
+        "path": "invalid/record-v5-non-finite-number.json",
+        "expect": "invalid",
+        "record_type": "unknown",
+        "manifest_exit_code": 2,
+        "verifier_exit_code": 2,
+        "baseline_strict": "reject",
+        "baseline_strict_reasons": [
+          "not parseable JSON"
+        ],
+        "baseline_json_parse": "reject",
+        "baseline_json_parse_reasons": [
+          "not parseable JSON"
+        ]
+      },
+      {
+        "project": "decision-control",
+        "path": "invalid/record-v5-not-json.json",
+        "expect": "invalid",
+        "record_type": "unknown",
+        "manifest_exit_code": 2,
+        "verifier_exit_code": 2,
+        "baseline_strict": "reject",
+        "baseline_strict_reasons": [
+          "not parseable JSON"
+        ],
+        "baseline_json_parse": "reject",
+        "baseline_json_parse_reasons": [
+          "not parseable JSON"
+        ]
+      },
+      {
+        "project": "decision-control",
+        "path": "invalid/record-v5-opa-module-path-traversal.json",
+        "expect": "invalid",
+        "record_type": "record.v5",
+        "manifest_exit_code": 2,
+        "verifier_exit_code": 2,
+        "baseline_strict": "reject",
+        "baseline_strict_reasons": [
+          "schema"
+        ],
+        "baseline_json_parse": "reject",
+        "baseline_json_parse_reasons": [
+          "schema"
+        ]
+      },
+      {
+        "project": "decision-control",
+        "path": "invalid/record-v5-recommendation-with-two-targets.json",
+        "expect": "invalid",
+        "record_type": "record.v5",
+        "manifest_exit_code": 2,
+        "verifier_exit_code": 2,
+        "baseline_strict": "reject",
+        "baseline_strict_reasons": [
+          "schema"
+        ],
+        "baseline_json_parse": "reject",
+        "baseline_json_parse_reasons": [
+          "schema"
+        ]
+      },
+      {
+        "project": "decision-control",
+        "path": "invalid/record-v5-schema-version-string.json",
+        "expect": "invalid",
+        "record_type": "record.v5",
+        "manifest_exit_code": 2,
+        "verifier_exit_code": 2,
+        "baseline_strict": "reject",
+        "baseline_strict_reasons": [
+          "schema"
+        ],
+        "baseline_json_parse": "reject",
+        "baseline_json_parse_reasons": [
+          "schema"
+        ]
+      },
+      {
+        "project": "decision-control",
+        "path": "invalid/record-v5-unknown-field.json",
+        "expect": "invalid",
+        "record_type": "record.v5",
+        "manifest_exit_code": 2,
+        "verifier_exit_code": 2,
+        "baseline_strict": "reject",
+        "baseline_strict_reasons": [
+          "schema"
+        ],
+        "baseline_json_parse": "reject",
+        "baseline_json_parse_reasons": [
+          "schema"
+        ]
+      },
+      {
+        "project": "decision-control",
+        "path": "invalid/record-v5-unsupported-schema-version.json",
+        "expect": "invalid",
+        "record_type": "record.v5",
+        "manifest_exit_code": 2,
+        "verifier_exit_code": 2,
+        "baseline_strict": "reject",
+        "baseline_strict_reasons": [
+          "schema"
+        ],
+        "baseline_json_parse": "reject",
+        "baseline_json_parse_reasons": [
+          "schema"
+        ]
+      },
+      {
+        "project": "decision-control",
+        "path": "invalid/record-v5-uppercase-checksum.json",
+        "expect": "invalid",
+        "record_type": "record.v5",
+        "manifest_exit_code": 2,
+        "verifier_exit_code": 2,
+        "baseline_strict": "reject",
+        "baseline_strict_reasons": [
+          "schema",
+          "digest /sha256: differs"
+        ],
+        "baseline_json_parse": "reject",
+        "baseline_json_parse_reasons": [
+          "schema",
+          "digest /sha256: differs"
+        ]
+      },
+      {
+        "project": "decision-control",
+        "path": "invalid/record-v5-uppercase-id.json",
+        "expect": "invalid",
+        "record_type": "record.v5",
+        "manifest_exit_code": 2,
+        "verifier_exit_code": 2,
+        "baseline_strict": "reject",
+        "baseline_strict_reasons": [
+          "schema"
+        ],
+        "baseline_json_parse": "reject",
+        "baseline_json_parse_reasons": [
+          "schema"
+        ]
+      },
+      {
+        "project": "decision-control",
+        "path": "invalid/record-v5-urn-id.json",
+        "expect": "invalid",
+        "record_type": "record.v5",
+        "manifest_exit_code": 2,
+        "verifier_exit_code": 2,
+        "baseline_strict": "reject",
+        "baseline_strict_reasons": [
+          "schema"
+        ],
+        "baseline_json_parse": "reject",
+        "baseline_json_parse_reasons": [
+          "schema"
+        ]
+      },
+      {
+        "project": "experiment-gate",
+        "path": "valid/decision-v3-ship.json",
+        "expect": "valid",
+        "record_type": "decision.v3",
+        "manifest_exit_code": 0,
+        "verifier_exit_code": 0,
+        "baseline_strict": "accept",
+        "baseline_json_parse": "accept"
+      },
+      {
+        "project": "experiment-gate",
+        "path": "valid/decision-v3-hold.json",
+        "expect": "valid",
+        "record_type": "decision.v3",
+        "manifest_exit_code": 0,
+        "verifier_exit_code": 0,
+        "baseline_strict": "accept",
+        "baseline_json_parse": "accept"
+      },
+      {
+        "project": "experiment-gate",
+        "path": "valid/decision-v3-rollback.json",
+        "expect": "valid",
+        "record_type": "decision.v3",
+        "manifest_exit_code": 0,
+        "verifier_exit_code": 0,
+        "baseline_strict": "accept",
+        "baseline_json_parse": "accept"
+      },
+      {
+        "project": "experiment-gate",
+        "path": "valid/decision-v3-srm.json",
+        "expect": "valid",
+        "record_type": "decision.v3",
+        "manifest_exit_code": 0,
+        "verifier_exit_code": 0,
+        "baseline_strict": "accept",
+        "baseline_json_parse": "accept"
+      },
+      {
+        "project": "experiment-gate",
+        "path": "valid/decision-v3-cuped.json",
+        "expect": "valid",
+        "record_type": "decision.v3",
+        "manifest_exit_code": 0,
+        "verifier_exit_code": 0,
+        "baseline_strict": "accept",
+        "baseline_json_parse": "accept"
+      },
+      {
+        "project": "experiment-gate",
+        "path": "valid/decision-v3-sequential.json",
+        "expect": "valid",
+        "record_type": "decision.v3",
+        "manifest_exit_code": 0,
+        "verifier_exit_code": 0,
+        "baseline_strict": "accept",
+        "baseline_json_parse": "accept"
+      },
+      {
+        "project": "experiment-gate",
+        "path": "valid/decision-v3-ratio.json",
+        "expect": "valid",
+        "record_type": "decision.v3",
+        "manifest_exit_code": 0,
+        "verifier_exit_code": 0,
+        "baseline_strict": "accept",
+        "baseline_json_parse": "accept"
+      },
+      {
+        "project": "experiment-gate",
+        "path": "valid/decision-v3-jcs-edge.json",
+        "expect": "valid",
+        "record_type": "decision.v3",
+        "manifest_exit_code": 0,
+        "verifier_exit_code": 0,
+        "baseline_strict": "accept",
+        "baseline_json_parse": "accept"
+      },
+      {
+        "project": "experiment-gate",
+        "path": "valid/decision-v2-ship.json",
+        "expect": "valid",
+        "record_type": "decision.v2",
+        "manifest_exit_code": 0,
+        "verifier_exit_code": 0,
+        "baseline_strict": "accept",
+        "baseline_json_parse": "accept"
+      },
+      {
+        "project": "experiment-gate",
+        "path": "valid/decision-v2-hold.json",
+        "expect": "valid",
+        "record_type": "decision.v2",
+        "manifest_exit_code": 0,
+        "verifier_exit_code": 0,
+        "baseline_strict": "accept",
+        "baseline_json_parse": "accept"
+      },
+      {
+        "project": "experiment-gate",
+        "path": "valid/decision-v2-rollback.json",
+        "expect": "valid",
+        "record_type": "decision.v2",
+        "manifest_exit_code": 0,
+        "verifier_exit_code": 0,
+        "baseline_strict": "accept",
+        "baseline_json_parse": "accept"
+      },
+      {
+        "project": "experiment-gate",
+        "path": "valid/decision-v2-regression.json",
+        "expect": "valid",
+        "record_type": "decision.v2",
+        "manifest_exit_code": 0,
+        "verifier_exit_code": 0,
+        "baseline_strict": "accept",
+        "baseline_json_parse": "accept"
+      },
+      {
+        "project": "experiment-gate",
+        "path": "valid/decision-v2-srm.json",
+        "expect": "valid",
+        "record_type": "decision.v2",
+        "manifest_exit_code": 0,
+        "verifier_exit_code": 0,
+        "baseline_strict": "accept",
+        "baseline_json_parse": "accept"
+      },
+      {
+        "project": "experiment-gate",
+        "path": "valid/decision-v2-sequential.json",
+        "expect": "valid",
+        "record_type": "decision.v2",
+        "manifest_exit_code": 0,
+        "verifier_exit_code": 0,
+        "baseline_strict": "accept",
+        "baseline_json_parse": "accept"
+      },
+      {
+        "project": "experiment-gate",
+        "path": "valid/decision-v2-jcs-edge.json",
+        "expect": "valid",
+        "record_type": "decision.v2",
+        "manifest_exit_code": 0,
+        "verifier_exit_code": 0,
+        "baseline_strict": "accept",
+        "baseline_json_parse": "accept"
+      },
+      {
+        "project": "experiment-gate",
+        "path": "tampered/decision-v3-input-edited.json",
+        "expect": "tampered",
+        "record_type": "decision.v3",
+        "manifest_exit_code": 1,
+        "verifier_exit_code": 1,
+        "baseline_strict": "reject",
+        "baseline_strict_reasons": [
+          "digest /input_sha256: differs"
+        ],
+        "baseline_json_parse": "reject",
+        "baseline_json_parse_reasons": [
+          "digest /input_sha256: differs"
+        ]
+      },
+      {
+        "project": "experiment-gate",
+        "path": "tampered/decision-v3-input-redigested.json",
+        "expect": "tampered",
+        "record_type": "decision.v3",
+        "manifest_exit_code": 1,
+        "verifier_exit_code": 1,
+        "baseline_strict": "accept",
+        "baseline_json_parse": "accept"
+      },
+      {
+        "project": "experiment-gate",
+        "path": "tampered/decision-v3-decision-edited.json",
+        "expect": "tampered",
+        "record_type": "decision.v3",
+        "manifest_exit_code": 1,
+        "verifier_exit_code": 1,
+        "baseline_strict": "accept",
+        "baseline_json_parse": "accept"
+      },
+      {
+        "project": "experiment-gate",
+        "path": "tampered/decision-v3-metric-edited.json",
+        "expect": "tampered",
+        "record_type": "decision.v3",
+        "manifest_exit_code": 1,
+        "verifier_exit_code": 1,
+        "baseline_strict": "accept",
+        "baseline_json_parse": "accept"
+      },
+      {
+        "project": "experiment-gate",
+        "path": "tampered/decision-v3-digest-python-json-v1.json",
+        "expect": "tampered",
+        "record_type": "decision.v3",
+        "manifest_exit_code": 1,
+        "verifier_exit_code": 1,
+        "baseline_strict": "reject",
+        "baseline_strict_reasons": [
+          "digest /input_sha256: differs"
+        ],
+        "baseline_json_parse": "reject",
+        "baseline_json_parse_reasons": [
+          "digest /input_sha256: differs"
+        ]
+      },
+      {
+        "project": "experiment-gate",
+        "path": "tampered/decision-v2-input-edited.json",
+        "expect": "tampered",
+        "record_type": "decision.v2",
+        "manifest_exit_code": 1,
+        "verifier_exit_code": 1,
+        "baseline_strict": "reject",
+        "baseline_strict_reasons": [
+          "digest /input_sha256: differs"
+        ],
+        "baseline_json_parse": "reject",
+        "baseline_json_parse_reasons": [
+          "digest /input_sha256: differs"
+        ]
+      },
+      {
+        "project": "experiment-gate",
+        "path": "tampered/decision-v2-input-redigested.json",
+        "expect": "tampered",
+        "record_type": "decision.v2",
+        "manifest_exit_code": 1,
+        "verifier_exit_code": 1,
+        "baseline_strict": "accept",
+        "baseline_json_parse": "accept"
+      },
+      {
+        "project": "experiment-gate",
+        "path": "tampered/decision-v2-decision-edited.json",
+        "expect": "tampered",
+        "record_type": "decision.v2",
+        "manifest_exit_code": 1,
+        "verifier_exit_code": 1,
+        "baseline_strict": "accept",
+        "baseline_json_parse": "accept"
+      },
+      {
+        "project": "experiment-gate",
+        "path": "tampered/decision-v2-metric-edited.json",
+        "expect": "tampered",
+        "record_type": "decision.v2",
+        "manifest_exit_code": 1,
+        "verifier_exit_code": 1,
+        "baseline_strict": "accept",
+        "baseline_json_parse": "accept"
+      },
+      {
+        "project": "experiment-gate",
+        "path": "tampered/decision-v2-digest-rfc8785.json",
+        "expect": "tampered",
+        "record_type": "decision.v2",
+        "manifest_exit_code": 1,
+        "verifier_exit_code": 1,
+        "baseline_strict": "reject",
+        "baseline_strict_reasons": [
+          "digest /input_sha256: differs"
+        ],
+        "baseline_json_parse": "reject",
+        "baseline_json_parse_reasons": [
+          "digest /input_sha256: differs"
+        ]
+      },
+      {
+        "project": "experiment-gate",
+        "path": "invalid/decision-v3-malformed-json.json",
+        "expect": "invalid",
+        "record_type": "unknown",
+        "manifest_exit_code": 2,
+        "verifier_exit_code": 2,
+        "baseline_strict": "reject",
+        "baseline_strict_reasons": [
+          "not parseable JSON"
+        ],
+        "baseline_json_parse": "reject",
+        "baseline_json_parse_reasons": [
+          "not parseable JSON"
+        ]
+      },
+      {
+        "project": "experiment-gate",
+        "path": "invalid/decision-v3-unknown-schema.json",
+        "expect": "invalid",
+        "record_type": "decision.v3",
+        "manifest_exit_code": 2,
+        "verifier_exit_code": 2,
+        "baseline_strict": "reject",
+        "baseline_strict_reasons": [
+          "schema"
+        ],
+        "baseline_json_parse": "reject",
+        "baseline_json_parse_reasons": [
+          "schema"
+        ]
+      },
+      {
+        "project": "experiment-gate",
+        "path": "invalid/decision-v3-missing-input.json",
+        "expect": "invalid",
+        "record_type": "decision.v3",
+        "manifest_exit_code": 2,
+        "verifier_exit_code": 2,
+        "baseline_strict": "reject",
+        "baseline_strict_reasons": [
+          "schema",
+          "digest /input_sha256: /input is missing"
+        ],
+        "baseline_json_parse": "reject",
+        "baseline_json_parse_reasons": [
+          "schema",
+          "digest /input_sha256: /input is missing"
+        ]
+      },
+      {
+        "project": "experiment-gate",
+        "path": "invalid/decision-v3-non-finite.json",
+        "expect": "invalid",
+        "record_type": "unknown",
+        "manifest_exit_code": 2,
+        "verifier_exit_code": 2,
+        "baseline_strict": "reject",
+        "baseline_strict_reasons": [
+          "not parseable JSON"
+        ],
+        "baseline_json_parse": "reject",
+        "baseline_json_parse_reasons": [
+          "not parseable JSON"
+        ]
+      },
+      {
+        "project": "experiment-gate",
+        "path": "invalid/decision-v2-malformed-json.json",
+        "expect": "invalid",
+        "record_type": "unknown",
+        "manifest_exit_code": 2,
+        "verifier_exit_code": 2,
+        "baseline_strict": "reject",
+        "baseline_strict_reasons": [
+          "not parseable JSON"
+        ],
+        "baseline_json_parse": "reject",
+        "baseline_json_parse_reasons": [
+          "not parseable JSON"
+        ]
+      },
+      {
+        "project": "experiment-gate",
+        "path": "invalid/decision-v2-unknown-schema.json",
+        "expect": "invalid",
+        "record_type": "decision.v2",
+        "manifest_exit_code": 2,
+        "verifier_exit_code": 2,
+        "baseline_strict": "reject",
+        "baseline_strict_reasons": [
+          "schema"
+        ],
+        "baseline_json_parse": "reject",
+        "baseline_json_parse_reasons": [
+          "schema"
+        ]
+      },
+      {
+        "project": "experiment-gate",
+        "path": "invalid/decision-v2-missing-input.json",
+        "expect": "invalid",
+        "record_type": "decision.v2",
+        "manifest_exit_code": 2,
+        "verifier_exit_code": 2,
+        "baseline_strict": "reject",
+        "baseline_strict_reasons": [
+          "schema",
+          "digest /input_sha256: /input is missing"
+        ],
+        "baseline_json_parse": "reject",
+        "baseline_json_parse_reasons": [
+          "schema",
+          "digest /input_sha256: /input is missing"
+        ]
+      },
+      {
+        "project": "experiment-gate",
+        "path": "invalid/decision-v2-non-finite.json",
+        "expect": "invalid",
+        "record_type": "unknown",
+        "manifest_exit_code": 2,
+        "verifier_exit_code": 2,
+        "baseline_strict": "reject",
+        "baseline_strict_reasons": [
+          "not parseable JSON"
+        ],
+        "baseline_json_parse": "reject",
+        "baseline_json_parse_reasons": [
+          "not parseable JSON"
+        ]
+      },
+      {
+        "project": "experiment-gate",
+        "path": "invalid/decision-v3-duplicate-key.json",
+        "expect": "invalid",
+        "record_type": "decision.v3",
+        "manifest_exit_code": 2,
+        "verifier_exit_code": 2,
+        "baseline_strict": "reject",
+        "baseline_strict_reasons": [
+          "not parseable JSON (duplicate object key \"decision\" at offset 26)"
+        ],
+        "baseline_json_parse": "accept"
+      },
+      {
+        "project": "experiment-gate",
+        "path": "invalid/decision-v3-duplicate-key-in-input.json",
+        "expect": "invalid",
+        "record_type": "decision.v3",
+        "manifest_exit_code": 2,
+        "verifier_exit_code": 2,
+        "baseline_strict": "reject",
+        "baseline_strict_reasons": [
+          "not parseable JSON (duplicate object key \"units\" at offset 418)"
+        ],
+        "baseline_json_parse": "accept"
+      },
+      {
+        "project": "experiment-gate",
+        "path": "invalid/decision-v3-integer-out-of-range.json",
+        "expect": "invalid",
+        "record_type": "decision.v3",
+        "manifest_exit_code": 2,
+        "verifier_exit_code": 2,
+        "baseline_strict": "reject",
+        "baseline_strict_reasons": [
+          "digest /input_sha256: integer 1152921504606846976 is outside the I-JSON range +-(2^53-1)"
+        ],
+        "baseline_json_parse": "reject",
+        "baseline_json_parse_reasons": [
+          "digest /input_sha256: integer 1152921504606846976 is outside the I-JSON range +-(2^53-1)"
+        ]
+      },
+      {
+        "project": "experiment-gate",
+        "path": "invalid/decision-v3-unsafe-integer-in-ignored-member.json",
+        "expect": "invalid",
+        "record_type": "decision.v3",
+        "manifest_exit_code": 2,
+        "verifier_exit_code": 2,
+        "baseline_strict": "accept",
+        "baseline_json_parse": "accept"
+      },
+      {
+        "project": "experiment-gate",
+        "path": "invalid/decision-v1-legacy.json",
+        "expect": "invalid",
+        "record_type": "unknown",
+        "manifest_exit_code": 2,
+        "verifier_exit_code": 2,
+        "baseline_strict": "accept",
+        "baseline_json_parse": "accept"
+      },
+      {
+        "project": "jev-decision",
+        "path": "valid/answer-v2-canonical-numbers.json",
+        "expect": "valid",
+        "record_type": "answer.v2",
+        "manifest_exit_code": 0,
+        "verifier_exit_code": 0,
+        "baseline_strict": "accept",
+        "baseline_json_parse": "accept"
+      },
+      {
+        "project": "jev-decision",
+        "path": "valid/answer-v2-jev.json",
+        "expect": "valid",
+        "record_type": "answer.v2",
+        "manifest_exit_code": 0,
+        "verifier_exit_code": 0,
+        "baseline_strict": "accept",
+        "baseline_json_parse": "accept"
+      },
+      {
+        "project": "jev-decision",
+        "path": "valid/answer-v2-openai.json",
+        "expect": "valid",
+        "record_type": "answer.v2",
+        "manifest_exit_code": 0,
+        "verifier_exit_code": 0,
+        "baseline_strict": "accept",
+        "baseline_json_parse": "accept"
+      },
+      {
+        "project": "jev-decision",
+        "path": "valid/evaluation-calibration-applied",
+        "expect": "valid",
+        "record_type": "evaluation-dir",
+        "manifest_exit_code": 0,
+        "verifier_exit_code": 0,
+        "baseline_strict": "accept",
+        "baseline_json_parse": "accept"
+      },
+      {
+        "project": "jev-decision",
+        "path": "valid/evaluation-calibration-fitted",
+        "expect": "valid",
+        "record_type": "evaluation-dir",
+        "manifest_exit_code": 0,
+        "verifier_exit_code": 0,
+        "baseline_strict": "accept",
+        "baseline_json_parse": "accept"
+      },
+      {
+        "project": "jev-decision",
+        "path": "valid/evaluation-live-failures",
+        "expect": "valid",
+        "record_type": "evaluation-dir",
+        "manifest_exit_code": 0,
+        "verifier_exit_code": 0,
+        "baseline_strict": "accept",
+        "baseline_json_parse": "accept"
+      },
+      {
+        "project": "jev-decision",
+        "path": "valid/evaluation-replay-gated",
+        "expect": "valid",
+        "record_type": "evaluation-dir",
+        "manifest_exit_code": 0,
+        "verifier_exit_code": 0,
+        "baseline_strict": "accept",
+        "baseline_json_parse": "accept"
+      },
+      {
+        "project": "jev-decision",
+        "path": "valid/evaluation-replay-ungated",
+        "expect": "valid",
+        "record_type": "evaluation-dir",
+        "manifest_exit_code": 0,
+        "verifier_exit_code": 0,
+        "baseline_strict": "accept",
+        "baseline_json_parse": "accept"
+      },
+      {
+        "project": "jev-decision",
+        "path": "tampered/answer-v2-answer-edited-resealed.json",
+        "expect": "tampered",
+        "record_type": "answer.v2",
+        "manifest_exit_code": 1,
+        "verifier_exit_code": 1,
+        "baseline_strict": "accept",
+        "baseline_json_parse": "accept"
+      },
+      {
+        "project": "jev-decision",
+        "path": "tampered/answer-v2-answer-edited.json",
+        "expect": "tampered",
+        "record_type": "answer.v2",
+        "manifest_exit_code": 1,
+        "verifier_exit_code": 1,
+        "baseline_strict": "reject",
+        "baseline_strict_reasons": [
+          "digest /record_sha256: differs"
+        ],
+        "baseline_json_parse": "reject",
+        "baseline_json_parse_reasons": [
+          "digest /record_sha256: differs"
+        ]
+      },
+      {
+        "project": "jev-decision",
+        "path": "tampered/answer-v2-id-edited-resealed.json",
+        "expect": "tampered",
+        "record_type": "answer.v2",
+        "manifest_exit_code": 1,
+        "verifier_exit_code": 1,
+        "baseline_strict": "accept",
+        "baseline_json_parse": "accept"
+      },
+      {
+        "project": "jev-decision",
+        "path": "tampered/answer-v2-question-edited.json",
+        "expect": "tampered",
+        "record_type": "answer.v2",
+        "manifest_exit_code": 1,
+        "verifier_exit_code": 1,
+        "baseline_strict": "reject",
+        "baseline_strict_reasons": [
+          "digest /record_sha256: differs"
+        ],
+        "baseline_json_parse": "reject",
+        "baseline_json_parse_reasons": [
+          "digest /record_sha256: differs"
+        ]
+      },
+      {
+        "project": "jev-decision",
+        "path": "tampered/answer-v2-response-edited-resealed.json",
+        "expect": "tampered",
+        "record_type": "answer.v2",
+        "manifest_exit_code": 1,
+        "verifier_exit_code": 1,
+        "baseline_strict": "accept",
+        "baseline_json_parse": "accept"
+      },
+      {
+        "project": "jev-decision",
+        "path": "tampered/answer-v2-response-edited.json",
+        "expect": "tampered",
+        "record_type": "answer.v2",
+        "manifest_exit_code": 1,
+        "verifier_exit_code": 1,
+        "baseline_strict": "reject",
+        "baseline_strict_reasons": [
+          "digest /record_sha256: differs"
+        ],
+        "baseline_json_parse": "reject",
+        "baseline_json_parse_reasons": [
+          "digest /record_sha256: differs"
+        ]
+      },
+      {
+        "project": "jev-decision",
+        "path": "tampered/evaluation-calibrated-metric-edited-resealed",
+        "expect": "tampered",
+        "record_type": "evaluation-dir",
+        "manifest_exit_code": 1,
+        "verifier_exit_code": 1,
+        "baseline_strict": "accept",
+        "baseline_json_parse": "accept"
+      },
+      {
+        "project": "jev-decision",
+        "path": "tampered/evaluation-calibration-refit-differs",
+        "expect": "tampered",
+        "record_type": "evaluation-dir",
+        "manifest_exit_code": 1,
+        "verifier_exit_code": 1,
+        "baseline_strict": "accept",
+        "baseline_json_parse": "accept"
+      },
+      {
+        "project": "jev-decision",
+        "path": "tampered/evaluation-file-missing",
+        "expect": "tampered",
+        "record_type": "evaluation-dir",
+        "manifest_exit_code": 1,
+        "verifier_exit_code": 1,
+        "baseline_strict": "reject",
+        "baseline_strict_reasons": [
+          "provenance.json: digest /outputs/cases.jsonl/sha256: cases.jsonl is missing"
+        ],
+        "baseline_json_parse": "reject",
+        "baseline_json_parse_reasons": [
+          "provenance.json: digest /outputs/cases.jsonl/sha256: cases.jsonl is missing"
+        ]
+      },
+      {
+        "project": "jev-decision",
+        "path": "tampered/evaluation-markdown-edited",
+        "expect": "tampered",
+        "record_type": "evaluation-dir",
+        "manifest_exit_code": 1,
+        "verifier_exit_code": 1,
+        "baseline_strict": "reject",
+        "baseline_strict_reasons": [
+          "provenance.json: digest /outputs/EVALUATION.md/sha256: SHA-256 of EVALUATION.md differs"
+        ],
+        "baseline_json_parse": "reject",
+        "baseline_json_parse_reasons": [
+          "provenance.json: digest /outputs/EVALUATION.md/sha256: SHA-256 of EVALUATION.md differs"
+        ]
+      },
+      {
+        "project": "jev-decision",
+        "path": "tampered/evaluation-report-resealed",
+        "expect": "tampered",
+        "record_type": "evaluation-dir",
+        "manifest_exit_code": 1,
+        "verifier_exit_code": 1,
+        "baseline_strict": "accept",
+        "baseline_json_parse": "accept"
+      },
+      {
+        "project": "jev-decision",
+        "path": "tampered/evaluation-requirements-edited-resealed",
+        "expect": "tampered",
+        "record_type": "evaluation-dir",
+        "manifest_exit_code": 1,
+        "verifier_exit_code": 1,
+        "baseline_strict": "accept",
+        "baseline_json_parse": "accept"
+      },
+      {
+        "project": "jev-decision",
+        "path": "tampered/evaluation-responses-edited",
+        "expect": "tampered",
+        "record_type": "evaluation-dir",
+        "manifest_exit_code": 1,
+        "verifier_exit_code": 1,
+        "baseline_strict": "reject",
+        "baseline_strict_reasons": [
+          "provenance.json: digest /outputs/responses.jsonl/sha256: SHA-256 of responses.jsonl differs"
+        ],
+        "baseline_json_parse": "reject",
+        "baseline_json_parse_reasons": [
+          "provenance.json: digest /outputs/responses.jsonl/sha256: SHA-256 of responses.jsonl differs"
+        ]
+      },
+      {
+        "project": "jev-decision",
+        "path": "invalid/answer-v1.json",
+        "expect": "invalid",
+        "record_type": "answer.v1",
+        "manifest_exit_code": 2,
+        "verifier_exit_code": 2,
+        "baseline_strict": "accept",
+        "baseline_json_parse": "accept"
+      },
+      {
+        "project": "jev-decision",
+        "path": "invalid/answer-v2-duplicate-key.json",
+        "expect": "invalid",
+        "record_type": "unknown",
+        "manifest_exit_code": 2,
+        "verifier_exit_code": 2,
+        "baseline_strict": "reject",
+        "baseline_strict_reasons": [
+          "not parseable JSON"
+        ],
+        "baseline_json_parse": "accept"
+      },
+      {
+        "project": "jev-decision",
+        "path": "invalid/answer-v2-missing-questions.json",
+        "expect": "invalid",
+        "record_type": "answer.v2",
+        "manifest_exit_code": 2,
+        "verifier_exit_code": 2,
+        "baseline_strict": "reject",
+        "baseline_strict_reasons": [
+          "schema",
+          "digest /record_sha256: differs"
+        ],
+        "baseline_json_parse": "reject",
+        "baseline_json_parse_reasons": [
+          "schema",
+          "digest /record_sha256: differs"
+        ]
+      },
+      {
+        "project": "jev-decision",
+        "path": "invalid/answer-v2-non-finite.json",
+        "expect": "invalid",
+        "record_type": "unknown",
+        "manifest_exit_code": 2,
+        "verifier_exit_code": 2,
+        "baseline_strict": "reject",
+        "baseline_strict_reasons": [
+          "not parseable JSON"
+        ],
+        "baseline_json_parse": "reject",
+        "baseline_json_parse_reasons": [
+          "not parseable JSON"
+        ]
+      },
+      {
+        "project": "jev-decision",
+        "path": "invalid/answer-v2-oversized-integer.json",
+        "expect": "invalid",
+        "record_type": "answer.v2",
+        "manifest_exit_code": 2,
+        "verifier_exit_code": 2,
+        "baseline_strict": "reject",
+        "baseline_strict_reasons": [
+          "digest /record_sha256: integer 1152921504606846976 is outside the I-JSON range +-(2^53-1)"
+        ],
+        "baseline_json_parse": "reject",
+        "baseline_json_parse_reasons": [
+          "digest /record_sha256: integer 1152921504606846976 is outside the I-JSON range +-(2^53-1)"
+        ]
+      },
+      {
+        "project": "jev-decision",
+        "path": "invalid/answer-v2-unnormalized-questions.json",
+        "expect": "invalid",
+        "record_type": "answer.v2",
+        "manifest_exit_code": 2,
+        "verifier_exit_code": 2,
+        "baseline_strict": "reject",
+        "baseline_strict_reasons": [
+          "schema",
+          "digest /record_sha256: differs"
+        ],
+        "baseline_json_parse": "reject",
+        "baseline_json_parse_reasons": [
+          "schema",
+          "digest /record_sha256: differs"
+        ]
+      },
+      {
+        "project": "jev-decision",
+        "path": "invalid/answer-v2-unsupported-schema.json",
+        "expect": "invalid",
+        "record_type": "answer.v2",
+        "manifest_exit_code": 2,
+        "verifier_exit_code": 2,
+        "baseline_strict": "reject",
+        "baseline_strict_reasons": [
+          "schema",
+          "digest /record_sha256: differs"
+        ],
+        "baseline_json_parse": "reject",
+        "baseline_json_parse_reasons": [
+          "schema",
+          "digest /record_sha256: differs"
+        ]
+      },
+      {
+        "project": "jev-decision",
+        "path": "invalid/evaluation-calibration-overlap",
+        "expect": "invalid",
+        "record_type": "evaluation-dir",
+        "manifest_exit_code": 2,
+        "verifier_exit_code": 2,
+        "baseline_strict": "accept",
+        "baseline_json_parse": "accept"
+      },
+      {
+        "project": "jev-decision",
+        "path": "invalid/evaluation-cases-unparseable",
+        "expect": "invalid",
+        "record_type": "evaluation-dir",
+        "manifest_exit_code": 2,
+        "verifier_exit_code": 2,
+        "baseline_strict": "accept",
+        "baseline_json_parse": "accept"
+      },
+      {
+        "project": "jev-decision",
+        "path": "invalid/evaluation-provenance-duplicate-key",
+        "expect": "invalid",
+        "record_type": "unknown",
+        "manifest_exit_code": 2,
+        "verifier_exit_code": 2,
+        "baseline_strict": "accept",
+        "baseline_json_parse": "accept"
+      },
+      {
+        "project": "jev-decision",
+        "path": "invalid/evaluation-provenance-missing-output",
+        "expect": "invalid",
+        "record_type": "provenance-dir",
+        "manifest_exit_code": 2,
+        "verifier_exit_code": 2,
+        "baseline_strict": "reject",
+        "baseline_strict_reasons": [
+          "provenance.json: schema"
+        ],
+        "baseline_json_parse": "reject",
+        "baseline_json_parse_reasons": [
+          "provenance.json: schema"
+        ]
+      },
+      {
+        "project": "jev-decision",
+        "path": "invalid/evaluation-provenance-schema-1",
+        "expect": "invalid",
+        "record_type": "provenance-dir",
+        "manifest_exit_code": 2,
+        "verifier_exit_code": 2,
+        "baseline_strict": "reject",
+        "baseline_strict_reasons": [
+          "provenance.json: schema"
+        ],
+        "baseline_json_parse": "reject",
+        "baseline_json_parse_reasons": [
+          "provenance.json: schema"
+        ]
+      }
+    ]
+  },
+  "mutations": {
+    "controls": {
+      "runs": 56,
+      "accepted": 56,
+      "rejected": []
+    },
+    "skipped": [
+      {
+        "vector": "jev-decision/valid/evaluation-calibration-applied",
+        "file": "questions.json",
+        "reason": "not in compact sorted JSON form"
+      },
+      {
+        "vector": "jev-decision/valid/evaluation-calibration-fitted",
+        "file": "questions.json",
+        "reason": "not in compact sorted JSON form"
+      },
+      {
+        "vector": "jev-decision/valid/evaluation-live-failures",
+        "file": "questions.json",
+        "reason": "not in compact sorted JSON form"
+      },
+      {
+        "vector": "jev-decision/valid/evaluation-replay-gated",
+        "file": "questions.json",
+        "reason": "not in compact sorted JSON form"
+      },
+      {
+        "vector": "jev-decision/valid/evaluation-replay-gated",
+        "file": "requirements.json",
+        "reason": "not in compact sorted JSON form"
+      },
+      {
+        "vector": "jev-decision/valid/evaluation-replay-ungated",
+        "file": "questions.json",
+        "reason": "not in compact sorted JSON form"
+      }
+    ],
+    "by_type": [
+      {
+        "project": "decision-control",
+        "record_type": "evaluation.v1",
+        "vectors": 2,
+        "stale": {
+          "mutations": 481,
+          "detected": 481,
+          "undetected": 0,
+          "errors": 0,
+          "detection_percent": 100,
+          "crashed": 0,
+          "exit_codes": {
+            "1": 481
+          },
+          "undetected_fields": []
+        },
+        "resealed": {
+          "mutations": 481,
+          "detected": 371,
+          "undetected": 110,
+          "errors": 0,
+          "detection_percent": 77.1,
+          "crashed": 0,
+          "exit_codes": {
+            "0": 110,
+            "1": 336,
+            "2": 35
+          },
+          "undetected_fields": [
+            "/report/case_results/[]/case/id",
+            "/report/case_results/[]/case/labels/correct_destination",
+            "/report/case_results/[]/case/labels/safe_to_execute",
+            "/report/case_results/[]/case/recommendation/destination",
+            "/report/case_results/[]/case/recommendation/model",
+            "/report/case_results/[]/case/recommendation/probability",
+            "/report/case_results/[]/case/recommendation/question_version",
+            "/report/case_results/[]/case/recommendation/refused",
+            "/report/case_results/[]/case/ticket/department",
+            "/report/case_results/[]/case/ticket/revision",
+            "/report/policy/reviewers/[]",
+            "/report/policy/version"
+          ]
+        }
+      },
+      {
+        "project": "decision-control",
+        "record_type": "evaluation.v2",
+        "vectors": 3,
+        "stale": {
+          "mutations": 738,
+          "detected": 738,
+          "undetected": 0,
+          "errors": 0,
+          "detection_percent": 100,
+          "crashed": 0,
+          "exit_codes": {
+            "1": 735,
+            "2": 3
+          },
+          "undetected_fields": []
+        },
+        "resealed": {
+          "mutations": 738,
+          "detected": 573,
+          "undetected": 165,
+          "errors": 0,
+          "detection_percent": 77.6,
+          "crashed": 0,
+          "exit_codes": {
+            "0": 165,
+            "1": 517,
+            "2": 56
+          },
+          "undetected_fields": [
+            "/report/case_results/[]/case/id",
+            "/report/case_results/[]/case/labels/correct_destination",
+            "/report/case_results/[]/case/labels/safe_to_execute",
+            "/report/case_results/[]/case/recommendation/destination",
+            "/report/case_results/[]/case/recommendation/model",
+            "/report/case_results/[]/case/recommendation/probability",
+            "/report/case_results/[]/case/recommendation/question_version",
+            "/report/case_results/[]/case/recommendation/refused",
+            "/report/case_results/[]/case/ticket/department",
+            "/report/case_results/[]/case/ticket/revision",
+            "/report/policy/reviewers/[]",
+            "/report/policy/version"
+          ]
+        }
+      },
+      {
+        "project": "decision-control",
+        "record_type": "record.v1",
+        "vectors": 2,
+        "stale": {
+          "mutations": 67,
+          "detected": 67,
+          "undetected": 0,
+          "errors": 0,
+          "detection_percent": 100,
+          "crashed": 0,
+          "exit_codes": {
+            "1": 67
+          },
+          "undetected_fields": []
+        },
+        "resealed": {
+          "mutations": 67,
+          "detected": 50,
+          "undetected": 17,
+          "errors": 0,
+          "detection_percent": 74.6,
+          "crashed": 0,
+          "exit_codes": {
+            "0": 17,
+            "1": 29,
+            "2": 21
+          },
+          "undetected_fields": [
+            "/record/policy/allowed_destinations/[]",
+            "/record/policy/min_probability",
+            "/record/policy/reviewers/[]",
+            "/record/policy/version",
+            "/record/recommendation/model",
+            "/record/recommendation/question_version",
+            "/record/review/note",
+            "/record/schema_version",
+            "/record/ticket/department"
+          ]
+        }
+      },
+      {
+        "project": "decision-control",
+        "record_type": "record.v2",
+        "vectors": 2,
+        "stale": {
+          "mutations": 67,
+          "detected": 67,
+          "undetected": 0,
+          "errors": 0,
+          "detection_percent": 100,
+          "crashed": 0,
+          "exit_codes": {
+            "1": 67
+          },
+          "undetected_fields": []
+        },
+        "resealed": {
+          "mutations": 67,
+          "detected": 50,
+          "undetected": 17,
+          "errors": 0,
+          "detection_percent": 74.6,
+          "crashed": 0,
+          "exit_codes": {
+            "0": 17,
+            "1": 26,
+            "2": 24
+          },
+          "undetected_fields": [
+            "/record/events/[]/note",
+            "/record/policy/allowed_destinations/[]",
+            "/record/policy/min_probability",
+            "/record/policy/reviewers/[]",
+            "/record/policy/version",
+            "/record/recommendation/model",
+            "/record/recommendation/question_version",
+            "/record/review/note",
+            "/record/ticket/department",
+            "/record/ticket/revision"
+          ]
+        }
+      },
+      {
+        "project": "decision-control",
+        "record_type": "record.v3",
+        "vectors": 3,
+        "stale": {
+          "mutations": 107,
+          "detected": 107,
+          "undetected": 0,
+          "errors": 0,
+          "detection_percent": 100,
+          "crashed": 0,
+          "exit_codes": {
+            "1": 107
+          },
+          "undetected_fields": []
+        },
+        "resealed": {
+          "mutations": 107,
+          "detected": 78,
+          "undetected": 29,
+          "errors": 0,
+          "detection_percent": 72.9,
+          "crashed": 0,
+          "exit_codes": {
+            "0": 29,
+            "1": 43,
+            "2": 35
+          },
+          "undetected_fields": [
+            "/record/policy/allowed_destinations/[]",
+            "/record/policy/min_probability",
+            "/record/policy/reviewers/[]",
+            "/record/policy/version",
+            "/record/produced_by/version",
+            "/record/proposed_by",
+            "/record/recommendation/model",
+            "/record/recommendation/question_version",
+            "/record/review/note",
+            "/record/schema_version",
+            "/record/ticket/department"
+          ]
+        }
+      },
+      {
+        "project": "decision-control",
+        "record_type": "record.v4",
+        "vectors": 6,
+        "stale": {
+          "mutations": 201,
+          "detected": 201,
+          "undetected": 0,
+          "errors": 0,
+          "detection_percent": 100,
+          "crashed": 0,
+          "exit_codes": {
+            "1": 201
+          },
+          "undetected_fields": []
+        },
+        "resealed": {
+          "mutations": 201,
+          "detected": 139,
+          "undetected": 62,
+          "errors": 0,
+          "detection_percent": 69.2,
+          "crashed": 0,
+          "exit_codes": {
+            "0": 62,
+            "1": 66,
+            "2": 73
+          },
+          "undetected_fields": [
+            "/record/events/[]/note",
+            "/record/policy/allowed_destinations/[]",
+            "/record/policy/min_probability",
+            "/record/policy/reviewers/[]",
+            "/record/policy/version",
+            "/record/produced_by/version",
+            "/record/proposed_by",
+            "/record/recommendation/destination",
+            "/record/recommendation/model",
+            "/record/recommendation/question_version",
+            "/record/recommendation/refused",
+            "/record/review/note",
+            "/record/ticket/department",
+            "/record/ticket/revision"
+          ]
+        }
+      },
+      {
+        "project": "decision-control",
+        "record_type": "record.v5",
+        "vectors": 15,
+        "stale": {
+          "mutations": 774,
+          "detected": 774,
+          "undetected": 0,
+          "errors": 0,
+          "detection_percent": 100,
+          "crashed": 0,
+          "exit_codes": {
+            "1": 759,
+            "2": 15
+          },
+          "undetected_fields": []
+        },
+        "resealed": {
+          "mutations": 774,
+          "detected": 543,
+          "undetected": 231,
+          "errors": 0,
+          "detection_percent": 70.2,
+          "crashed": 0,
+          "exit_codes": {
+            "0": 231,
+            "1": 305,
+            "2": 238
+          },
+          "undetected_fields": [
+            "/record/external_policy/bundles/bundle/revision",
+            "/record/external_policy/decision_id",
+            "/record/external_policy/diagnostics/reason/[]",
+            "/record/external_policy/entities/[]/parents/[]/id",
+            "/record/external_policy/entities/[]/parents/[]/type",
+            "/record/external_policy/entities/[]/uid/id",
+            "/record/external_policy/entities/[]/uid/type",
+            "/record/external_policy/labels/id",
+            "/record/external_policy/labels/version",
+            "/record/external_policy/modules/routing.rego",
+            "/record/external_policy/path",
+            "/record/external_policy/policies/text",
+            "/record/external_policy/timestamp",
+            "/record/policy/allowed_destinations/[]",
+            "/record/policy/allowed_priorities/[]",
+            "/record/policy/min_probability",
+            "/record/policy/reviewers/[]",
+            "/record/policy/version",
+            "/record/produced_by/version",
+            "/record/proposed_by",
+            "/record/recommendation/destination",
+            "/record/recommendation/model",
+            "/record/recommendation/question_version",
+            "/record/recommendation/refused",
+            "/record/review/note",
+            "/record/ticket/department",
+            "/record/ticket/priority",
+            "/record/ticket/revision"
+          ]
+        }
+      },
+      {
+        "project": "experiment-gate",
+        "record_type": "decision.v2",
+        "vectors": 7,
+        "stale": {
+          "mutations": 594,
+          "detected": 580,
+          "undetected": 14,
+          "errors": 0,
+          "detection_percent": 97.6,
+          "crashed": 0,
+          "exit_codes": {
+            "0": 14,
+            "1": 573,
+            "2": 7
+          },
+          "undetected_fields": [
+            "/expgate_version",
+            "/produced_by/version"
+          ]
+        },
+        "resealed": {
+          "mutations": 594,
+          "detected": 566,
+          "undetected": 28,
+          "errors": 0,
+          "detection_percent": 95.3,
+          "crashed": 0,
+          "exit_codes": {
+            "0": 28,
+            "1": 499,
+            "2": 67
+          },
+          "undetected_fields": [
+            "/expgate_version",
+            "/input/description",
+            "/input/seed",
+            "/produced_by/version"
+          ]
+        }
+      },
+      {
+        "project": "experiment-gate",
+        "record_type": "decision.v3",
+        "vectors": 8,
+        "stale": {
+          "mutations": 608,
+          "detected": 592,
+          "undetected": 16,
+          "errors": 0,
+          "detection_percent": 97.4,
+          "crashed": 0,
+          "exit_codes": {
+            "0": 16,
+            "1": 576,
+            "2": 16
+          },
+          "undetected_fields": [
+            "/expgate_version",
+            "/produced_by/version"
+          ]
+        },
+        "resealed": {
+          "mutations": 608,
+          "detected": 577,
+          "undetected": 31,
+          "errors": 0,
+          "detection_percent": 94.9,
+          "crashed": 0,
+          "exit_codes": {
+            "0": 31,
+            "1": 504,
+            "2": 73
+          },
+          "undetected_fields": [
+            "/expgate_version",
+            "/input/description",
+            "/input/seed",
+            "/produced_by/version"
+          ]
+        }
+      },
+      {
+        "project": "jev-decision",
+        "record_type": "answer.v2",
+        "vectors": 3,
+        "stale": {
+          "mutations": 169,
+          "detected": 169,
+          "undetected": 0,
+          "errors": 0,
+          "detection_percent": 100,
+          "crashed": 0,
+          "exit_codes": {
+            "1": 150,
+            "2": 19
+          },
+          "undetected_fields": []
+        },
+        "resealed": {
+          "mutations": 169,
+          "detected": 145,
+          "undetected": 24,
+          "errors": 0,
+          "detection_percent": 85.8,
+          "crashed": 0,
+          "exit_codes": {
+            "0": 24,
+            "1": 126,
+            "2": 19
+          },
+          "undetected_fields": [
+            "/produced_by/version",
+            "/questions/department/criteria/billing",
+            "/questions/department/criteria/sales",
+            "/questions/department/criteria/technical",
+            "/questions/department/instructions",
+            "/questions/frustration/instructions",
+            "/questions/rare/instructions",
+            "/questions/refund/instructions",
+            "/questions/tone/criteria/a",
+            "/questions/tone/criteria/é",
+            "/questions/tone/criteria/€",
+            "/questions/tone/criteria/😀",
+            "/questions/tone/criteria/דּ",
+            "/questions/tone/instructions",
+            "/questions/urgency/instructions"
+          ]
+        }
+      },
+      {
+        "project": "jev-decision",
+        "record_type": "evaluation-dir",
+        "vectors": 5,
+        "stale": {
+          "mutations": 418,
+          "detected": 418,
+          "undetected": 0,
+          "errors": 0,
+          "detection_percent": 100,
+          "crashed": 0,
+          "exit_codes": {
+            "1": 418
+          },
+          "undetected_fields": []
+        },
+        "resealed": {
+          "mutations": 418,
+          "detected": 418,
+          "undetected": 0,
+          "errors": 0,
+          "detection_percent": 100,
+          "crashed": 0,
+          "exit_codes": {
+            "1": 338,
+            "2": 80
+          },
+          "undetected_fields": []
+        },
+        "files": {
+          "calibration.json": {
+            "stale": {
+              "mutations": 80,
+              "detected": 80,
+              "undetected": 0,
+              "errors": 0,
+              "detection_percent": 100,
+              "crashed": 0,
+              "exit_codes": {
+                "1": 80
+              },
+              "undetected_fields": []
+            },
+            "resealed": {
+              "mutations": 80,
+              "detected": 80,
+              "undetected": 0,
+              "errors": 0,
+              "detection_percent": 100,
+              "crashed": 0,
+              "exit_codes": {
+                "1": 30,
+                "2": 50
+              },
+              "undetected_fields": []
+            }
+          },
+          "evaluation.json": {
+            "stale": {
+              "mutations": 336,
+              "detected": 336,
+              "undetected": 0,
+              "errors": 0,
+              "detection_percent": 100,
+              "crashed": 0,
+              "exit_codes": {
+                "1": 336
+              },
+              "undetected_fields": []
+            },
+            "resealed": {
+              "mutations": 336,
+              "detected": 336,
+              "undetected": 0,
+              "errors": 0,
+              "detection_percent": 100,
+              "crashed": 0,
+              "exit_codes": {
+                "1": 306,
+                "2": 30
+              },
+              "undetected_fields": []
+            }
+          },
+          "requirements.json": {
+            "stale": {
+              "mutations": 2,
+              "detected": 2,
+              "undetected": 0,
+              "errors": 0,
+              "detection_percent": 100,
+              "crashed": 0,
+              "exit_codes": {
+                "1": 2
+              },
+              "undetected_fields": []
+            },
+            "resealed": {
+              "mutations": 2,
+              "detected": 2,
+              "undetected": 0,
+              "errors": 0,
+              "detection_percent": 100,
+              "crashed": 0,
+              "exit_codes": {
+                "1": 2
+              },
+              "undetected_fields": []
+            }
+          }
+        }
+      }
+    ],
+    "total": {
+      "stale": {
+        "mutations": 4224,
+        "detected": 4194,
+        "undetected": 30,
+        "errors": 0,
+        "detection_percent": 99.3,
+        "crashed": 0,
+        "exit_codes": {
+          "0": 30,
+          "1": 4134,
+          "2": 60
+        }
+      },
+      "resealed": {
+        "mutations": 4224,
+        "detected": 3510,
+        "undetected": 714,
+        "errors": 0,
+        "detection_percent": 83.1,
+        "crashed": 0,
+        "exit_codes": {
+          "0": 714,
+          "1": 2789,
+          "2": 721
+        }
+      }
+    }
+  },
+  "sizes": {
+    "unit": "bytes; a directory vector counts every file in it",
+    "by_type": [
+      {
+        "project": "decision-control",
+        "record_type": "evaluation.v1",
+        "vectors": 2,
+        "min": 10460,
+        "median": 11025,
+        "max": 11590
+      },
+      {
+        "project": "decision-control",
+        "record_type": "evaluation.v2",
+        "vectors": 3,
+        "min": 10460,
+        "median": 11503,
+        "max": 11590
+      },
+      {
+        "project": "decision-control",
+        "record_type": "record.v1",
+        "vectors": 2,
+        "min": 1354,
+        "median": 1471,
+        "max": 1588
+      },
+      {
+        "project": "decision-control",
+        "record_type": "record.v2",
+        "vectors": 2,
+        "min": 1350,
+        "median": 1484,
+        "max": 1618
+      },
+      {
+        "project": "decision-control",
+        "record_type": "record.v3",
+        "vectors": 3,
+        "min": 1556,
+        "median": 1557,
+        "max": 1819
+      },
+      {
+        "project": "decision-control",
+        "record_type": "record.v4",
+        "vectors": 6,
+        "min": 1382,
+        "median": 1553.5,
+        "max": 1819
+      },
+      {
+        "project": "decision-control",
+        "record_type": "record.v5",
+        "vectors": 15,
+        "min": 1447,
+        "median": 3954,
+        "max": 4720
+      },
+      {
+        "project": "experiment-gate",
+        "record_type": "decision.v2",
+        "vectors": 7,
+        "min": 2518,
+        "median": 3603,
+        "max": 3842
+      },
+      {
+        "project": "experiment-gate",
+        "record_type": "decision.v3",
+        "vectors": 8,
+        "min": 2133,
+        "median": 3602.5,
+        "max": 3842
+      },
+      {
+        "project": "jev-decision",
+        "record_type": "answer.v2",
+        "vectors": 3,
+        "min": 1315,
+        "median": 1356,
+        "max": 1560
+      },
+      {
+        "project": "jev-decision",
+        "record_type": "evaluation-dir",
+        "vectors": 5,
+        "min": 4955,
+        "median": 12715,
+        "max": 19210
+      }
+    ]
+  }
+}
