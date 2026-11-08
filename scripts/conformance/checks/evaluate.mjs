@@ -979,7 +979,7 @@ export function renderMarkdown(result) {
 
   add("", "### What the mutation rates show, and what they do not", "");
   add("- Digests detect change, not forgery: whoever edits a record can recompute its hashes ([DECISION_RECORDS.md](../../../docs/DECISION_RECORDS.md#compatibility-and-limits)). A resealed edit is caught when replay recomputes something from the edited field, or finds that it no longer matches a copy elsewhere in the record.");
-  add("- Fields no recomputation depends on stay bound only by a signature (`--require-signature`): free text such as review and event notes or question instructions, caller-supplied labels such as `recommendation.model`, `question_version`, `proposed_by` and `produced_by.version`, and inputs whose edit leaves the recomputed verdict unchanged. The lists above name them for this corpus.");
+  add("- Fields no recomputation depends on stay bound only by a signature (`--require-signature`): free text such as review and event notes or question instructions, caller-supplied labels such as `recommendation.model`, `question_version`, `proposed_by` and `produced_by.version`, inputs whose edit leaves the recomputed verdict unchanged, and `schema_version` where the next version reads the same record and the edit is resealed in that version's canonical form. The lists above name them for this corpus.");
   add("- One edit per value type, one leaf at a time, on vectors written by the same authors as the verifiers. The rates describe this corpus and operator, not records in general or an adversary who edits several fields together.");
 
   add("", "## Record sizes", "", `Valid vectors, ${sizes.unit}.`, "", "| Project | Record type | Vectors | Min | Median | Max |", "| --- | --- | --- | --- | --- | --- |");
