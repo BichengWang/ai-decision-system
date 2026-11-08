@@ -129,8 +129,8 @@ clean:
 	@find . "(" -name "*.pyc" -o -name "coverage.xml" -o -name "junit.xml" ")" -delete
 	@rm -rf coverage
 
-# Release inspection and source-only record demo require Python 3.11+.
-.PHONY: release-status records-demo
+# Release inspection and the source-only record demos require Python 3.11+.
+.PHONY: release-status records-demo records-chain
 release-status:
 	python3 scripts/release.py status
 
@@ -143,9 +143,39 @@ records-demo:
 	cd $(JEV_DIR) && python3 -m jevdecision.evaluation \
 		--questions examples/support-ticket.json --cases examples/support-ticket-cases.jsonl \
 		--responses examples/support-ticket-responses.jsonl \
-		--require examples/support-ticket-requirements.json --out "$(DEMO_OUT)/jev-decision"
+		--require examples/support-ticket-requirements.json --out "$(DEMO_OUT)/jev-decision" && \
+		python3 -m jevdecision.verify --evaluation "$(DEMO_OUT)/jev-decision"
 	cd ai-workflows/decision-control && python3 -m decisioncontrol demo --out "$(DEMO_OUT)/decision-control" && \
 		python3 -m decisioncontrol replay --record "$(DEMO_OUT)/decision-control/record-review.json"
 	@echo 'Experiment records: $(DEMO_OUT)/experiment-gate/*/decision.json'
 	@echo 'Jev evaluation and provenance: $(DEMO_OUT)/jev-decision/{evaluation,provenance}.json'
 	@echo 'Review record: $(DEMO_OUT)/decision-control/record-review.json'
+
+# One offline, keyless chain across the packages (P-037): a Jev answer from the stand-in transport
+# becomes a decision-control proposal (destination, probability, model = jev:<record_sha256>).
+records-chain:
+	@case "$(DEMO_OUT)" in /*) ;; *) echo 'Set DEMO_OUT=/abs/new/dir'; exit 2;; esac; \
+	test ! -e "$(DEMO_OUT)" || { echo 'DEMO_OUT must not exist'; exit 2; }; \
+	mkdir -p "$(DEMO_OUT)/jev-decision" "$(DEMO_OUT)/decision-control" || exit 2
+	cd $(EXPGATE_DIR) && python3 -m expgate.run --input examples/offer-ranker-v2.json --out "$(DEMO_OUT)/experiment-gate" && \
+		python3 -m expgate.verify "$(DEMO_OUT)/experiment-gate/decision.json"
+	cd $(JEV_DIR) && PYTHONPATH=. python3 scripts/example-answer.py "$(DEMO_OUT)/jev-decision/answer.json" && \
+		python3 -m jevdecision.verify "$(DEMO_OUT)/jev-decision/answer.json"
+	cd ai-workflows/decision-control && out="$(DEMO_OUT)/decision-control" && \
+		dc() { python3 -m decisioncontrol --db "$$out/tickets.sqlite3" "$$@"; } && \
+		python3 -c 'import json, sys; a = json.load(open(sys.argv[1])); d = a["answers"]["department"]; json.dump({"action": "reassign_ticket", "ticket_id": "T-CHAIN", "destination": d["choice"], "probability": d["probabilities"][d["choice"]], "model": "jev:" + a["record_sha256"], "question_version": "department", "refused": False}, open(sys.argv[2], "x"), indent=2)' \
+			"$(DEMO_OUT)/jev-decision/answer.json" "$$out/proposal.json" && \
+		printf '%s\n' '{"version": "chain-1", "allowed_destinations": ["billing", "sales", "technical"], "review_destinations": ["technical"], "reviewers": ["local-reviewer"], "min_probability": 0.8}' > "$$out/policy.json" && \
+		dc ticket-create --ticket-id T-CHAIN --department intake > /dev/null && \
+		id=$$(dc submit --proposal "$$out/proposal.json" --policy "$$out/policy.json" --proposed-by jev-chain | python3 -c 'import json, sys; print(json.load(sys.stdin)["id"])') && \
+		dc approve "$$id" --reviewer local-reviewer --note 'Reviewed the Jev department answer' > /dev/null && \
+		dc execute "$$id" > /dev/null && dc export "$$id" --out "$$out/record.json" > /dev/null && \
+		dc replay --record "$$out/record.json"
+	@python3 -c 'import json, sys; a = json.load(open(sys.argv[1])); d = a["answers"]["department"]; r = json.load(open(sys.argv[2]))["record"]["recommendation"]; \
+		ok = (r["model"], r["destination"], r["probability"]) == ("jev:" + a["record_sha256"], d["choice"], d["probabilities"][d["choice"]]); \
+		print("Jev -> decision-control link:", "OK" if ok else "MISMATCH", r["model"], r["destination"], r["probability"]); sys.exit(not ok)' \
+		"$(DEMO_OUT)/jev-decision/answer.json" "$(DEMO_OUT)/decision-control/record.json"
+	@echo 'Only this recipe checks that link. No verifier does: decision-control stores model and probability as labels the caller supplies (P-034).'
+	@echo 'Experiment record: $(DEMO_OUT)/experiment-gate/decision.json'
+	@echo 'Jev answer record: $(DEMO_OUT)/jev-decision/answer.json'
+	@echo 'Review record: $(DEMO_OUT)/decision-control/record.json'
