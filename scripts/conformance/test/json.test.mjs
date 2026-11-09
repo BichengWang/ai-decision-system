@@ -21,6 +21,13 @@ test("rejects duplicate object keys at any depth", () => {
   assert.throws(() => parseJson('[{"x":{"k":1,"k\\u0000":2,"\\u006b":3}}]'), /duplicate object key "k"/);
 });
 
+test("duplicates: last keeps the last value in the first position, as JSON.parse does", () => {
+  const text = '{"a":1,"b":2,"a":{"c":3,"c":4}}';
+  const value = parseJson(text, { duplicates: "last" });
+  assert.deepEqual(value, JSON.parse(text));
+  assert.deepEqual(Object.keys(value), Object.keys(JSON.parse(text)));
+});
+
 test("keeps __proto__ as an ordinary member", () => {
   const value = parseJson('{"__proto__":{"polluted":true}}');
   assert.equal(Object.getPrototypeOf(value), Object.prototype);

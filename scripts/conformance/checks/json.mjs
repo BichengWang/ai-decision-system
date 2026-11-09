@@ -49,9 +49,10 @@ function setOwn(target, key, value) {
 /**
  * Parse JSON text. Throws JsonSyntaxError on malformed input, on a duplicate
  * object key, and on anything after the first value. `number` maps a literal's
- * source text to a value.
+ * source text to a value. `duplicates: "last"` accepts a duplicate key and keeps
+ * its last value, as JSON.parse does (the evaluation's lenient baseline uses it).
  */
-export function parseJson(text, { number = readNumber } = {}) {
+export function parseJson(text, { number = readNumber, duplicates = "reject" } = {}) {
   let pos = 0;
 
   const fail = (message, at = pos) => {
@@ -112,7 +113,7 @@ export function parseJson(text, { number = readNumber } = {}) {
         if (text[pos] !== '"') fail("expected a string key");
         const keyAt = pos;
         const key = parseString();
-        if (Object.hasOwn(result, key)) fail(`duplicate object key ${JSON.stringify(key)}`, keyAt);
+        if (Object.hasOwn(result, key) && duplicates !== "last") fail(`duplicate object key ${JSON.stringify(key)}`, keyAt);
         skip();
         if (text[pos] !== ":") fail("expected ':'");
         pos += 1;

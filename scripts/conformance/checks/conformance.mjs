@@ -24,7 +24,7 @@ const SHA256_HEX = /^[0-9a-f]{64}$/;
 
 const sha256 = (bytes) => createHash("sha256").update(bytes).digest("hex");
 
-function newAjv() {
+export function newAjv() {
   // Strict mode rejects unknown keywords and formats (typos). The type-hygiene checks are off:
   // conditional branches, tuples and `required` across branches are valid JSON Schema.
   const ajv = new Ajv2020({ strict: true, strictTypes: false, strictTuples: false, strictRequired: false, allErrors: true });
@@ -71,9 +71,9 @@ export class Recorder {
   }
 }
 
-class PathError extends Error {}
+export class PathError extends Error {}
 
-function contained(base, relative, what) {
+export function contained(base, relative, what) {
   const full = path.resolve(base, relative);
   if (full !== base && !full.startsWith(base + path.sep)) {
     throw new PathError(`${what} ${JSON.stringify(relative)} leaves ${path.basename(base)}/`);
@@ -81,7 +81,7 @@ function contained(base, relative, what) {
   return full;
 }
 
-async function discoverManifests(root) {
+export async function discoverManifests(root) {
   const projects = path.join(root, PROJECTS_DIR);
   let entries;
   try {
@@ -102,7 +102,7 @@ async function discoverManifests(root) {
 // directories, so a $ref by $id resolves across files. Every discovered schema is registered
 // and compiled up front, so a malformed, id-less or invalid schema is reported even when no
 // vector references it. `problems` lists those failures as { file, error }.
-async function loadProjectSchemas(projectDir) {
+export async function loadProjectSchemas(projectDir) {
   const ajv = newAjv();
   const loaded = new Map(); // absolute file -> { id, validate? } | { error }
   const files = [];
@@ -305,7 +305,7 @@ function readDigest(document, pointer) {
   return recorded;
 }
 
-function withoutMembers(value, names) {
+export function withoutMembers(value, names) {
   if (names.length === 0) return value;
   if (value === null || typeof value !== "object" || Array.isArray(value) || value instanceof RawNumber) {
     throw new Error("exclude needs the covered value to be an object");
