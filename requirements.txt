@@ -966,7 +966,7 @@ torchrec==1.1.0
     # via -r requirements.in
 torchvision==0.29.0
     # via -r requirements.in
-tornado==6.6
+tornado==6.6.1
     # via
     #   -c (workspace)
     #   ipykernel
