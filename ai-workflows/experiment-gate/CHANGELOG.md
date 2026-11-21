@@ -116,6 +116,9 @@ Breaking for anything that reads or checks records; no command or option of 0.1.
 - A `null` `policy.alpha`, `srm_alpha`, `power` or `assignment.expected_treatment_share` is rejected with the
   field named (`ValueError`, exit 2). It passed validation before, and `evaluate` then raised a `TypeError` such
   as `unsupported operand type(s) for /: 'NoneType' and 'int'`.
+- `experiment-gate-verify` reports a `sequential` mismatch (exit 1) for a record with `"sequential": null` whose
+  replay has no sequential monitoring. It verified before, although expgate never writes that member and
+  `decision.v2.json` and `decision.v3.json` reject it.
 
 ### Security
 - Signed records (see Added) bind a record to a key: an edited record whose digest was recomputed passes

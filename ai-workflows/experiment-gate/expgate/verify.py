@@ -130,7 +130,7 @@ def verify_record(record: dict) -> list[str]:
             return mismatches + ["input (cannot replay)"]
         raise ValueError(f"invalid embedded input: {exc}") from exc
     for field in ("decision", "reasons", "metrics", "experiment", "policy", "sample_ratio", "sequential"):
-        if not _same(record.get(field), replay.get(field), field):
+        if (field in record) != (field in replay) or not _same(record.get(field), replay.get(field), field):
             mismatches.append(field)
     return mismatches
 

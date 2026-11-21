@@ -161,6 +161,7 @@ class SchemaThreeReplayTest(unittest.TestCase):
             "string": lambda r: r["metrics"][0].update(status="IMPROVED" if r["metrics"][0]["status"] != "IMPROVED" else "DEGRADED"),
             "boolean": lambda r: r["sample_ratio"].update(**{"pass": not r["sample_ratio"]["pass"]}),
             "structure": lambda r: r["metrics"][0].update(extra=1),
+            "null sequential": lambda r: r.update(sequential=None),  # the replay has no such member
             "reason": lambda r: r.update(reasons=r["reasons"] + ["x"]),
             "type": lambda r: r["metrics"][0].update(se=str(r["metrics"][0]["se"])),
         }
