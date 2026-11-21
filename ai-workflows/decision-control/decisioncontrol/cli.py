@@ -268,7 +268,9 @@ def main(argv=None):
     except StateError as error:
         print(f"decision-control: {error}", file=sys.stderr)
         return 1
-    except (DecisionError, signing.KeyFileError, OSError, UnicodeError, json.JSONDecodeError, sqlite3.Error) as error:
+    # ValueError and RecursionError: JSON beyond the parser's limits (integer digits, nesting depth).
+    except (DecisionError, signing.KeyFileError, OSError, UnicodeError, json.JSONDecodeError, sqlite3.Error,
+            ValueError, RecursionError) as error:
         print(f"decision-control: {error}", file=sys.stderr)
         return 2
     print(json.dumps(result, indent=2, allow_nan=False))

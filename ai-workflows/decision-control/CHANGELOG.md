@@ -109,6 +109,9 @@ of 0.1.0 was removed.
   JSON `null`. It was treated as an omitted option: a gated evaluation ran `UNGATED` and exited 0, a
   submission was recorded without its external decision, and `freeze-cedar` ran `cedar` instead of freezing
   the recorded response.
+- JSON beyond Python's parser limits (an integer of more than 4300 digits, or nesting deeper than the
+  recursion limit) exits 2 with an error message instead of a traceback and exit 1, the code `replay` uses for
+  evidence that is wrong. Under `--require-signature` such a signature envelope is malformed (exit 1).
 
 ### Security
 - Signed records and `--require-signature` bind a record to a key: a record edited to name the proposer as
