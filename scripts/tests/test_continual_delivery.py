@@ -23,7 +23,7 @@ def pr(**changes):
         "headRefName": "automation/issue-42", "headRefOid": SHA, "title": "Improve feature",
         "mergeStateStatus": "CLEAN", "body": "Closes #42\n\nImplementation run: implement-42",
         "labels": [{"name": delivery.MANAGED}],
-        "files": [{"path": "src/utils/general/example.py"}],
+        "files": [{"filename": "src/utils/general/example.py"}], "changedFiles": 1,
         "statusCheckRollup": [
             {"name": "Delivery policy", "conclusion": "SUCCESS", "workflowName": "Delivery policy"},
             {"name": "src baseline", "conclusion": "SUCCESS", "workflowName": "Research baseline"},
@@ -40,6 +40,76 @@ def receipt(sha=SHA, verdict="PASS", findings=0):
     }
     return {"body": f"{delivery.REVIEW_PREFIX}{json.dumps(data)} -->",
             "user": {"login": "BichengWang"}}
+
+
+REPO = "BichengWang/repo"
+PROTECTED = {"required_status_checks": {"contexts": ["Delivery policy", "RELIA required"], "strict": True},
+             "enforce_admins": {"enabled": True}}
+
+
+class FakeGh:
+    """Answers the gate's read-only `gh` calls with GitHub's listing limits.
+
+    GraphQL (`gh pr view --json files`) returns the first 100 files and only a rename's
+    new path; REST lists up to 3,000 files with `previous_filename` and 250 commits.
+    """
+
+    def __init__(self, files, commits=(), comments=None):
+        self.files, self.commits = list(files), list(commits)
+        self.comments = [receipt()] if comments is None else comments
+
+    def __call__(self, *args, input_text=None):
+        if args[:3] == ("gh", "pr", "view"):
+            fields = args[args.index("--json") + 1].split(",")
+            data = dict(pr(), changedFiles=len(self.files),
+                        files=[{"path": item["filename"]} for item in self.files[:100]])
+            return json.dumps({key: data[key] for key in fields if key in data})
+        endpoint = args[2]
+        if endpoint == f"repos/{REPO}/branches/main/protection":
+            return json.dumps(PROTECTED)
+        if endpoint == f"repos/{REPO}/pulls/42":
+            return json.dumps({"changed_files": len(self.files), "commits": len(self.commits)})
+        if endpoint.startswith(f"repos/{REPO}/pulls/42/files?"):
+            items = self.files[:3000]
+        elif endpoint.startswith(f"repos/{REPO}/pulls/42/commits?"):
+            items = self.commits[:250]
+        elif endpoint.startswith(f"repos/{REPO}/issues/42/comments?"):
+            items = self.comments
+        else:
+            raise AssertionError(f"unexpected gh call {args}")
+        return json.dumps([items[start:start + 100] for start in range(0, len(items), 100)] or [[]])
+
+
+class GateListingTests(unittest.TestCase):
+    def gate(self, fake):
+        with patch.object(delivery, "run", side_effect=fake):
+            return delivery.gate(REPO, 42)
+
+    def test_fake_passes_a_small_clean_pr(self):
+        self.assertEqual(self.gate(FakeGh([{"filename": "src/utils/general/example.py"}])), SHA)
+
+    def test_release_file_after_the_first_hundred_files_blocks(self):
+        files = [{"filename": f"docs/notes/{number}.md"} for number in range(100)]
+        files.append({"filename": "scripts/release.py"})
+        with self.assertRaisesRegex(delivery.Blocked, "release-related diff"):
+            self.gate(FakeGh(files))
+
+    def test_file_list_past_the_rest_limit_blocks(self):
+        files = [{"filename": f"docs/notes/{number}.md"} for number in range(3001)]
+        with self.assertRaisesRegex(delivery.Blocked, "file list is incomplete"):
+            self.gate(FakeGh(files))
+
+    def test_renaming_a_release_file_away_blocks(self):
+        renamed = {"filename": "scripts/old_release.py", "previous_filename": "scripts/release.py",
+                   "status": "renamed"}
+        with self.assertRaisesRegex(delivery.Blocked, "release-related diff"):
+            self.gate(FakeGh([renamed]))
+
+    def test_renaming_out_of_a_component_requires_its_checks(self):
+        renamed = {"filename": "docs/run.py", "previous_filename": "ai-workflows/experiment-gate/expgate/run.py",
+                   "status": "renamed"}
+        with self.assertRaisesRegex(delivery.Blocked, r"required check test \(3\.11\)"):
+            self.gate(FakeGh([renamed]))
 
 
 class EvaluationTests(unittest.TestCase):
@@ -99,11 +169,11 @@ class EvaluationTests(unittest.TestCase):
     def test_release_related_diff_blocks(self):
         for path in ("docs/RELIA_RELEASE.md", ".github/workflows/release.yml", "scripts/release.py"):
             with self.subTest(path=path):
-                changed = pr(files=[{"path": path}])
+                changed = pr(files=[{"filename": path}])
                 self.assertTrue(any("release" in item for item in delivery.evaluate(changed, [receipt()], [])))
 
     def test_area_checks_required(self):
-        changed = pr(files=[{"path": "ai-workflows/experiment-gate/expgate/run.py"}])
+        changed = pr(files=[{"filename": "ai-workflows/experiment-gate/expgate/run.py"}])
         failures = delivery.evaluate(changed, [receipt()], [])
         self.assertTrue(any("test (3.11)" in item for item in failures))
         self.assertTrue(any("test (3.13)" in item for item in failures))
@@ -116,7 +186,7 @@ class EvaluationTests(unittest.TestCase):
         )
         for path in paths:
             with self.subTest(path=path):
-                changed = pr(files=[{"path": path}], statusCheckRollup=[
+                changed = pr(files=[{"filename": path}], statusCheckRollup=[
                     {"name": "Delivery policy", "conclusion": "SUCCESS", "workflowName": "Delivery policy"},
                     {"name": "RELIA required", "conclusion": "SUCCESS", "workflowName": "RELIA CI"},
                 ])
@@ -153,21 +223,21 @@ class EvaluationTests(unittest.TestCase):
         for path in (".plan/README.md", "scripts/continual_delivery.py",
                      "ai-workflows/ai-decision-reliability/pyproject.toml"):
             with self.subTest(path=path):
-                changed = pr(files=[{"path": path}], statusCheckRollup=[
+                changed = pr(files=[{"filename": path}], statusCheckRollup=[
                     {"name": "Delivery policy", "conclusion": "SUCCESS", "workflowName": "Delivery policy"},
                     {"name": "RELIA required", "conclusion": "SUCCESS", "workflowName": "RELIA CI"},
                 ])
                 self.assertEqual(delivery.evaluate(changed, [receipt()], []), [])
 
     def test_manifest_change_requires_every_check(self):
-        changed = pr(files=[{"path": "workspace.json"}])
+        changed = pr(files=[{"filename": "workspace.json"}])
         failures = delivery.evaluate(changed, [receipt()], [])
         for name in ("RELIA required", "test (3.11)", "test (3.13)", "golden vectors"):
             self.assertIn(f"required check {name} is missing, failing, or from the wrong workflow", failures)
         self.assertFalse(any("src baseline" in item for item in failures))
 
     def test_export_tests_require_relia_validation(self):
-        changed = pr(files=[{"path": "scripts/tests/test_export_relia.py"}])
+        changed = pr(files=[{"filename": "scripts/tests/test_export_relia.py"}])
         self.assertEqual(delivery.evaluate(changed, [receipt()], []), [
             "required check RELIA required is missing, failing, or from the wrong workflow",
         ])
