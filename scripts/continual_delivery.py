@@ -151,11 +151,12 @@ def review_result(comments, sha, implementation_run, trusted_login):
                     record = json.loads(line[len(REVIEW_PREFIX):-4])
                 except json.JSONDecodeError:
                     continue
-                if (record.get("head_sha") == sha
-                        and record.get("reviewer_run")
-                        and record["reviewer_run"] != implementation_run):
-                    if record.get("verdict") == "BLOCK" or record.get("blocking_findings") != 0:
-                        return record
+                if record.get("head_sha") != sha:
+                    continue
+                # Any non-passing receipt blocks; only a pass must come from a separate run.
+                if record.get("verdict") != "PASS" or record.get("blocking_findings") != 0:
+                    return record
+                if record.get("reviewer_run") and record["reviewer_run"] != implementation_run:
                     verdict = record
     return verdict
 

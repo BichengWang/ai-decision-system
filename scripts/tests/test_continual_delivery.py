@@ -136,6 +136,19 @@ class EvaluationTests(unittest.TestCase):
         failures = delivery.evaluate(pr(), [receipt(verdict="BLOCK", findings=1), receipt()], [])
         self.assertTrue(any("review" in item for item in failures))
 
+    def test_block_cannot_be_dropped_by_renaming_the_implementation_run(self):
+        block = receipt(verdict="BLOCK", findings=1)
+        later = receipt()
+        later["body"] = later["body"].replace("separate-review-1", "separate-review-2")
+        # The PR body is editable without a push, so the head SHA stays the same.
+        relabelled = pr(body="Closes #42\n\nImplementation run: separate-review-1")
+        failures = delivery.evaluate(relabelled, [block, later], [])
+        self.assertIn("independent review has no passing receipt for head SHA", failures)
+
+    def test_unknown_verdict_is_not_overridden_by_a_later_pass(self):
+        failures = delivery.evaluate(pr(), [receipt(verdict="FAIL"), receipt()], [])
+        self.assertIn("independent review has no passing receipt for head SHA", failures)
+
     def test_public_commenter_cannot_forge_pass(self):
         forged = receipt()
         forged["user"]["login"] = "another-user"
