@@ -151,11 +151,12 @@ def review_result(comments, sha, implementation_run, trusted_login):
                     record = json.loads(line[len(REVIEW_PREFIX):-4])
                 except json.JSONDecodeError:
                     continue
-                if (record.get("head_sha") == sha
-                        and record.get("reviewer_run")
-                        and record["reviewer_run"] != implementation_run):
-                    if record.get("verdict") == "BLOCK" or record.get("blocking_findings") != 0:
-                        return record
+                if record.get("head_sha") != sha:
+                    continue
+                # Any non-passing receipt blocks; only a pass must come from a separate run.
+                if record.get("verdict") != "PASS" or record.get("blocking_findings") != 0:
+                    return record
+                if record.get("reviewer_run") and record["reviewer_run"] != implementation_run:
                     verdict = record
     return verdict
 
@@ -163,7 +164,11 @@ def review_result(comments, sha, implementation_run, trusted_login):
 def evaluate(pr, comments, commits, trusted_login="BichengWang"):
     failures = []
     sha = pr.get("headRefOid", "")
-    paths = {item["path"] for item in pr.get("files", [])}
+    files = pr.get("files") or []
+    # A rename changes both paths, so both count for release files and required checks.
+    paths = {path for item in files for path in (item.get("filename"), item.get("previous_filename")) if path}
+    if len(files) != pr.get("changedFiles"):
+        failures.append("PR file list is incomplete")
     if not SHA_RE.fullmatch(sha):
         failures.append("missing exact head SHA")
     if pr.get("state") != "OPEN" or pr.get("isDraft"):
@@ -219,10 +224,15 @@ def evaluate(pr, comments, commits, trusted_login="BichengWang"):
 def pr_data(repo, number):
     pr = gh_json(
         "pr", "view", str(number), "--json",
-        "number,title,body,state,isDraft,headRefOid,headRefName,baseRefName,mergeStateStatus,files,statusCheckRollup,labels",
+        "number,title,body,state,isDraft,headRefOid,headRefName,baseRefName,mergeStateStatus,changedFiles,statusCheckRollup,labels",
     )
+    # `gh pr view --json files` stops at 100 files and omits a rename's old path.
+    pr["files"] = gh_pages(f"repos/{repo}/pulls/{number}/files?per_page=100")
     comments = gh_pages(f"repos/{repo}/issues/{number}/comments?per_page=100")
     commits = gh_pages(f"repos/{repo}/pulls/{number}/commits?per_page=100")
+    # This endpoint lists at most 250 commits; unlisted ones escape the attribution rule.
+    if len(commits) != gh_json("api", f"repos/{repo}/pulls/{number}").get("commits"):
+        raise Blocked("PR commit list is incomplete")
     return pr, comments, commits
 
 
