@@ -281,6 +281,10 @@ class ResponseValidationTest(unittest.TestCase):
             "score out of range": self.answers(frustration={"score": 2.5}),
             "unknown level": self.answers(frustration={"probabilities": {"7": 1.0}}),
             "nan confidence": self.answers(department={"confidence": float("nan")}),
+            # JSON integers beyond the float range must not escape as OverflowError.
+            "oversized integer probability": self.answers(refund={"noul": 10**400}),
+            "oversized integer score": self.answers(frustration={"score": -10**400}),
+            "oversized integer confidence": self.answers(department={"confidence": 10**400}),
             # Malformed shapes must surface as ResponseError, not TypeError or ValueError.
             "list choice": self.answers(department={"choice": ["technical"]}),
             "object choice": self.answers(department={"choice": {"technical": 1}}),
@@ -511,6 +515,16 @@ class DecisionModelTest(unittest.TestCase):
                     self.assertEqual(answer.probabilities, {})
                     self.assertEqual(model.route(STATE, DEPARTMENT, min_confidence=floor, fallback="human"), expected)
 
+    def test_route_rejects_a_floor_outside_the_unit_interval_before_asking(self):
+        # A NaN floor compares false with every confidence, so it would route every answer.
+        answer = {"department": JEV_RESPONSE["answers"]["department"]}
+        backend, transport = jev(*[{"answers": answer}] * 3)
+        model = DecisionModel(backend)
+        for floor in (float("nan"), -0.1, 1.1):
+            with self.subTest(floor=floor), self.assertRaises(DecisionError):
+                model.route(STATE, DEPARTMENT, min_confidence=floor, fallback="human")
+        self.assertEqual(transport.calls, [])
+
     def test_route_accepts_reported_choice_probability_at_the_boundary(self):
         backend, _ = jev({"answers": {"department": {
             "choice": "technical", "probabilities": {"technical": 0.0}}}})
@@ -594,15 +608,20 @@ class CLITest(unittest.TestCase):
         self.assertIn("API key", err)
 
     def test_undecodable_provider_response_exits_1_without_retrying(self):
+        # Invalid UTF-8; an integer longer than int() converts (ValueError, not JSONDecodeError); nesting deeper
+        # than the decoder recurses (RecursionError on Python 3.13 and earlier, a non-object response later).
+        bodies = {"utf-8": b"\xff", "long integer": b'{"answers": ' + b"1" * 5000 + b"}",
+                  "deep nesting": b"[" * 100000 + b"]" * 100000}
         for backend_type in (JevBackend, OpenAIDecisionsBackend):
-            with self.subTest(backend=backend_type.name):
-                backend = backend_type(api_key="k", env={})
-                with mock.patch("jevdecision.__main__.create_backend", return_value=backend), \
-                        mock.patch("urllib.request.OpenerDirector.open", return_value=io.BytesIO(b"\xff")) as request:
-                    code, out, err = self.run_cli("--questions", str(EXAMPLE), "--state", STATE)
-                self.assertEqual((code, out), (1, ""))
-                self.assertIn("not JSON", err)
-                request.assert_called_once()
+            for label, body in bodies.items():
+                with self.subTest(backend=backend_type.name, body=label):
+                    backend = backend_type(api_key="k", env={})
+                    with mock.patch("jevdecision.__main__.create_backend", return_value=backend), \
+                            mock.patch("urllib.request.OpenerDirector.open", return_value=io.BytesIO(body)) as request:
+                        code, out, err = self.run_cli("--questions", str(EXAMPLE), "--state", STATE)
+                    self.assertEqual((code, out), (1, ""))
+                    self.assertIn("not JSON" if label != "deep nesting" else "error:", err)
+                    request.assert_called_once()
 
 
 if __name__ == "__main__":

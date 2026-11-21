@@ -65,6 +65,14 @@ class ReleaseTests(unittest.TestCase):
         for url in ('http://127.0.0.1:1234', 'http://[::1]:1234', 'http://localhost:1234'):
             JevBackend(api_key='secret', base_url=url)
 
+    def test_path_cannot_change_the_host(self):
+        # Without a leading '/', the path extends the host: http://localhost + .example.com/v1 is a remote URL.
+        for base, path in (('http://localhost', '.example.com/v1'), ('https://api.typesafe.ai', '@example.com/v1'),
+                           ('https://api.typesafe.ai', 'v1/systemone')):
+            with self.subTest(base=base, path=path), self.assertRaises(QuestionError):
+                JevBackend(api_key='secret', base_url=base, path=path)
+        self.assertEqual(JevBackend(api_key='secret', path='/v1/decisions').url, 'https://api.typesafe.ai/v1/decisions')
+
     def test_authenticated_post_does_not_follow_redirects(self):
         calls = []
         class Handler(BaseHTTPRequestHandler):

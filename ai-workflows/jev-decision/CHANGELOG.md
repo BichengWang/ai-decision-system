@@ -80,13 +80,30 @@ and evaluations without a calibration keep their schema numbers.
 - `urllib_transport` closes the HTTP error response after reading its body and headers; it was left for
   garbage collection, which emitted `ResourceWarning`.
 - A provider response body that is not valid UTF-8 is reported as a non-JSON response (`jev-decision` exits
-  1, no retry); it escaped as an uncaught `UnicodeDecodeError`.
+  1, no retry); it escaped as an uncaught `UnicodeDecodeError`. So is a body holding an integer of more than
+  4300 digits (`ValueError`) or, on Python 3.13 and earlier, nesting deeper than the decoder recurses
+  (`RecursionError`).
+- `jev-decision-eval` and `jev-decision-verify` split JSON Lines files only at newlines. A string holding
+  U+2028, U+2029 or U+0085, which JSON allows unescaped and the package writes unescaped, split its row: such
+  a case or response file was rejected as not JSON, an exported `responses.jsonl` could not be replayed, and
+  `jev-decision-verify --evaluation` could not check the run (exit 2).
+- A response number that is a JSON integer too large for a float (for example a 400-digit `noul`) raises
+  `ResponseError`. It escaped as an uncaught `OverflowError`, so `jev-decision` and a
+  `jev-decision-eval` replay ended with a traceback instead of recording a malformed response.
+- A case file whose choice label is a JSON array or object is invalid input (`jev-decision-eval` exits 2); the
+  label escaped as an uncaught `TypeError`.
+- `DecisionModel.route` raises `DecisionError` before any request for a `min_confidence` outside [0, 1], as
+  `gate` does for its threshold. A NaN floor compared false with every confidence, so every answer was routed
+  instead of falling back.
 
 ### Security
 - Signed records and `--require-signature` bind a record to a key: an edited record whose `record_sha256` was
   recomputed passes the digest check but fails the signature check. HMAC proves possession of the shared
   key, not an individual author; a signature does not show the provider's response is genuine. See the
   repository `SECURITY.md` for key generation, storage and rotation.
+- A backend `path` (`--path`) must start with `/` (`QuestionError`, exit 2). Without one it extended the host
+  of `base_url`: `http://localhost` with path `.example.com/v1` sent the API key over plain HTTP to
+  `localhost.example.com`, and a path starting with `@` turned the base URL host into credentials.
 
 ## [0.1.0] - 2026-10-13
 

@@ -146,7 +146,10 @@ class Decision:
 def _number(value, where):
     if isinstance(value, bool) or not isinstance(value, (int, float)):
         raise ResponseError(f"{where}: expected a number, got {value!r}")
-    value = float(value)
+    try:
+        value = float(value)
+    except OverflowError:
+        raise ResponseError(f"{where}: expected a finite number, got an integer too large for a float") from None
     if not math.isfinite(value):
         raise ResponseError(f"{where}: expected a finite number, got {value!r}")
     return value

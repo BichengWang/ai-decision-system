@@ -80,7 +80,8 @@ model.route(state, department_question, min_confidence=0.7,
 
 `route` uses the provider's `confidence` when it returns one, otherwise the
 reported probability of the chosen label. If neither is supplied, it returns
-`fallback` (default `None`), even with `min_confidence=0.0`. A reported confidence
+`fallback` (default `None`), even with `min_confidence=0.0`. A `min_confidence` outside [0, 1], or NaN,
+raises `DecisionError` before any request, as a `gate` threshold does. A reported confidence
 still takes precedence over a reported choice probability; neither is a calibrated
 safety guarantee or a replacement for application policy.
 
@@ -144,7 +145,8 @@ network.
 
 Remote `base_url` values require HTTPS. HTTP is accepted only for `localhost`
 or a literal loopback IP address (IPv4 or IPv6). Credentials, query strings and
-fragments in the base URL are rejected with `QuestionError`. Authenticated POSTs
+fragments in the base URL are rejected with `QuestionError`, and so is a `path` that does not start
+with `/` (it would extend the host). Authenticated POSTs
 never follow redirects: every 3xx response raises a non-retryable `APIError`.
 Custom transports must enforce equivalent credential protection themselves.
 

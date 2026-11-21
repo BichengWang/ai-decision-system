@@ -266,6 +266,8 @@ class LoadTest(unittest.TestCase):
             "unknown question": jsonl([self.case(labels={"other": True})]),
             "noul label not boolean": jsonl([self.case(labels={"refund": 1})]),
             "unknown choice": jsonl([self.case(labels={"department": "legal"})]),
+            "list choice label": jsonl([self.case(labels={"department": ["billing"]})]),
+            "object choice label": jsonl([self.case(labels={"department": {"billing": 1}})]),
             "unknown level": jsonl([self.case(labels={"frustration": "Livid"})]),
             "level index out of range": jsonl([self.case(labels={"frustration": 3})]),
             "boolean level index": jsonl([self.case(labels={"frustration": True})]),
@@ -273,6 +275,14 @@ class LoadTest(unittest.TestCase):
         for label, text in bad.items():
             with self.subTest(label), self.assertRaises(DatasetError):
                 load_cases(text, QUESTIONS)
+
+    def test_unicode_line_separators_inside_strings_stay_in_their_row(self):
+        # JSON allows U+2028, U+2029 and U+0085 unescaped in strings; only a newline ends a JSON Lines row.
+        state = "first\u2028second\u2029third\x85fourth"
+        cases = load_cases(json.dumps(self.case(state=state), ensure_ascii=False) + "\r\n", QUESTIONS)
+        self.assertEqual(cases[0].state, state)
+        responses = load_responses(json.dumps({"id": "a", "response": {"id": state}}, ensure_ascii=False) + "\n")
+        self.assertEqual(responses, {"a": {"id": state}})
 
     def test_invalid_responses(self):
         for label, text in {
