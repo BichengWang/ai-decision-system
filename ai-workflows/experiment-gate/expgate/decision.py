@@ -181,8 +181,7 @@ def _validate(summary: dict) -> None:
     policy = _object(summary.get("policy", {}), "'policy'")
     _known_keys(policy, _POLICY_KEYS, "'policy'")
     for key in ("alpha", "srm_alpha", "power"):
-        value = policy.get(key)
-        if value is not None and not 0 < _number(value, f"policy {key}") < 1:
+        if key in policy and not 0 < _number(policy[key], f"policy {key}") < 1:
             raise ValueError(f"policy {key} must be in (0, 1)")
     if "sequential" in policy:
         sequential = _object(policy["sequential"], "policy sequential")
@@ -191,8 +190,8 @@ def _validate(summary: dict) -> None:
             raise ValueError("policy sequential planned_units must be at least 2")
     assignment = _object(summary.get("assignment", {}), "'assignment'")
     _known_keys(assignment, _ASSIGNMENT_KEYS, "'assignment'")
-    share = assignment.get("expected_treatment_share")
-    if share is not None and not 0 < _number(share, "expected_treatment_share") < 1:
+    share = assignment.get("expected_treatment_share", 0.5)
+    if not 0 < _number(share, "expected_treatment_share") < 1:
         raise ValueError("expected_treatment_share must be in (0, 1)")
 
     arms = _object(summary.get("arms"), "'arms'")

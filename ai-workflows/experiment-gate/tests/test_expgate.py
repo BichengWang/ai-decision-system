@@ -236,6 +236,10 @@ MALFORMED = {
     "share out of range": _set(["assignment", "expected_treatment_share"], 0.0),
     "power of 1": _set(["policy", "power"], 1.0),
     "string power": _set(["policy", "power"], "0.8"),
+    "null alpha": _set(["policy", "alpha"], None),
+    "null srm_alpha": _set(["policy", "srm_alpha"], None),
+    "null power": _set(["policy", "power"], None),
+    "null share": _set(["assignment", "expected_treatment_share"], None),
     "misspelled alpha": _set(["policy", "alpah"], 0.01),
     "misspelled sequential plan": _set(["policy", "sequential"], {"planned_units": 200000, "planed_units": 1}),
     "misspelled share": _set(["assignment", "expected_share"], 0.2),
@@ -256,6 +260,8 @@ class MalformedInputTest(unittest.TestCase):
         summary["policy"]["alpah"] = 0.01
         with self.assertRaisesRegex(ValueError, r"'policy' has unknown keys \['alpah'\]"):
             evaluate(summary)
+        with self.assertRaisesRegex(ValueError, "policy power must be a finite number"):
+            evaluate(_set(["policy", "power"], None)(example()))
 
     def test_evaluate_raises_value_error(self):
         for label, mutate in MALFORMED.items():

@@ -113,6 +113,9 @@ Breaking for anything that reads or checks records; no command or option of 0.1.
 - `experiment-gate --input` with several summaries exits 2 when two experiment names differ only in Unicode
   normalization (`café` composed and decomposed), as it already did for names differing only in case. macOS
   stores both in one directory, so one record silently replaced the other while both were reported as written.
+- A `null` `policy.alpha`, `srm_alpha`, `power` or `assignment.expected_treatment_share` is rejected with the
+  field named (`ValueError`, exit 2). It passed validation before, and `evaluate` then raised a `TypeError` such
+  as `unsupported operand type(s) for /: 'NoneType' and 'int'`.
 
 ### Security
 - Signed records (see Added) bind a record to a key: an edited record whose digest was recomputed passes
