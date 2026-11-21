@@ -266,6 +266,8 @@ class LoadTest(unittest.TestCase):
             "unknown question": jsonl([self.case(labels={"other": True})]),
             "noul label not boolean": jsonl([self.case(labels={"refund": 1})]),
             "unknown choice": jsonl([self.case(labels={"department": "legal"})]),
+            "list choice label": jsonl([self.case(labels={"department": ["billing"]})]),
+            "object choice label": jsonl([self.case(labels={"department": {"billing": 1}})]),
             "unknown level": jsonl([self.case(labels={"frustration": "Livid"})]),
             "level index out of range": jsonl([self.case(labels={"frustration": 3})]),
             "boolean level index": jsonl([self.case(labels={"frustration": True})]),

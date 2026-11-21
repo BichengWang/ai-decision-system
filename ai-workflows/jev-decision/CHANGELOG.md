@@ -88,6 +88,8 @@ and evaluations without a calibration keep their schema numbers.
 - A response number that is a JSON integer too large for a float (for example a 400-digit `noul`) raises
   `ResponseError`. It escaped as an uncaught `OverflowError`, so `jev-decision` and a
   `jev-decision-eval` replay ended with a traceback instead of recording a malformed response.
+- A case file whose choice label is a JSON array or object is invalid input (`jev-decision-eval` exits 2); the
+  label escaped as an uncaught `TypeError`.
 
 ### Security
 - Signed records and `--require-signature` bind a record to a key: an edited record whose `record_sha256` was

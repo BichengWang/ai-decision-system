@@ -99,7 +99,7 @@ def _expected(question, value, where):
             raise DatasetError(f"{where}: a noul label must be true or false, got {value!r}")
         return value
     if isinstance(question, Choice):
-        if value not in question.options:
+        if not isinstance(value, str) or value not in question.options:
             raise DatasetError(f"{where}: {value!r} is not one of {list(question.labels)}")
         return value
     if isinstance(value, str) and value in question.levels:
