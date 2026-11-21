@@ -99,7 +99,7 @@ def _expected(question, value, where):
             raise DatasetError(f"{where}: a noul label must be true or false, got {value!r}")
         return value
     if isinstance(question, Choice):
-        if value not in question.options:
+        if not isinstance(value, str) or value not in question.options:
             raise DatasetError(f"{where}: {value!r} is not one of {list(question.labels)}")
         return value
     if isinstance(value, str) and value in question.levels:
@@ -111,7 +111,7 @@ def _expected(question, value, where):
 
 def _jsonl(text, what):
     rows = []
-    for number, line in enumerate(text.splitlines(), 1):
+    for number, line in enumerate(text.split("\n"), 1):  # not splitlines(): JSON strings may hold U+2028
         if not line.strip():
             continue
         try:

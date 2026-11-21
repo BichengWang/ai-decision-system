@@ -276,11 +276,13 @@ class GitHub:
         return {release["tag_name"]: release for release in gh_pages(f"repos/{self.repo}/releases?per_page=100")}
 
     def issues(self):
-        """Map each milestone name to its tracking issue."""
+        """Map each milestone name to its tracking issue, opened by the workflow or the owner."""
+        # Anyone can open an issue carrying the marker; its text must not become the announcement.
+        trusted = {"github-actions[bot]", self.repo.split("/", 1)[0]}
         found = {}
         for issue in gh_pages(f"repos/{self.repo}/issues?state=all&per_page=100"):
             match = MARKER_RE.search(issue.get("body") or "")
-            if match and "pull_request" not in issue:
+            if match and "pull_request" not in issue and (issue.get("user") or {}).get("login") in trusted:
                 found.setdefault(match.group(1), issue)
         return found
 

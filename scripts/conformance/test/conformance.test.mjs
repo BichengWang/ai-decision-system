@@ -281,6 +281,21 @@ describe("schema validation", () => {
     assert.match(failureText(await check()), /declared schema_valid=true but is not parseable JSON/);
   });
 
+  test("a document declared invalid must still exist as a file", async () => {
+    write("conformance/invalid/bundle/record.json", `{"schema_version":3,"input":{},"input_sha256":"${WRONG}","extra":true}`);
+    for (const [documentPath, code] of [["missing.json", /ENOENT/], [".", /EISDIR/]]) {
+      editManifest((value) => {
+        value.vectors = value.vectors.filter((item) => item.path !== "invalid/bundle");
+        value.vectors.push(vector("invalid/bundle", "invalid", {
+          documents: [{ path: documentPath, schema: "demo/schema/record.v3.json", schema_valid: false }],
+        }));
+      });
+      const text = failureText(await check());
+      assert.match(text, /invalid\/bundle: schema: /, documentPath);
+      assert.match(text, code, documentPath);
+    }
+  });
+
   test("an unreferenced schema that is malformed, id-less or invalid fails", async () => {
     for (const [text, expected] of [
       ["{", /unused\.v1\.json cannot be loaded: .*JSON/],

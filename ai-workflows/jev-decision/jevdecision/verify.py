@@ -168,7 +168,7 @@ def _check_provenance(provenance: Any) -> dict[str, str]:
 
 def _strict_jsonl(text: str, what: str) -> list[dict]:
     rows = []
-    for number, line in enumerate(text.splitlines(), 1):
+    for number, line in enumerate(text.split("\n"), 1):  # not splitlines(): JSON strings may hold U+2028
         if not line.strip():
             continue
         row = loads_strict(line)

@@ -61,6 +61,8 @@ class DecisionModel:
         """
         if not isinstance(question, Choice):
             raise DecisionError("route() takes a Choice question")
+        if not 0.0 <= min_confidence <= 1.0:
+            raise DecisionError("min_confidence must lie in [0, 1]")
         answer = self.ask(state, question)
         if isinstance(answer, RefusalAnswer):
             return fallback
