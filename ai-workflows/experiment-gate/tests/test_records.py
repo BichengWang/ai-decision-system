@@ -11,6 +11,7 @@ from pathlib import Path
 from expgate import verify_record
 from expgate.decision import evaluate
 from expgate.jcs import canonicalize
+from expgate.records import input_digest
 from expgate.run import main as run_main
 from expgate.verify import load_record, main as verify_main
 
@@ -282,6 +283,42 @@ class ReviewProbeTest(unittest.TestCase):
         record["note"] = 2 ** 60
         with self.assertRaises(ValueError):
             verify_record(record)
+
+
+class UnreplayableRecordTest(unittest.TestCase):
+    """A record the running version cannot evaluate or parse is invalid (exit 2), never a traceback."""
+
+    def test_replay_that_divides_by_an_underflowed_zero_exits_2(self):
+        value = summary()
+        for arm in value["arms"].values():  # covariate sd squared underflows to 0.0
+            arm["metrics"]["latency_ms"]["covariate"] = {"mean": 1.0, "sd": 1e-200, "corr": 0.5}
+        for schema in (2, 3):
+            with self.subTest(schema=schema):
+                record = json.loads(json.dumps(evaluate(summary(), schema_version=schema)))
+                record["input"] = value  # the digest is still that of the original input
+                self.assertEqual(verify_record(record), ["input_sha256", "input (cannot replay)"])
+                record["input_sha256"] = input_digest(value, schema)
+                with self.assertRaises(ValueError):
+                    verify_record(record)
+                code, message = verify_text(json.dumps(record))
+                self.assertEqual(code, 2, message)
+                self.assertIn("invalid embedded input", message)
+
+    def test_deeply_nested_records_exit_2_and_later_records_are_still_checked(self):
+        text = json.dumps(evaluate(summary()), indent=2)
+        # 5,000 levels parse but exceed the canonicalizer's recursion; 200,000 exceed the parser's.
+        for depth in (5_000, 200_000):
+            with self.subTest(depth=depth), tempfile.TemporaryDirectory() as tmp:
+                deep = Path(tmp, "deep.json")
+                deep.write_text(text.replace("{\n", '{\n  "note": ' + "[" * depth + "]" * depth + ",\n", 1))
+                good = Path(tmp, "good.json")
+                good.write_text(text)
+                out, err = io.StringIO(), io.StringIO()
+                with redirect_stdout(out), redirect_stderr(err):
+                    code = verify_main([str(deep), str(good)])
+                self.assertEqual(code, 2)
+                self.assertIn("deep.json: cannot verify", err.getvalue())
+                self.assertIn("good.json: verified", out.getvalue())
 
 
 class SchemaTwoTest(unittest.TestCase):

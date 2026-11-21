@@ -101,6 +101,11 @@ Breaking for anything that reads or checks records; no command or option of 0.1.
 ### Fixed
 - `experiment-gate-verify` no longer reports last-digit float differences between platforms: the 0.1.0
   scenario records written on macOS now verify on Linux (five of seven failed before).
+- `experiment-gate-verify` exits 2 instead of stopping with a traceback and exit 1 when a record's input
+  cannot be replayed because a statistic divides by a square that underflows to zero (a covariate `sd` of
+  1e-200, say; `verify_record` raises `ValueError`), or when a record is nested too deeply to parse or
+  canonicalize. The remaining records are still checked. A `--require-signature` envelope nested too deeply
+  exits 1 like any malformed envelope, and `experiment-gate predicate` exits 2 for such a record.
 
 ### Security
 - Signed records (see Added) bind a record to a key: an edited record whose digest was recomputed passes
