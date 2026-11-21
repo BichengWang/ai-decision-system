@@ -85,6 +85,9 @@ and evaluations without a calibration keep their schema numbers.
   U+2028, U+2029 or U+0085, which JSON allows unescaped and the package writes unescaped, split its row: such
   a case or response file was rejected as not JSON, an exported `responses.jsonl` could not be replayed, and
   `jev-decision-verify --evaluation` could not check the run (exit 2).
+- A response number that is a JSON integer too large for a float (for example a 400-digit `noul`) raises
+  `ResponseError`. It escaped as an uncaught `OverflowError`, so `jev-decision` and a
+  `jev-decision-eval` replay ended with a traceback instead of recording a malformed response.
 
 ### Security
 - Signed records and `--require-signature` bind a record to a key: an edited record whose `record_sha256` was

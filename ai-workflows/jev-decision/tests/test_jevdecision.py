@@ -281,6 +281,10 @@ class ResponseValidationTest(unittest.TestCase):
             "score out of range": self.answers(frustration={"score": 2.5}),
             "unknown level": self.answers(frustration={"probabilities": {"7": 1.0}}),
             "nan confidence": self.answers(department={"confidence": float("nan")}),
+            # JSON integers beyond the float range must not escape as OverflowError.
+            "oversized integer probability": self.answers(refund={"noul": 10**400}),
+            "oversized integer score": self.answers(frustration={"score": -10**400}),
+            "oversized integer confidence": self.answers(department={"confidence": 10**400}),
             # Malformed shapes must surface as ResponseError, not TypeError or ValueError.
             "list choice": self.answers(department={"choice": ["technical"]}),
             "object choice": self.answers(department={"choice": {"technical": 1}}),
