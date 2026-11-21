@@ -80,7 +80,9 @@ and evaluations without a calibration keep their schema numbers.
 - `urllib_transport` closes the HTTP error response after reading its body and headers; it was left for
   garbage collection, which emitted `ResourceWarning`.
 - A provider response body that is not valid UTF-8 is reported as a non-JSON response (`jev-decision` exits
-  1, no retry); it escaped as an uncaught `UnicodeDecodeError`.
+  1, no retry); it escaped as an uncaught `UnicodeDecodeError`. So is a body holding an integer of more than
+  4300 digits (`ValueError`) or, on Python 3.13 and earlier, nesting deeper than the decoder recurses
+  (`RecursionError`).
 - `jev-decision-eval` and `jev-decision-verify` split JSON Lines files only at newlines. A string holding
   U+2028, U+2029 or U+0085, which JSON allows unescaped and the package writes unescaped, split its row: such
   a case or response file was rejected as not JSON, an exported `responses.jsonl` could not be replayed, and

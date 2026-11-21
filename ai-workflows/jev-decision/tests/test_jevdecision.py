@@ -608,15 +608,20 @@ class CLITest(unittest.TestCase):
         self.assertIn("API key", err)
 
     def test_undecodable_provider_response_exits_1_without_retrying(self):
+        # Invalid UTF-8; an integer longer than int() converts (ValueError, not JSONDecodeError); nesting deeper
+        # than the decoder recurses (RecursionError on Python 3.13 and earlier, a non-object response later).
+        bodies = {"utf-8": b"\xff", "long integer": b'{"answers": ' + b"1" * 5000 + b"}",
+                  "deep nesting": b"[" * 100000 + b"]" * 100000}
         for backend_type in (JevBackend, OpenAIDecisionsBackend):
-            with self.subTest(backend=backend_type.name):
-                backend = backend_type(api_key="k", env={})
-                with mock.patch("jevdecision.__main__.create_backend", return_value=backend), \
-                        mock.patch("urllib.request.OpenerDirector.open", return_value=io.BytesIO(b"\xff")) as request:
-                    code, out, err = self.run_cli("--questions", str(EXAMPLE), "--state", STATE)
-                self.assertEqual((code, out), (1, ""))
-                self.assertIn("not JSON", err)
-                request.assert_called_once()
+            for label, body in bodies.items():
+                with self.subTest(backend=backend_type.name, body=label):
+                    backend = backend_type(api_key="k", env={})
+                    with mock.patch("jevdecision.__main__.create_backend", return_value=backend), \
+                            mock.patch("urllib.request.OpenerDirector.open", return_value=io.BytesIO(body)) as request:
+                        code, out, err = self.run_cli("--questions", str(EXAMPLE), "--state", STATE)
+                    self.assertEqual((code, out), (1, ""))
+                    self.assertIn("not JSON" if label != "deep nesting" else "error:", err)
+                    request.assert_called_once()
 
 
 if __name__ == "__main__":
