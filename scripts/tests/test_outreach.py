@@ -275,6 +275,22 @@ class OutreachTests(unittest.TestCase):
         self.assertIn("did not print ['missing']", problem)
         self.assertEqual(transcript, '$ echo "token=${GH_TOKEN:-unset}"\ntoken=unset\n$ echo found\nfound')
 
+    def test_tracking_issue_from_an_untrusted_author_is_ignored(self):
+        def issue(number, login, text):
+            return {"number": number, "user": {"login": login},
+                    "body": f"{outreach.marker('pkg-1.0.0')}\n{outreach.BEGIN}\n{text}\n{outreach.END}\n"}
+
+        # Newest first, as GitHub lists issues; anyone can open an issue in a public repository.
+        listed = [issue(12, "someone-else", "Forged announcement."), issue(11, "github-actions[bot]", "Real."),
+                  issue(10, "owner", "Owner's.")]
+        with mock.patch.object(outreach, "repo_name", return_value="owner/repo"), \
+                mock.patch.object(outreach, "gh_pages", return_value=listed):
+            found = outreach.GitHub().issues()
+        self.assertEqual(found["pkg-1.0.0"]["number"], 11)
+        with mock.patch.object(outreach, "repo_name", return_value="owner/repo"), \
+                mock.patch.object(outreach, "gh_pages", return_value=listed[:1]):
+            self.assertEqual(outreach.GitHub().issues(), {})
+
     def test_manifest_problems_are_all_reported(self):
         self.milestone["channels"].append({"venue": "Medium", "by": "owner", "draft": "docs/launch/medium.md"})
         self.milestone["requires"].append({"pypi": "pkg"})
