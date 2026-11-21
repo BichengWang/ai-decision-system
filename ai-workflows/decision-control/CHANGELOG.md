@@ -112,6 +112,8 @@ of 0.1.0 was removed.
 - JSON beyond Python's parser limits (an integer of more than 4300 digits, or nesting deeper than the
   recursion limit) exits 2 with an error message instead of a traceback and exit 1, the code `replay` uses for
   evidence that is wrong. Under `--require-signature` such a signature envelope is malformed (exit 1).
+- `TicketStore.pending()` skips a stored row with JSON beyond those limits as corrupt, with a diagnostic in
+  `.skipped`, instead of raising and listing no valid pending decision; `decision-control pending` exits 1.
 
 ### Security
 - Signed records and `--require-signature` bind a record to a key: a record edited to name the proposer as

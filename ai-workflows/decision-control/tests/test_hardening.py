@@ -56,6 +56,27 @@ class HardeningTests(unittest.TestCase):
         self.assertEqual([row['id'] for row in output], [good['id']])
         self.assertIn(bad['id'], error)
 
+    def test_pending_skips_rows_beyond_the_json_parser_limits(self):
+        oversized, nested, good = self.submit(), self.submit(), self.submit()
+        # Deep enough for the JSON parser (Python 3.11) or, when it parses, the RFC 8785 writer (3.14+).
+        deep = {'engine': 'opa', 'decision_id': 'd', 'path': 'a/b', 'bundles': {}, 'input': {'deep': 'DEEP'},
+                'result': True, 'modules': {'a.rego': 'package a'}, 'data': {}}
+        edits = ((oversized, '"revision":0', '"revision":' + '1' * 5000),
+                 (nested, '"external_policy":null',
+                  '"external_policy":' + json.dumps(deep).replace('"DEEP"', '[' * 100000 + ']' * 100000, 1)))
+        with sqlite3.connect(self.db) as connection:
+            for record, needle, replacement in edits:
+                text = json.dumps(record, separators=(',', ':'))
+                self.assertIn(needle, text)
+                connection.execute('UPDATE decisions SET record = ? WHERE id = ?',
+                                   (text.replace(needle, replacement, 1), record['id']))
+        pending = self.store.pending()
+        self.assertEqual([row['id'] for row in pending], [good['id']])
+        self.assertEqual([row['id'] for row in pending.skipped], [oversized['id'], nested['id']])
+        code, output, error = self.call('pending')
+        self.assertEqual((code, [row['id'] for row in output]), (1, [good['id']]))
+        self.assertIn(nested['id'], error)
+
     def test_identical_rejection_is_idempotent_but_conflicts_error(self):
         record = self.submit()
         rejected = self.store.reject(record['id'], 'bob', 'unsafe')

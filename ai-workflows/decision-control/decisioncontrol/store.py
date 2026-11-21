@@ -240,7 +240,7 @@ class TicketStore:
             for row in rows:
                 try:
                     pending.append(self._decode(row))
-                except DecisionError as error:
+                except (ValueError, RecursionError) as error:  # DecisionError, or JSON beyond the parser limits
                     pending.skipped.append({"id": row["id"], "error": str(error)})
             return pending
 
