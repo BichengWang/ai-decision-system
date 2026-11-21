@@ -110,6 +110,9 @@ Breaking for anything that reads or checks records; no command or option of 0.1.
   code, for a summary whose statistics cannot be computed (a count beyond the float range, an `sd` whose
   square overflows, a covariate `sd` whose square underflows to zero) or that is nested too deeply to parse or
   canonicalize. `--from growthbook` exits 2 for an export with such numbers.
+- `experiment-gate --input` with several summaries exits 2 when two experiment names differ only in Unicode
+  normalization (`café` composed and decomposed), as it already did for names differing only in case. macOS
+  stores both in one directory, so one record silently replaced the other while both were reported as written.
 
 ### Security
 - Signed records (see Added) bind a record to a key: an edited record whose digest was recomputed passes

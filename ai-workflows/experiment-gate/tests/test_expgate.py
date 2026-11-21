@@ -755,6 +755,9 @@ class BatchInputTest(unittest.TestCase):
                 "unreadable second file": [good, Path(tmp, "missing.json")],
                 "duplicate names": [good, self.write(tmp, "dup", experiment="good")],
                 "names differing only in case": [good, self.write(tmp, "case", experiment="GOOD")],
+                # one directory on macOS, so one record would silently replace the other
+                "names differing only in normalization": [self.write(tmp, "nfc", experiment="café"),
+                                                          self.write(tmp, "nfd", experiment="CAFÉ")],
                 "path in the name": [good, self.write(tmp, "path", experiment="../escape")],
                 "dot name": [good, self.write(tmp, "dot", experiment="..")],
                 "hidden name": [good, self.write(tmp, "hidden", experiment=".git")],

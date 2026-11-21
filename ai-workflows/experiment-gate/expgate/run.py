@@ -23,6 +23,7 @@ import json
 import os
 import tempfile
 import sys
+import unicodedata
 from pathlib import Path
 
 from . import __version__, attestation, signing
@@ -196,9 +197,11 @@ def _batch_problem(summaries, reports) -> str | None:
             return f"{source}: an experiment name is required when evaluating several summaries"
         if name in (".", "..") or name.startswith(".") or any(c in name for c in "/\\\0") or name != name.strip():
             return f"{source}: experiment name {name!r} cannot be used as a directory name"
-        if name.casefold() in seen:
-            return f"{source}: experiment name {name!r} is also used by {seen[name.casefold()]}"
-        seen[name.casefold()] = source
+        # Canonical caseless match: macOS file systems treat case and normalization variants as one directory.
+        key = unicodedata.normalize("NFD", unicodedata.normalize("NFD", name).casefold())
+        if key in seen:
+            return f"{source}: experiment name {name!r} is also used by {seen[key]}"
+        seen[key] = source
     return None
 
 
