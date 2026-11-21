@@ -547,6 +547,19 @@ class EvaluationDirectoryTests(unittest.TestCase):
         self.assertEqual(code, 2)
         self.assertIn("more than one error", stderr)
 
+    def test_unicode_line_separators_in_a_response_verify_and_replay(self):
+        rows = [json.loads(line) for line in RESPONSES_FILE.read_text().splitlines()]
+        rows[0]["response"]["id"] = "example\u2028t01"
+        responses = self.root / "separators.jsonl"
+        responses.write_text("".join(json.dumps(row) + "\n" for row in rows))  # escaped in the input
+        out, again = self.root / "separators", self.root / "separators-again"
+        common = ("--questions", QUESTIONS_FILE, "--cases", CASES_FILE, "--require", REQUIRE_FILE)
+        self.assertEqual(run(eval_main, *common, "--responses", responses, "--out", out)[0], 0)
+        self.assertIn("\u2028", (out / "responses.jsonl").read_text(encoding="utf-8"))  # written unescaped
+        self.assertEqual(self.verify(out), (0, f"{out}: verified\n", ""))
+        self.assertEqual(run(eval_main, *common, "--responses", out / "responses.jsonl", "--out", again)[0], 0)
+        self.assertEqual((again / "evaluation.json").read_bytes(), (out / "evaluation.json").read_bytes())
+
     def test_replay_error_entries_must_be_well_formed_too(self):
         directory = self.copy("replay-bad-error")
         report = json.loads((directory / "evaluation.json").read_text())

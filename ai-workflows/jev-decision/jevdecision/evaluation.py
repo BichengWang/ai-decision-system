@@ -111,7 +111,7 @@ def _expected(question, value, where):
 
 def _jsonl(text, what):
     rows = []
-    for number, line in enumerate(text.splitlines(), 1):
+    for number, line in enumerate(text.split("\n"), 1):  # not splitlines(): JSON strings may hold U+2028
         if not line.strip():
             continue
         try:

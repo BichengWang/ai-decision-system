@@ -81,6 +81,10 @@ and evaluations without a calibration keep their schema numbers.
   garbage collection, which emitted `ResourceWarning`.
 - A provider response body that is not valid UTF-8 is reported as a non-JSON response (`jev-decision` exits
   1, no retry); it escaped as an uncaught `UnicodeDecodeError`.
+- `jev-decision-eval` and `jev-decision-verify` split JSON Lines files only at newlines. A string holding
+  U+2028, U+2029 or U+0085, which JSON allows unescaped and the package writes unescaped, split its row: such
+  a case or response file was rejected as not JSON, an exported `responses.jsonl` could not be replayed, and
+  `jev-decision-verify --evaluation` could not check the run (exit 2).
 
 ### Security
 - Signed records and `--require-signature` bind a record to a key: an edited record whose `record_sha256` was
