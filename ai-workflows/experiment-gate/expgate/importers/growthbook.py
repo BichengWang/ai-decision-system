@@ -445,7 +445,7 @@ def convert(export: bytes, mapping: dict) -> dict:
         summary["policy"] = policy
     try:
         report = evaluate(summary)
-    except (KeyError, TypeError, ValueError) as exc:
+    except (KeyError, TypeError, ValueError, ArithmeticError) as exc:
         _fail(f"the converted summary is not valid input: {exc}")
     summary["source"] = {
         "asserted": dict(mapping["snapshot"]),

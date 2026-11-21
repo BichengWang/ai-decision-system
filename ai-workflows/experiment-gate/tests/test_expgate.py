@@ -276,6 +276,33 @@ class MalformedInputTest(unittest.TestCase):
                     self.assertIn("invalid experiment summary", err)
                     self.assertFalse(Path(tmp, f"out-{i}").exists())
 
+    def test_statistics_that_cannot_be_computed_exit_2_not_1(self):
+        def covariate(sd):
+            def mutate(s):
+                for arm in s["arms"].values():
+                    arm["metrics"]["latency_ms"]["covariate"] = {"mean": 40.0, "sd": sd, "corr": 0.5}
+                return s
+            return mutate
+        deep = "[" * 5_000 + "]" * 5_000
+        texts = {
+            "count beyond the float range": json.dumps(_set(["arms", "control", "units"], 10 ** 400)(example())),
+            "sd whose square overflows": json.dumps(
+                _set(["arms", "control", "metrics", "latency_ms", "sd"], 1e200)(example())),
+            "covariate sd whose square underflows": json.dumps(covariate(1e-200)(example())),
+            "description nested too deeply": json.dumps(_set(["description"], "@")(example())).replace('"@"', deep),
+            "file nested too deeply": '{"description": ' + "[" * 200_000 + "]" * 200_000 + "}",
+        }
+        with tempfile.TemporaryDirectory() as tmp:
+            for i, (label, text) in enumerate(texts.items()):
+                with self.subTest(label):
+                    path = Path(tmp, f"{i}.json")
+                    path.write_text(text)
+                    code, _, err = run_cli("--input", str(path), "--out", str(Path(tmp, f"out-{i}")),
+                                           "--require-ship")
+                    self.assertEqual(code, 2)
+                    self.assertRegex(err, "(invalid|cannot read) experiment summary")
+                    self.assertFalse(Path(tmp, f"out-{i}").exists())
+
     def test_unreadable_input_exits_2(self):
         with tempfile.TemporaryDirectory() as tmp:
             bad = Path(tmp, "bad.json")

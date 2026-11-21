@@ -127,7 +127,7 @@ def main(argv=None) -> int:
         for path in a.input:
             try:
                 summaries.append((str(path), json.loads(path.read_text(encoding="utf-8"))))
-            except (OSError, ValueError) as exc:
+            except (OSError, ValueError, RecursionError) as exc:
                 print(f"error: cannot read experiment summary {path}: {exc}", file=sys.stderr)
                 return 2
     elif a.from_export:
@@ -151,7 +151,7 @@ def main(argv=None) -> int:
     for source, summary in summaries:
         try:
             reports.append(evaluate(summary))
-        except (KeyError, TypeError, ValueError) as exc:
+        except (KeyError, TypeError, ValueError, ArithmeticError, RecursionError) as exc:
             print(f"error: invalid experiment summary {source}: {exc}", file=sys.stderr)
             return 2
     if len(reports) > 1:

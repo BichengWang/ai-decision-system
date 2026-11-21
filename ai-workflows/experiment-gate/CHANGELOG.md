@@ -106,6 +106,10 @@ Breaking for anything that reads or checks records; no command or option of 0.1.
   1e-200, say; `verify_record` raises `ValueError`), or when a record is nested too deeply to parse or
   canonicalize. The remaining records are still checked. A `--require-signature` envelope nested too deeply
   exits 1 like any malformed envelope, and `experiment-gate predicate` exits 2 for such a record.
+- `experiment-gate` exits 2 instead of stopping with a traceback and exit 1, the `--require-ship` refusal
+  code, for a summary whose statistics cannot be computed (a count beyond the float range, an `sd` whose
+  square overflows, a covariate `sd` whose square underflows to zero) or that is nested too deeply to parse or
+  canonicalize. `--from growthbook` exits 2 for an export with such numbers.
 
 ### Security
 - Signed records (see Added) bind a record to a key: an edited record whose digest was recomputed passes
