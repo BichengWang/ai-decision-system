@@ -90,6 +90,9 @@ and evaluations without a calibration keep their schema numbers.
   `jev-decision-eval` replay ended with a traceback instead of recording a malformed response.
 - A case file whose choice label is a JSON array or object is invalid input (`jev-decision-eval` exits 2); the
   label escaped as an uncaught `TypeError`.
+- `DecisionModel.route` raises `DecisionError` before any request for a `min_confidence` outside [0, 1], as
+  `gate` does for its threshold. A NaN floor compared false with every confidence, so every answer was routed
+  instead of falling back.
 
 ### Security
 - Signed records and `--require-signature` bind a record to a key: an edited record whose `record_sha256` was

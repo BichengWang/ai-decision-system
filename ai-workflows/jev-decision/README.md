@@ -80,7 +80,8 @@ model.route(state, department_question, min_confidence=0.7,
 
 `route` uses the provider's `confidence` when it returns one, otherwise the
 reported probability of the chosen label. If neither is supplied, it returns
-`fallback` (default `None`), even with `min_confidence=0.0`. A reported confidence
+`fallback` (default `None`), even with `min_confidence=0.0`. A `min_confidence` outside [0, 1], or NaN,
+raises `DecisionError` before any request, as a `gate` threshold does. A reported confidence
 still takes precedence over a reported choice probability; neither is a calibrated
 safety guarantee or a replacement for application policy.
 

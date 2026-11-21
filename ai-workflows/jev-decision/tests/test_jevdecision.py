@@ -515,6 +515,16 @@ class DecisionModelTest(unittest.TestCase):
                     self.assertEqual(answer.probabilities, {})
                     self.assertEqual(model.route(STATE, DEPARTMENT, min_confidence=floor, fallback="human"), expected)
 
+    def test_route_rejects_a_floor_outside_the_unit_interval_before_asking(self):
+        # A NaN floor compares false with every confidence, so it would route every answer.
+        answer = {"department": JEV_RESPONSE["answers"]["department"]}
+        backend, transport = jev(*[{"answers": answer}] * 3)
+        model = DecisionModel(backend)
+        for floor in (float("nan"), -0.1, 1.1):
+            with self.subTest(floor=floor), self.assertRaises(DecisionError):
+                model.route(STATE, DEPARTMENT, min_confidence=floor, fallback="human")
+        self.assertEqual(transport.calls, [])
+
     def test_route_accepts_reported_choice_probability_at_the_boundary(self):
         backend, _ = jev({"answers": {"department": {
             "choice": "technical", "probabilities": {"technical": 0.0}}}})
