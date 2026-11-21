@@ -236,6 +236,10 @@ MALFORMED = {
     "share out of range": _set(["assignment", "expected_treatment_share"], 0.0),
     "power of 1": _set(["policy", "power"], 1.0),
     "string power": _set(["policy", "power"], "0.8"),
+    "null alpha": _set(["policy", "alpha"], None),
+    "null srm_alpha": _set(["policy", "srm_alpha"], None),
+    "null power": _set(["policy", "power"], None),
+    "null share": _set(["assignment", "expected_treatment_share"], None),
     "misspelled alpha": _set(["policy", "alpah"], 0.01),
     "misspelled sequential plan": _set(["policy", "sequential"], {"planned_units": 200000, "planed_units": 1}),
     "misspelled share": _set(["assignment", "expected_share"], 0.2),
@@ -256,6 +260,8 @@ class MalformedInputTest(unittest.TestCase):
         summary["policy"]["alpah"] = 0.01
         with self.assertRaisesRegex(ValueError, r"'policy' has unknown keys \['alpah'\]"):
             evaluate(summary)
+        with self.assertRaisesRegex(ValueError, "policy power must be a finite number"):
+            evaluate(_set(["policy", "power"], None)(example()))
 
     def test_evaluate_raises_value_error(self):
         for label, mutate in MALFORMED.items():
@@ -274,6 +280,33 @@ class MalformedInputTest(unittest.TestCase):
                                            "--require-ship")
                     self.assertEqual(code, 2)
                     self.assertIn("invalid experiment summary", err)
+                    self.assertFalse(Path(tmp, f"out-{i}").exists())
+
+    def test_statistics_that_cannot_be_computed_exit_2_not_1(self):
+        def covariate(sd):
+            def mutate(s):
+                for arm in s["arms"].values():
+                    arm["metrics"]["latency_ms"]["covariate"] = {"mean": 40.0, "sd": sd, "corr": 0.5}
+                return s
+            return mutate
+        deep = "[" * 5_000 + "]" * 5_000
+        texts = {
+            "count beyond the float range": json.dumps(_set(["arms", "control", "units"], 10 ** 400)(example())),
+            "sd whose square overflows": json.dumps(
+                _set(["arms", "control", "metrics", "latency_ms", "sd"], 1e200)(example())),
+            "covariate sd whose square underflows": json.dumps(covariate(1e-200)(example())),
+            "description nested too deeply": json.dumps(_set(["description"], "@")(example())).replace('"@"', deep),
+            "file nested too deeply": '{"description": ' + "[" * 200_000 + "]" * 200_000 + "}",
+        }
+        with tempfile.TemporaryDirectory() as tmp:
+            for i, (label, text) in enumerate(texts.items()):
+                with self.subTest(label):
+                    path = Path(tmp, f"{i}.json")
+                    path.write_text(text)
+                    code, _, err = run_cli("--input", str(path), "--out", str(Path(tmp, f"out-{i}")),
+                                           "--require-ship")
+                    self.assertEqual(code, 2)
+                    self.assertRegex(err, "(invalid|cannot read) experiment summary")
                     self.assertFalse(Path(tmp, f"out-{i}").exists())
 
     def test_unreadable_input_exits_2(self):
@@ -728,6 +761,9 @@ class BatchInputTest(unittest.TestCase):
                 "unreadable second file": [good, Path(tmp, "missing.json")],
                 "duplicate names": [good, self.write(tmp, "dup", experiment="good")],
                 "names differing only in case": [good, self.write(tmp, "case", experiment="GOOD")],
+                # one directory on macOS, so one record would silently replace the other
+                "names differing only in normalization": [self.write(tmp, "nfc", experiment="café"),
+                                                          self.write(tmp, "nfd", experiment="CAFÉ")],
                 "path in the name": [good, self.write(tmp, "path", experiment="../escape")],
                 "dot name": [good, self.write(tmp, "dot", experiment="..")],
                 "hidden name": [good, self.write(tmp, "hidden", experiment=".git")],
