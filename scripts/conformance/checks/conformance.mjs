@@ -209,10 +209,12 @@ export async function checkManifest(manifestFile, { root, recorder, validateMani
         const file = inside(document.path, "document path");
         const schemaFile = contained(projectDir, document.schema, "schema");
         const validate = await schemas.validatorFor(schemaFile);
+        // Read outside the parse check: a missing document fails rather than counting as invalid.
+        const bytes = await readBytes(file);
         let data;
         let parseProblem = null;
         try {
-          data = JSON.parse(decodeUtf8(await readBytes(file)));
+          data = JSON.parse(decodeUtf8(bytes));
         } catch (error) {
           parseProblem = `is not parseable JSON: ${describeError(error)}`;
         }
