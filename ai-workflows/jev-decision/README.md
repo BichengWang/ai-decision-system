@@ -144,7 +144,8 @@ network.
 
 Remote `base_url` values require HTTPS. HTTP is accepted only for `localhost`
 or a literal loopback IP address (IPv4 or IPv6). Credentials, query strings and
-fragments in the base URL are rejected with `QuestionError`. Authenticated POSTs
+fragments in the base URL are rejected with `QuestionError`, and so is a `path` that does not start
+with `/` (it would extend the host). Authenticated POSTs
 never follow redirects: every 3xx response raises a non-retryable `APIError`.
 Custom transports must enforce equivalent credential protection themselves.
 

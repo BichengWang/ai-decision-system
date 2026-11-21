@@ -96,6 +96,9 @@ and evaluations without a calibration keep their schema numbers.
   recomputed passes the digest check but fails the signature check. HMAC proves possession of the shared
   key, not an individual author; a signature does not show the provider's response is genuine. See the
   repository `SECURITY.md` for key generation, storage and rotation.
+- A backend `path` (`--path`) must start with `/` (`QuestionError`, exit 2). Without one it extended the host
+  of `base_url`: `http://localhost` with path `.example.com/v1` sent the API key over plain HTTP to
+  `localhost.example.com`, and a path starting with `@` turned the base URL host into credentials.
 
 ## [0.1.0] - 2026-10-13
 

@@ -137,6 +137,8 @@ class HTTPBackend:
                 or (parsed.scheme != "https" and not loopback)):
             raise QuestionError("base_url must use HTTPS (HTTP is allowed only for loopback hosts), without credentials, query or fragment")
         self.path = path or self.default_path
+        if not isinstance(self.path, str) or not self.path.startswith("/"):
+            raise QuestionError("path must start with '/'; otherwise it changes the host of base_url")
         self.timeout = timeout
         self.max_retries = max_retries
         self.backoff = backoff
