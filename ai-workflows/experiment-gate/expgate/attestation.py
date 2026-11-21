@@ -70,7 +70,7 @@ def require_signature(record: Path, data: bytes, document, options, key: bytes |
             raise signing.SignatureError(f"cannot read signature envelope {path}: {error}") from error
         try:
             envelope = json.loads(text)
-        except ValueError as error:
+        except (ValueError, RecursionError) as error:
             raise signing.SignatureError(f"malformed DSSE envelope: {error}") from error
         signing.verify(data, envelope, {expected}, key)
         return
@@ -136,7 +136,7 @@ def command(argv: list[str]) -> int:
                 json.dump(predicate(version), stream, indent=2)
                 stream.write("\n")
             result = {"predicate_type": predicate_type(version), "predicate_file": str(args.out)}
-    except (OSError, ValueError) as error:
+    except (OSError, ValueError, RecursionError) as error:
         print(f"error: {error}", file=sys.stderr)
         return 2
     print(json.dumps(result, indent=2))
