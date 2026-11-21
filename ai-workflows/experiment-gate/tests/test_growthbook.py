@@ -395,7 +395,9 @@ class MalformedExportTest(Workspace):
             del d["experiment"]["phases"][0]["trafficSplit"]
         def bad_phase(d):
             d["result"]["phase"] = "7"
-        cases = [(fractional_successes, "whole number"), (too_many_successes, "exceed"),
+        def overflowing_sd(d):
+            metric(d, "Page load ms")["variations"][0]["analyses"][0]["stddev"] = 1e200
+        cases = [(overflowing_sd, "not valid input"), (fractional_successes, "whole number"), (too_many_successes, "exceed"),
                  (wrong_mean, "is not successes/users"), (wrong_sd, "not that of a proportion"),
                  (ratio_without_denominator, "positive exported denominator"), (metric_error, "query failed"),
                  (missing_variation, "has results for variations"), (user_counts_differ, "differs from"),

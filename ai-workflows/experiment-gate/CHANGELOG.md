@@ -101,6 +101,24 @@ Breaking for anything that reads or checks records; no command or option of 0.1.
 ### Fixed
 - `experiment-gate-verify` no longer reports last-digit float differences between platforms: the 0.1.0
   scenario records written on macOS now verify on Linux (five of seven failed before).
+- `experiment-gate-verify` exits 2 instead of stopping with a traceback and exit 1 when a record's input
+  cannot be replayed because a statistic divides by a square that underflows to zero (a covariate `sd` of
+  1e-200, say; `verify_record` raises `ValueError`), or when a record is nested too deeply to parse or
+  canonicalize. The remaining records are still checked. A `--require-signature` envelope nested too deeply
+  exits 1 like any malformed envelope, and `experiment-gate predicate` exits 2 for such a record.
+- `experiment-gate` exits 2 instead of stopping with a traceback and exit 1, the `--require-ship` refusal
+  code, for a summary whose statistics cannot be computed (a count beyond the float range, an `sd` whose
+  square overflows, a covariate `sd` whose square underflows to zero) or that is nested too deeply to parse or
+  canonicalize. `--from growthbook` exits 2 for an export with such numbers.
+- `experiment-gate --input` with several summaries exits 2 when two experiment names differ only in Unicode
+  normalization (`café` composed and decomposed), as it already did for names differing only in case. macOS
+  stores both in one directory, so one record silently replaced the other while both were reported as written.
+- A `null` `policy.alpha`, `srm_alpha`, `power` or `assignment.expected_treatment_share` is rejected with the
+  field named (`ValueError`, exit 2). It passed validation before, and `evaluate` then raised a `TypeError` such
+  as `unsupported operand type(s) for /: 'NoneType' and 'int'`.
+- `experiment-gate-verify` reports a `sequential` mismatch (exit 1) for a record with `"sequential": null` whose
+  replay has no sequential monitoring. It verified before, although expgate never writes that member and
+  `decision.v2.json` and `decision.v3.json` reject it.
 
 ### Security
 - Signed records (see Added) bind a record to a key: an edited record whose digest was recomputed passes

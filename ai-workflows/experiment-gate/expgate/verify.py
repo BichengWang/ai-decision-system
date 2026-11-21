@@ -125,12 +125,12 @@ def verify_record(record: dict) -> list[str]:
         mismatches.append("input_sha256")
     try:
         replay = evaluate(record["input"], schema_version=schema)
-    except (ValueError, TypeError, KeyError, OverflowError) as exc:
+    except (ValueError, TypeError, KeyError, ArithmeticError) as exc:
         if mismatches:
             return mismatches + ["input (cannot replay)"]
         raise ValueError(f"invalid embedded input: {exc}") from exc
     for field in ("decision", "reasons", "metrics", "experiment", "policy", "sample_ratio", "sequential"):
-        if not _same(record.get(field), replay.get(field), field):
+        if (field in record) != (field in replay) or not _same(record.get(field), replay.get(field), field):
             mismatches.append(field)
     return mismatches
 
@@ -166,7 +166,7 @@ def main(argv=None) -> int:
             print(f"{path}: signature: {exc}", file=sys.stderr)
             result = max(result, 1)
             continue
-        except (OSError, ValueError, TypeError, OverflowError) as exc:
+        except (OSError, ValueError, TypeError, OverflowError, RecursionError) as exc:
             print(f"{path}: cannot verify: {exc}", file=sys.stderr)
             result = 2
             continue

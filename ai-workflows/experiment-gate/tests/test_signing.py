@@ -151,6 +151,7 @@ class SigningTest(unittest.TestCase):
             "bad sig encoding": json.dumps({**good, "signatures": [{"keyid": good["signatures"][0]["keyid"], "sig": "***"}]}),
             "payload is not a statement": json.dumps({**good, "payload": base64.b64encode(b"[]").decode()}),
             "not utf-8": b"\xff\xfe",
+            "nested too deeply": "[" * 200_000 + "]" * 200_000,
         }
         for name, text in cases.items():
             with self.subTest(case=name):
@@ -431,6 +432,9 @@ class PredicateTest(unittest.TestCase):
                                  {"schema": f"https://github.com/BichengWang/ai-decision-system/schema/expgate/decision.v{version}.json"})
                 self.assertEqual(call(run_main, "predicate", "--record", record, "--out", out)[0], 2)  # no overwrite
             self.assertEqual(call(run_main, "predicate", "--record", root / "missing.json", "--out", root / "p")[0], 2)
+            deep = root / "deep.json"
+            deep.write_text("[" * 200_000 + "]" * 200_000, encoding="utf-8")
+            self.assertEqual(call(run_main, "predicate", "--record", deep, "--out", root / "p")[0], 2)
 
     def test_schema_files_exist_for_every_signable_version(self):
         schema = Path(attestation.__file__).parent / "schema"
