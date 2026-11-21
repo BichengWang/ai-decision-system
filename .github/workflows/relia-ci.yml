@@ -19,6 +19,7 @@ env:
 jobs:
   changes:
     runs-on: ubuntu-latest
+    timeout-minutes: 10
     outputs:
       relevant: ${{ steps.paths.outputs.relevant }}
     steps:
@@ -80,6 +81,7 @@ jobs:
     needs: [changes, validate]
     if: always()
     runs-on: ubuntu-latest
+    timeout-minutes: 5
     steps:
       - name: Require successful validation or a verified unrelated change
         env:
