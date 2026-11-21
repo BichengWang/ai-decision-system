@@ -20,6 +20,16 @@ def _json_file(path):
         return json.load(stream)
 
 
+def _optional_json_file(path, option):
+    """``None`` only when the option was not given; a file holding JSON ``null`` is invalid input."""
+    if path is None:
+        return None
+    value = _json_file(path)
+    if value is None:
+        raise DecisionError(f"{option} file must not contain null")
+    return value
+
+
 def _text_file(path):
     return Path(path).read_text(encoding="utf-8")
 
@@ -163,7 +173,7 @@ def _run(args):
         policies = ({"format": "cedar", "text": text} if args.policy_format == "cedar"
                     else {"format": "json", "json": json.loads(text)})
         frozen = cedar.freeze(policies, _json_file(args.entities), _json_file(args.request),
-                              _json_file(args.response) if args.response else None)
+                              _optional_json_file(args.response, "--response"))
         if args.out:
             _write_json(args.out, frozen)
         return frozen
@@ -181,7 +191,7 @@ def _run(args):
         return run_demo(args.out, _sign_key(args))
     if args.command == "evaluate":
         key = _sign_key(args)
-        requirements = _json_file(args.require) if args.require else None
+        requirements = _optional_json_file(args.require, "--require")
         report = evaluate_cases(load_cases(args.cases),
                                 RoutingPolicy.from_dict(_json_file(args.policy), LEGACY_ACTIONS_SCHEMA), requirements)
         return write_evaluation(report, args.out, key)
@@ -201,7 +211,7 @@ def _run(args):
         if args.command == "submit":
             return store.submit(Recommendation.from_dict(_json_file(args.proposal)),
                                 RoutingPolicy.from_dict(_json_file(args.policy)), args.proposed_by,
-                                _json_file(args.external_policy) if args.external_policy else None)
+                                _optional_json_file(args.external_policy, "--external-policy"))
         if args.command == "policy-input":
             proposal = Recommendation.from_dict(_json_file(args.proposal))
             ticket = store.get_ticket(proposal.ticket_id)

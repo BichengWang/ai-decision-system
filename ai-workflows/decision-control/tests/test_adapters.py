@@ -644,6 +644,30 @@ class FreezeCliTests(unittest.TestCase):
         self.assertEqual(wrong[0], 2)
         self.assertIn("does not describe", wrong[2])
 
+    def test_a_null_external_policy_or_response_file_is_refused_not_ignored(self):
+        null = self.root / "null.json"
+        null.write_text("null\n", encoding="utf-8")
+        proposal = self.root / "proposal.json"
+        proposal.write_text(json.dumps(load("opa-reassign-allow-executed")["record"]["recommendation"]), encoding="utf-8")
+        self.assertEqual(run_cli("--db", self.db, "ticket-create", "--ticket-id", "T-201", "--department", "intake")[0], 0)
+        code, record, _ = run_cli("--db", self.db, "submit", "--proposal", str(proposal), "--policy", str(self.policy),
+                                  "--proposed-by", "alice", "--external-policy", str(null))
+        self.assertEqual((code, record), (2, None))
+        with TicketStore(self.db) as store:
+            self.assertEqual(store._connection.execute("SELECT COUNT(*) FROM decisions").fetchone()[0], 0)
+        reference = load("cedar-reassign-forbidden")["record"]["external_policy"]
+        for name, text in (("policies.cedar", reference["policies"]["text"]),
+                           ("entities.json", json.dumps(reference["entities"])),
+                           ("request.json", json.dumps(reference["request"]))):
+            (self.root / name).write_text(text, encoding="utf-8")
+        with patch("decisioncontrol.adapters.cedar.authorize", return_value=("Allow", {"reason": ["p"], "errors": []})) \
+                as authorize:
+            code, frozen, _ = run_cli("freeze-cedar", "--policies", str(self.root / "policies.cedar"),
+                                      "--entities", str(self.root / "entities.json"),
+                                      "--request", str(self.root / "request.json"), "--response", str(null))
+        self.assertEqual((code, frozen), (2, None))
+        authorize.assert_not_called()
+
 
 @unittest.skipUnless(HAVE_OPA and HAVE_CEDAR, "opa and cedar are required")
 class RecorderTests(unittest.TestCase):

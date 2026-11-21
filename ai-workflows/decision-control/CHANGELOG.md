@@ -105,6 +105,10 @@ of 0.1.0 was removed.
 ### Fixed
 - A record or report with an unsupported or non-integer `schema_version` exits 2 before its checksum is
   examined; a bad checksum could previously exit 1 first.
+- `evaluate --require`, `submit --external-policy` and `freeze-cedar --response` exit 2 for a file that holds
+  JSON `null`. It was treated as an omitted option: a gated evaluation ran `UNGATED` and exited 0, a
+  submission was recorded without its external decision, and `freeze-cedar` ran `cedar` instead of freezing
+  the recorded response.
 
 ### Security
 - Signed records and `--require-signature` bind a record to a key: a record edited to name the proposer as
