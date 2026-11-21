@@ -56,6 +56,27 @@ class HardeningTests(unittest.TestCase):
         self.assertEqual([row['id'] for row in output], [good['id']])
         self.assertIn(bad['id'], error)
 
+    def test_pending_skips_rows_beyond_the_json_parser_limits(self):
+        oversized, nested, good = self.submit(), self.submit(), self.submit()
+        # Deep enough for the JSON parser (Python 3.11) or, when it parses, the RFC 8785 writer (3.14+).
+        deep = {'engine': 'opa', 'decision_id': 'd', 'path': 'a/b', 'bundles': {}, 'input': {'deep': 'DEEP'},
+                'result': True, 'modules': {'a.rego': 'package a'}, 'data': {}}
+        edits = ((oversized, '"revision":0', '"revision":' + '1' * 5000),
+                 (nested, '"external_policy":null',
+                  '"external_policy":' + json.dumps(deep).replace('"DEEP"', '[' * 100000 + ']' * 100000, 1)))
+        with sqlite3.connect(self.db) as connection:
+            for record, needle, replacement in edits:
+                text = json.dumps(record, separators=(',', ':'))
+                self.assertIn(needle, text)
+                connection.execute('UPDATE decisions SET record = ? WHERE id = ?',
+                                   (text.replace(needle, replacement, 1), record['id']))
+        pending = self.store.pending()
+        self.assertEqual([row['id'] for row in pending], [good['id']])
+        self.assertEqual([row['id'] for row in pending.skipped], [oversized['id'], nested['id']])
+        code, output, error = self.call('pending')
+        self.assertEqual((code, [row['id'] for row in output]), (1, [good['id']]))
+        self.assertIn(nested['id'], error)
+
     def test_identical_rejection_is_idempotent_but_conflicts_error(self):
         record = self.submit()
         rejected = self.store.reject(record['id'], 'bob', 'unsafe')
@@ -243,6 +264,36 @@ class HardeningTests(unittest.TestCase):
         path.write_text(nan, encoding='utf-8')
         with contextlib.redirect_stderr(io.StringIO()):
             self.assertEqual(main(['replay', '--record', str(path)]), 2)
+
+    def test_json_beyond_the_parser_limits_is_invalid_input_not_a_traceback(self):
+        text = json.dumps(export_record(self.submit()))
+        oversized = text.replace('"revision": 0', '"revision": ' + '1' * 5000, 1)
+        nested = text.replace('"review": null', '"review": ' + '[' * 100000 + ']' * 100000, 1)
+        for name, edited in (('oversized', oversized), ('nested', nested)):
+            self.assertNotEqual(edited, text)
+            path = self.root / f'{name}.json'
+            path.write_text(edited, encoding='utf-8')
+            for command, argv in (('replay', ['replay', '--record', str(path)]),
+                                  ('replay-evaluation', ['replay-evaluation', '--record', str(path)]),
+                                  ('submit', ['--db', str(self.db), 'submit', '--proposal', str(path),
+                                              '--policy', str(path), '--proposed-by', 'alice'])):
+                with self.subTest(name=name, command=command):
+                    with contextlib.redirect_stdout(io.StringIO()) as out, \
+                            contextlib.redirect_stderr(io.StringIO()) as error:
+                        self.assertEqual(main(argv), 2)
+                    self.assertEqual(out.getvalue(), '')
+                    self.assertTrue(error.getvalue().startswith('decision-control: '))
+
+    def test_a_signature_envelope_beyond_the_parser_limits_is_a_malformed_signature(self):
+        key = self.root / 'signing.key'
+        record = self.root / 'record.json'
+        self.assertEqual(self.call('keygen', str(key))[0], 0)
+        self.assertEqual(self.call('export', self.submit()['id'], '--out', str(record))[0], 0)
+        Path(str(record) + '.dsse.json').write_text('{"payloadType": ' + '[' * 100000 + ']' * 100000 + '}',
+                                                    encoding='utf-8')
+        code, output, error = self.call('replay', '--record', str(record), '--require-signature', '--key', str(key))
+        self.assertEqual((code, output), (1, None))
+        self.assertIn('signature', error)
 
     def duplicate_status(self, record):
         text = json.dumps(record, separators=(',', ':'))

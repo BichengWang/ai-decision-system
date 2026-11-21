@@ -75,6 +75,15 @@ class EvaluationCliTests(unittest.TestCase):
         self.assertEqual(output["report"]["disposition"], "UNGATED")
         self.assertFalse(unused_db.exists())
 
+    def test_a_null_requirements_file_is_invalid_input_not_an_ungated_run(self):
+        self.write_case(safe=False)
+        self.requirements.write_text("null\n", encoding="utf-8")
+        out = self.root / "null-requirements"
+        code, output = self.evaluate(out)
+        self.assertEqual(code, 2)
+        self.assertIsNone(output)
+        self.assertFalse(out.exists())
+
     def test_malformed_input_does_not_leave_a_partial_evaluation(self):
         self.write_case()
         with self.cases.open("a", encoding="utf-8") as stream:

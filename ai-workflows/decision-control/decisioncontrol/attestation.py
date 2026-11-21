@@ -80,7 +80,7 @@ def require_signature(record: Path, data: bytes, document, kind: str, options) -
             raise signing.SignatureError(f"cannot read signature envelope {path}: {error}") from error
         try:
             envelope = json.loads(text)
-        except ValueError as error:
+        except (ValueError, RecursionError) as error:
             raise signing.SignatureError(f"malformed DSSE envelope: {error}") from error
         signing.verify(data, envelope, {expected}, key)
         return
