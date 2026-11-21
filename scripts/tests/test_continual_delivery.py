@@ -99,6 +99,14 @@ class GateListingTests(unittest.TestCase):
         with self.assertRaisesRegex(delivery.Blocked, "file list is incomplete"):
             self.gate(FakeGh(files))
 
+    def test_commits_past_the_rest_limit_block(self):
+        clean = {"commit": {"author": {"name": "Bicheng Wang", "email": "b@example.com"}, "message": "change"}}
+        tagged = {"commit": {"author": {"name": "Bicheng Wang", "email": "b@example.com"},
+                             "message": "change\n\nCo-authored-by: Codex <codex@example.com>"}}
+        fake = FakeGh([{"filename": "src/utils/general/example.py"}], commits=[clean] * 250 + [tagged])
+        with self.assertRaisesRegex(delivery.Blocked, "commit list is incomplete"):
+            self.gate(fake)
+
     def test_renaming_a_release_file_away_blocks(self):
         renamed = {"filename": "scripts/old_release.py", "previous_filename": "scripts/release.py",
                    "status": "renamed"}

@@ -229,6 +229,9 @@ def pr_data(repo, number):
     pr["files"] = gh_pages(f"repos/{repo}/pulls/{number}/files?per_page=100")
     comments = gh_pages(f"repos/{repo}/issues/{number}/comments?per_page=100")
     commits = gh_pages(f"repos/{repo}/pulls/{number}/commits?per_page=100")
+    # This endpoint lists at most 250 commits; unlisted ones escape the attribution rule.
+    if len(commits) != gh_json("api", f"repos/{repo}/pulls/{number}").get("commits"):
+        raise Blocked("PR commit list is incomplete")
     return pr, comments, commits
 
 
