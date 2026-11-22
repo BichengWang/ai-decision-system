@@ -64,6 +64,8 @@ try {
   console.log(`vectors: ${result.counts.total.total} (${result.counts.total.valid} valid, ${result.counts.total.tampered} tampered, ${result.counts.total.invalid} invalid)`);
   console.log(`baseline (strict) accepts ${total.tampered.baseline_strict_accepts}/${total.tampered.vectors} tampered and ${total.invalid.baseline_strict_accepts}/${total.invalid.vectors} invalid; verifiers reject ${total.tampered.verifier_rejects}/${total.tampered.vectors} and ${total.invalid.verifier_rejects}/${total.invalid.vectors}`);
   console.log(`mutations: stale ${stale.detected}/${stale.mutations} detected (${stale.detection_percent}%), resealed ${resealed.detected}/${resealed.mutations} (${resealed.detection_percent}%)`);
+  const cross = (mode) => `${mode.baseline_strict.baseline_rejects}/${mode.baseline_strict.edits} rejected, ${mode.baseline_strict.only_verifier_rejects} only by the verifier, ${mode.baseline_strict.both_accept} pass both`;
+  console.log(`baseline on the edits: stale ${cross(stale)}; resealed ${cross(resealed)}`);
   console.log(`wrote ${path.join(outDir, "results.json")} and RESULTS.md in ${((Date.now() - started) / 1000).toFixed(1)} s`);
   const found = problems(result);
   if (found.length > 0) {

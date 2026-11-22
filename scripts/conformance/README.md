@@ -35,7 +35,12 @@ every change to a manifest, vector, package `schema/` directory or this folder.
 `verify.command` as a subprocess, and writes `results.json` and `RESULTS.md`:
 vector counts, a hash + JSON Schema baseline against the verifiers, a stale and a
 resealed single-leaf mutation matrix per record type, record sizes and CLI verify
-latency. It needs the three packages installed from this checkout:
+latency. The sweep also runs the strict baseline on every edited record, on the
+files its verifier gets, and reports per record type and mode how many edits the
+baseline rejects, how many only the verifier or only the baseline rejects, and how
+many pass both (`baseline_strict`), with the baseline's verdict split by verifier
+exit code; `undetected_field_counts` counts the passes per field. It needs the
+three packages installed from this checkout:
 
 ```sh
 python3 -m venv /tmp/ads-venv
