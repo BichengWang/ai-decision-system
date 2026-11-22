@@ -12,6 +12,10 @@
 - [RELIA release](RELIA_RELEASE.md) — Export a standalone candidate and preserve its identity through human-gated release acceptance.
 - [Continual delivery](CONTINUAL_DELIVERY.md) — Local recurring delivery workflow, required checks, review gates, and recovery rules.
 
+## Papers
+
+- [Workshop paper draft](paper/) — Four-page draft on recomputing AI-assisted go/no-go decisions from their records, with build steps and the committed source of every number; not submitted or peer reviewed.
+
 ## Outreach and portfolio
 
 - [Launch kit](launch/) — Venue-specific launch drafts, outreach records, and launch trigger instructions.

@@ -1,0 +1,11 @@
+# AAAI-27 Author Kit files. Download them from https://aaai.org/authorkit27/
+# and put them next to paper.tex; they are not redistributed here.
+aaai2027.sty
+aaai2027.bst
+# Build output
+build/
+*.aux
+*.bbl
+*.blg
+*.out
+paper-anonymous.pdf
