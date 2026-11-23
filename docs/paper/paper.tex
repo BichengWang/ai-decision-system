@@ -37,8 +37,8 @@
     %    then \ttfamily and \sffamily fall back to Latin Modern Roman. This
     %    option keeps the Type 1 fonts and T1 encoding that pdflatex uses.
     \PassOptionsToPackage{nofontspec}{newtxtext}
-    % 3. XeTeX has no \pdfinfo primitive; accept and ignore it.
-    \providecommand\pdfinfo[1]{}
+    % 3. XeTeX has no \pdfinfo primitive; hand its entries to xdvipdfmx.
+    \providecommand\pdfinfo[1]{\AtBeginDocument{\special{pdf:docinfo<<#1>>}}}
   \fi
   \ifanonymous
     \usepackage[submission]{aaai2027} % DO NOT CHANGE THIS
@@ -145,44 +145,55 @@ on Records of AI-Assisted Go/No-Go Decisions}
 \maketitle
 
 \begin{abstract}
-Signed receipts for agent actions already exist; they attest who signed which
-outcome. We study a complementary property: a third party can recompute the
-decision from the record. A decision record keeps the inputs and frozen rules
-of one go/no-go decision (a typed model answer, a policy-gated agent action
-with human approval, an experiment promotion), and its verifier re-derives
-the verdict without running a model. On 185 conformance vectors, a hash and JSON Schema check
-accepts 36 of 64 tampered records that the verifiers reject. Of 4,214
-single-leaf edits to valid records, the verifiers still reject 82.2\% after
-the editor re-hashes (99.3\% while digests are stale). What passes is free text, caller-supplied labels such as the model
-named in a proposed action, and edits that leave another consistent record.
-All fixtures are synthetic; no agent or model is run.
+Signed receipts for agent actions already exist, and some of their verifiers
+re-apply rules. We measure what recomputing the verdict adds over digest and
+schema checks, and what it leaves unbound. A decision record keeps the inputs
+and frozen rules of one go/no-go decision (a typed model answer, a
+policy-gated agent action with human approval, an experiment promotion); its
+verifier re-derives the verdict without running a model. On our own
+conformance vectors and JSON Schemas, which tie no verdict to its inputs, of
+4,214 single-leaf edits with every digest recomputed, the hash and schema
+check rejects 1,104 (26.2\%) and the verifiers 3,466 (82.2\%); 735 pass
+both. Only the verifiers reject 2,375 (56.4\%), 2,263 as mismatches; a
+stricter schema would lower that share. Replay is a
+consistency check: consistent edits of several fields pass, as do single
+edits of labels, such as the model named in most proposed actions,
+and of inputs that leave the verdict unchanged. All fixtures are synthetic;
+no agent or model is run.
 \end{abstract}
 
 \section{Introduction}
 \label{sec:intro}
 
-Model output is not authority. Take the exported record of an agent action
-that waits for human approval: proposal, frozen policy,
-verdict and event history under a SHA-256 digest. Append an \code{EXECUTED}
-event and a result, and recompute the digest. The file still validates
-against its JSON Schema and its digest matches, so a check built from those
-two tests accepts a record of an action that ran without approval. A
-signature would stop this edit by anyone without the key. A verifier that
-recomputes the verdict and walks the lifecycle stops it with no key at all.
+Model output is not authority; the approval that follows it is. Take the
+exported record of an agent action awaiting human approval: proposal, frozen
+policy, verdict and event history under a SHA-256 digest. Append an
+\code{EXECUTED} event and a result, and recompute the digest: the file still
+validates against its JSON Schema and its digest matches
+(Appendix~\ref{app:manifest}). A verifier that recomputes the verdict and
+walks the lifecycle rejects it with no key, but an editor who also writes an
+approval by a listed reviewer passes. Replay is a consistency check: it shows
+that the recorded verdict follows from the recorded inputs under the rules
+of the schema version the record claims, not that the inputs are the
+original ones. Whoever can rewrite every field and digest can write any
+self-consistent record.
 
-Signed records are not the gap. More than ten 2026 Internet-Drafts and several
-preprints define signed, offline-verifiable receipts for agent actions and
-decisions
-\citep[e.g.,][]{farley2026acta,schrock2026authorization,sharif2026aat,ardebili2026novafabric},
-and one draft states that none of hash-chaining, signing or offline
-verification is new to it \citep{sahu2026receipts}. A receipt attests who
-signed which outcome. Most do not let a third party check that the outcome
-follows from the inputs: the closest format excludes request content by rule
-\citep{farley2026acta}, and the verification steps we read end at signatures,
-digests or chain links. We study that complementary property. A
-hash and JSON Schema check accepts 36 of 64 tampered records that
-recomputation rejects; after re-hashing, the verifiers still reject 82.2\%
-of single-leaf edits.
+Recomputation therefore complements a signature. A signature says that a
+key holder vouched for the bytes, not whether the signed record is coherent;
+replay catches an edit or error that breaks a relation it recomputes or
+compares, whoever makes it and whether or not they re-hash or re-sign. Signed agent receipts are
+plentiful: more than ten 2026 Internet-Drafts and several
+preprints define them
+\citep[e.g.,][]{farley2026acta,sahu2026receipts,sharif2026aat,ardebili2026novafabric},
+and some verifiers re-apply rules. One re-checks separation of duties
+offline and compares policy digests \citep{schrock2026authorization};
+AgentBound, the nearest
+design to ours, replays the action against the reconstructed policy
+\citep{kaul2026agentbound}. We did not find a measurement of how much
+recomputing the verdict adds over digest and schema checks, or of what it
+leaves unbound. On our own vectors, a hash check with our own JSON Schemas,
+which tie no verdict to its inputs, rejects 26.2\% of single-leaf edits
+with every digest recomputed, the verifiers 82.2\%.
 
 % The table* appears at the top of the page after the one where this source falls.
 \begin{table*}[t]
@@ -194,23 +205,24 @@ of single-leaf edits.
   Decision (package) & The record embeds & Replay recomputes &
   Not reached: a label, or unchecked \\
   \midrule
-  \raggedright Typed model answer (jev-decision) &
+  \raggedright Typed model answer; its labeled evaluation (jev-decision) &
   \raggedright question definitions and the raw provider response, under one
   digest &
-  \raggedright answers, refusals, response id, usage and model name, by
-  re-parsing the stored response with the stored questions &
-  \raggedright that a provider sent the response; the text asked about (not
-  stored); the threshold the caller applied \tabularnewline
+  \raggedright answers, refusals, response id, usage and model name,
+  re-parsed from the stored response &
+  \raggedright that a provider sent the response; question and option
+  wording; the input text (not stored); the caller's threshold \tabularnewline
   \addlinespace
-  \raggedright Policy-gated action with human approval (decision-control) &
+  \raggedright Policy-gated action with human approval; policy evaluation
+  (decision-control) &
   \raggedright proposal, ticket snapshot, frozen policy, proposer, verdict,
   review, events, result; optionally an OPA or Cedar decision &
   \raggedright verdict and reason codes; the lifecycle; that the reviewer is
-  listed and not the proposer; the result of the action; that an external
-  decision binds this proposal &
-  \raggedright model name, question version, origin of the probability; who
-  proposer and reviewer are; timestamps (local clock); outside effects
-  \tabularnewline
+  listed and not the proposer; the result; that a frozen external decision
+  matches the proposal &
+  \raggedright model name, question version; origin of probability, policy
+  and ticket; who proposer and reviewer are; need for an external decision;
+  outside effects \tabularnewline
   \addlinespace
   \raggedright Experiment promotion (experiment-gate) &
   \raggedright exported A/B aggregates under a digest, policy, metrics,
@@ -222,359 +234,355 @@ of single-leaf edits.
   version labels \tabularnewline
   \bottomrule
 \end{tabular}
-\caption{A successful check means that the recorded verdict follows from the
-recorded inputs under that schema version's rules. Replay binds nothing in
-the last column, and no verifier checks a link between two records.}
+\caption{Three decision points and what replay reaches. A pass means the
+recorded verdict follows from the recorded inputs under the claimed schema
+version's rules, unless OPA or Cedar was checked \code{digest-only};
+evaluation records are re-scored.}
 \label{tab:points}
 \end{table*}
 
 A \emph{record} keeps the inputs and the frozen rules of one go/no-go
-decision. \emph{Replay} is recomputing the
-deterministic part of that decision from inputs frozen in the record; a
-\emph{verifier} replays a record and compares the result with what it states.
-No verifier runs a model: the answer record stores the provider response,
-which its verifier re-parses, and the action record stores only a model name
-and a probability that the caller supplies. One draft \citep{sharif2026aat}
-would call such a decision reconstructable, not reproducible, and replaying a whole agent run
-\citep{ardebili2026novafabric} is a different operation. A \emph{label} is a
-caller-written value that no verifier can re-derive.
+decision. \emph{Replay} is recomputing the deterministic part of that
+decision from inputs frozen in the record; a \emph{verifier} replays a record
+and compares the result with what it states. No verifier runs a model:
+replay re-executes neither the model \citep{sharif2026aat} nor an agent run
+\citep{ardebili2026novafabric}. A \emph{label} is a caller-written value no
+verifier can re-derive.
 
-We contribute (1) records and standard-library verifiers that recompute the
-verdict at three decision points (Table~\ref{tab:points}); (2) a hash and
-JSON Schema baseline and a single-leaf mutation sweep that measure what
-recomputation adds, with every undetected field published; (3) lessons for
-builders of such records; and (4) a stated boundary: what the records do not
-bind for an LLM agent, and where receipts are ahead.
+We contribute (1) the apparatus: records and standard-library verifiers that
+recompute the verdict at three decision points (Table~\ref{tab:points}), with
+schemas and 185 conformance vectors; (2) a single-leaf mutation sweep in
+which every edited record goes through a hash and JSON Schema baseline and
+through the verifiers, with every field whose edits pass published; (3)
+lessons for builders of such records; and (4) a stated boundary: what the
+records do not bind for an LLM agent, and where receipts are ahead.
 
-We concede four things. The envelope, canonical JSON, signing and offline
-verification are reused, and the format is one more in a field with more than
-ten. Proposer and reviewer are labels, so approval binding is weaker than
-with approver-held keys \citep{schrock2026authorization}. A stand-alone record
-has no chain and no trusted time, and it exposes its embedded inputs to its
-holder. Every model answer, probability and proposal here is a synthetic
-fixture: no model or agent is called, and the software has one author and no
-outside user. Only version 0.1.0 of the packages is
-published; what we evaluate beyond it is unreleased. Code, vectors and results: \repourl.
+We reuse the envelope, canonical JSON, signing and offline verification; the
+format is one more of many. Every model
+answer, probability and proposal is a synthetic fixture: no model or agent
+is called, and the software has one author and no outside user. Only version
+0.1.0 of the packages is published; what we evaluate beyond it is
+unreleased. Code and vectors: \repourl{}; the results name their source
+commit and the code's tree ids (Appendix~\ref{app:trace}).
 
 \section{Decision Records and Replay}
 \label{sec:records}
 
 Three independent Python packages write and verify these records
-(Table~\ref{tab:points}). They use only the standard library and are not one integrated runtime. Each ships JSON Schemas
-\citep{wright2022jsonschema} and valid, tampered and invalid vectors with
-expected exit codes. A Node checker by the same author, sharing no code with
-them, re-checks schemas and digests only. A fourth, unreleased benchmark is not evaluated.
+(Table~\ref{tab:points}). They use only the standard library and are not one
+integrated runtime. Each ships JSON Schemas \citep{wright2022jsonschema} and
+valid, tampered and invalid vectors with expected exit codes; a Node checker
+by the same author, sharing no code with them, re-checks schemas and digests
+only. The jev-decision package records answers of decision models such as
+Jev \citep{almeida2026jev}, which answer bounded questions with typed answers
+and probabilities; their calibration is studied elsewhere
+\citep{deusser2026jev}.
 
-The records follow five rules. (1) A record embeds the inputs of its decision
-and the rules as data, such as thresholds and allowlists; the logic that
-applies them is verifier code. (2) A schema version selects
-exactly one canonical form, RFC 8785 \citep{rundgren2020jcs} in current
-versions, and one set of replay rules. (3) To verify is to recompute, not to
-compare hashes. (4) Exit code \code{1} means that the evidence disagrees,
-\code{2} that the input is invalid or the check could not be made. (5) Limits
-appear in the output: \code{digest-only} when a frozen external policy was
-not re-evaluated, and \code{UNGATED}, never \code{PASS}, when an evaluation
-of labeled cases ran without requirements.
-
-The first package records answers of decision models such as Jev, a ``System
-One'' API announced in September 2026 \citep{almeida2026jev} that answers
-bounded questions with typed answers and reported probabilities. Preprints gate on such probabilities at set thresholds \citep{li2026jevjudge,shoham2026jevact};
-whether they are calibrated is a question for such studies
-\citep{deusser2026jev}, not for our fixtures.
-
-The promotion package applies ordered rules to exported A/B aggregates
-\citep{kohavi2020trustworthy}: a sample-ratio check first, then the primary
-metric and its guardrails.
+The records follow five rules. (1) A record embeds the inputs that replay
+needs and the rules as data; the logic that applies them is verifier code.
+(2) A schema version selects one digest form, RFC 8785
+\citep{rundgren2020jcs} in current versions or exact file bytes for a Jev
+evaluation directory, and one set of replay rules. (3) To verify is to
+recompute the verdict, not only to compare hashes. (4) Exit code \code{1}
+means that the evidence disagrees, \code{2} that the input is invalid or a
+required check could not run. (5) Limits appear in the output:
+\code{digest-only} for a frozen external policy that was not re-evaluated,
+and \code{UNGATED}, never \code{PASS}, for an evaluation of labeled cases
+without requirements.
 
 Signing is optional and reused: an in-toto Statement
-\citep{torresarias2019intoto} in a DSSE envelope \citep{dsse2024spec} over the
-SHA-256 of the record file's exact bytes, with an HMAC or Sigstore
-\citep{newman2022sigstore}. Verifiers ignore signatures unless
-\code{--require-signature} is given. A signature shows that a key holder
-vouched for those bytes, not that the inputs are true, who the holder is (an
-HMAC key is a shared secret), or when the record was made.
+\citep{intoto2026statement} in a DSSE envelope \citep{dsse2024spec} over the
+SHA-256 of the record file's exact bytes. The packages compute an HMAC tag
+over Statement v1; an external \code{cosign} makes a Sigstore bundle
+\citep{newman2022sigstore}, with Statement v0.1. Verifiers ignore both unless \code{--require-signature} is
+given. Every holder of an HMAC key, each verifier included, can make a tag,
+so it names no one; a Sigstore certificate names the signer. Neither shows
+that the inputs are true.
 
 \section{The Approval Boundary of an Agent}
 \label{sec:boundary}
 
 The agent-facing package, decision-control, evaluates a proposal that a host
-supplies. It calls no model and authenticates no one, and its two registered
-actions only update a local SQLite ticket table.
+supplies. It calls no model, authenticates no one, and its actions only update
+a local SQLite ticket table.
 
-\emph{Verdict order and stale state.} A frozen policy routes a proposal through eight checks
-in a fixed order. Four hard constraints (wrong ticket, unregistered action, a
-value off the allowlist, no change) give \code{DENY} before the probability
-or the refusal is read. A refusal, or a probability that is missing or below
-the policy minimum, gives \code{ABSTAIN}; a value on the review list gives
-\code{REVIEW}, however high the probability; otherwise \code{ALLOW}. At execution,
-a ticket that has moved from the frozen snapshot gives \code{STALE} instead
-of an action: an approval covers a snapshot, not a standing permission.
+\emph{Verdict order and the snapshot guard.} A frozen policy routes a
+proposal through eight checks in a fixed order. Four hard constraints (wrong
+ticket, unregistered action, a value off the allowlist, no change) give
+\code{DENY} before the probability or the refusal is read. A refusal, or a
+missing or low probability, gives \code{ABSTAIN}; a value on the review list
+gives \code{REVIEW}, however high the probability; otherwise \code{ALLOW}.
+At execution, a ticket that has moved from the frozen snapshot gives
+\code{STALE} instead of an action, so an approval covers only that snapshot.
 
 \emph{Approval and separation of duties.} A \code{REVIEW} decision needs a
 reviewer from the frozen list who is not the proposer. Replay applies the
 rule to the exported file: a record edited to name the proposer as reviewer
-fails with exit \code{1} even when re-hashed (three tampered vectors, and
-one for a cancellation). The rule
-compares labels and has two bypasses. An editor who also renames the proposer
-and re-hashes passes. And replay applies the rules of the schema version a
-record claims: the rule exists from schema 3, so a record rewritten as schema
-2, which has no proposer field, passes with the same reviewer. A consumer has
-to require a minimum schema version or a signature, and a signature still
-does not show that two people were involved: a host has to add an identity
-layer \citep{south2025delegation,kasselman2026aims}.
+fails with exit \code{1} even when re-hashed (four tampered vectors). The
+rule compares labels: an editor who also renames the proposer passes once
+re-hashed, and so does one who names an unlisted reviewer and adds that
+name to the frozen list. So does a record
+rewritten as schema 2, which has no proposer field. This is general: the
+record names the schema version it is replayed under, so every defence a
+later version added (the proposer rule, duplicate-key rejection, strict
+reading of numbers) is optional for an editor unless the consumer pins a
+minimum version outside the file, which no verifier offers, or requires a
+signature by a key the editor does not hold. Even a signature does not show that two people were involved;
+that needs an identity layer
+\citep{south2025delegation,kasselman2026aims}.
 
 \emph{An external decision, bound to the whole proposal.} An OPA decision-log
-entry \citep{opa2026decisionlogs} with its Rego modules, or a Cedar authorization \citep{cutler2024cedar} with
-its policies and entities, can be frozen in the record. The frozen input must
-equal the one derived from the record's complete proposal, ticket snapshot
-and proposer: an early Cedar request omitted the model,
-question version, probability and ticket revision, so one authorization was
-accepted for different proposals. Replay re-evaluates the frozen policy when its engine is on
-the PATH; otherwise it reports \code{digest-only} and exits \code{0}, or
-\code{2} under \code{--require-reevaluation}.
+entry \citep{opa2026decisionlogs} with its Rego modules, or a Cedar
+authorization \citep{cutler2024cedar} with its policies and entities, can be
+frozen in the record. The frozen input must equal the one derived from the
+record's complete proposal, ticket snapshot and proposer: an early Cedar
+request left out the model, question version, probability, ticket revision
+and non-target fields, so one authorization was accepted for different
+proposals. The
+binding is one-way; nothing requires a frozen decision: an editor who
+deletes a frozen \code{DENY}, records the built-in \code{ALLOW} and re-hashes
+passes, even under \code{--require-reevaluation}. Without its engine on the
+PATH, replay checks the policy digest-only and exits \code{0}
+(\code{2} under that flag).
 
 \emph{A framework's approval interrupt.} The Model Context Protocol says
 there ``SHOULD always be a human in the loop with the ability to deny tool
-invocations'' and defines no record of the approval \citep{mcp2026spec}; a
-framework's approval interrupt saves the run state and resumes when a person
-answers \citep{langchain2026interrupts,openai2026agentshitl}. That says a
-human resumed the run, not who, under which frozen rules, or what was
-decided. Our example maps a LangGraph interrupt onto submit and approve or
-reject, and leaves a record that replays (Appendix~\ref{app:langgraph}).
+invocations'', asks clients to log tool use for audit, and defines no record
+of the approval \citep{mcp2026spec}. A
+framework's approval interrupt saves the run state and resumes with an answer
+\citep{langchain2026interrupts,openai2026agentshitl}; that state can hold the
+call, the answer and a name the caller supplies, but neither the frozen rules
+the answer was checked against nor a form a third party can re-check. Our LangGraph example maps an interrupt onto a
+record that replays (Appendix~\ref{app:langgraph}).
 
 \section{Evaluation}
 \label{sec:evaluation}
 
-\emph{Corpus and threat model.} The corpus is the three packages' conformance
-vectors: 185 vectors (56 valid, 64 tampered, 65 invalid); the valid ones span
-eleven record types and schema versions. A tampered vector must make
-its verifier exit \code{1}, an invalid one exit \code{2}. Verifiers run as
-black-box subprocesses on a PATH without OPA, Cedar or \code{cosign}, and
-return the manifest's exit code on 185 of 185. Our editor holds an exported,
-unsigned record and no signing key, and can change any field, recompute every
-digest and choose the schema version, which nothing outside the file pins. Out of scope: a fabricating producer, a key holder, a modified verifier.
+\emph{Corpus and editor.} The corpus is the three packages' conformance
+vectors: 185 (56 valid, 64 tampered, 65 invalid), the valid ones in twelve
+record types and schema versions, shown in eleven rows. Run as black-box
+subprocesses on a PATH without OPA, Cedar or \code{cosign}, the verifiers
+return each vector's expected exit code (\code{1} tampered, \code{2}
+invalid) on 185 of 185. The sweep below models one change to a valid record:
+one leaf edited, every digest recomputed or left stale. A key holder who
+edits one field and re-signs is the first case, since replay's result does
+not depend on the signature. Consistent edits of several fields, which pass,
+are not measured.
 
-\begin{table}[t]
-\centering
-\small
-\begin{tabular}{@{}lrrrr@{}}
-  \toprule
-   & & \multicolumn{2}{c}{Baseline accepts} & Verifiers \\
-  \cmidrule(lr){3-4}
-  Vectors & Count & strict & last-wins & accept \\
-  \midrule
-  Valid & 56 & 56 & 56 & 56 \\
-    Tampered & 64 & 36 & 36 & 0 \\
-  \quad decision-control & 41 & 23 & 23 & 0 \\
-  \quad experiment-gate & 10 & 6 & 6 & 0 \\
-  \quad jev-decision & 13 & 7 & 7 & 0 \\
-  Invalid & 65 & 6 & 12 & 0 \\
-  \bottomrule
-\end{tabular}
-\caption{The hash and schema baseline accepts 36 tampered records that
-replay rejects; \emph{last-wins} keeps the last duplicate.}
-\label{tab:baseline}
-\end{table}
+\emph{Baseline.} The baseline does what a consumer with the schemas but no
+replaying verifier can do: every declared document validates against its
+JSON Schema, and every digest recomputable from the vector matches. The
+schemas are this repository's own. They constrain each field's type, form
+and range; none ties a verdict, a lifecycle state or a policy outcome to
+other fields. A stricter schema would reject more, leaving replay less to
+add: one
+\code{if}/\code{then} rule added to record schema 4 rejects the lead example
+and accepts every valid v4 record. Of the 64 hand-written tampered vectors
+the baseline accepts 36 and the verifiers none (Table~\ref{tab:bykind}), a
+count that reflects how many we wrote with consistent digests.
 
-\emph{Baseline.} The baseline does what a consumer without a replaying
-verifier can do: every declared document validates against its JSON Schema,
-and every digest that can be recomputed from the vector matches. It accepts 36
-of the 64 tampered vectors (Table~\ref{tab:baseline}); the 28 it
-rejects all fail a digest check, none a schema. The verifiers' 64 of 64 is by
-construction, since a tampered vector is by definition one its verifier
-rejects; the informative number is the 36. These are edits whose digests are
-consistent: a disposition changed from \code{FAIL} to \code{PASS}, an
-\code{EXECUTED} event appended to a pending \code{REVIEW} decision, an answer
-probability changed to 0.99, each re-hashed. Four of the six experiment-gate
-cases need no re-hash: that record's digest covers only the input, so only
-replay ties the output to the input.
+\emph{Mutation sweep.} We edit every JSON leaf of every valid vector once, as
+in mutation testing \citep{jia2011mutation}: a number is changed, a string
+gets a character appended, a boolean is flipped, a null is replaced
+(Appendix~\ref{app:types}). Each of the 4,214 edits runs twice:
+\emph{stale}, with every digest left as it was, as an accidental change
+would; and \emph{resealed}, with every digest the verifier checks recomputed
+in the canonical form the edited schema version requires. The baseline and
+the verifier both check each edited record; an edit counts as rejected on a
+non-zero exit. Resealed, the baseline rejects 1,104 edits (26.2\%) and the
+verifiers 3,466 (82.2\%); 2,375 (56.4\%) only the verifiers reject, and 735
+pass both (Table~\ref{tab:sweep}). Stale, the baseline rejects 3,619 of the
+4,214 edits (85.9\%) and the verifiers 4,184 (99.3\%); the 565 only the verifiers reject
+are all experiment-gate edits outside the input its digest covers, and the
+30 that pass both are two version labels.
 
 \begin{table}[t]
 \centering
 \small
 \setlength{\tabcolsep}{1mm}
-\begin{tabular}{@{}lrrr@{}}
+\begin{tabular}{@{}lrrrrr@{}}
   \toprule
-   & & \multicolumn{2}{c}{Edits detected} \\
-  \cmidrule(l){3-4}
-  Package & Edits & stale & resealed \\
+   & & \multicolumn{2}{c}{Rejected by} & Only the & Pass \\
+  \cmidrule(lr){3-4}
+  Package & Edits & baseline & verifiers & verifiers & both \\
   \midrule
-  decision-control & 2,431 & 2,431 (100.0\%) & 1,785 (73.4\%) \\
-  experiment-gate & 1,202 & 1,172 (97.5\%) & 1,137 (94.6\%) \\
-  jev-decision & 581 & 581 (100.0\%) & 544 (93.6\%) \\
+  decision-control & 2,431 & 598 & 1,785 & 1,194 & 639 \\
+  experiment-gate & 1,202 & 371 & 1,137 & 772 & 59 \\
+  jev-decision & 581 & 135 & 544 & 409 & 37 \\
   \midrule
-      All & 4,214 & 4,184 (99.3\%) & 3,466 (82.2\%) \\
-  All, with OPA & 4,214 & 4,184 (99.3\%) & 3,474 (82.4\%) \\
+  All, resealed & 4,214 & 1,104 & 3,466 & 2,375 & 735 \\
+  \quad percent & 100.0 & 26.2 & 82.2 & 56.4 & 17.4 \\
+  All, stale & 4,214 & 3,619 & 4,184 & 565 & 30 \\
   \bottomrule
 \end{tabular}
-\caption{Single-leaf edits detected by the verifiers. Of the 3,466 resealed
-detections, 2,749 are mismatches (exit \code{1}) and 717 reject the edited
-record as invalid input (exit \code{2}).}
+\caption{Single-leaf edits rejected (non-zero exit) by the hash and JSON
+Schema baseline and by the verifiers; resealed edits have every digest
+recomputed, stale ones keep the old. Package rows sum
+Table~\ref{tab:basetypes}. Of the 2,375 edits only the verifiers reject,
+2,263 are mismatches (exit \code{1}) and 112 inputs the schemas allow (exit
+\code{2}).}
 \label{tab:sweep}
 \end{table}
 
-\emph{Mutation sweep.} The tampered vectors are hand-picked, so we also edit
-every JSON leaf of every valid vector once, as in mutation testing
-\citep{jia2011mutation}: a number is changed, a string gets a character
-appended, a boolean is flipped, a null is replaced
-(operators and the few files left alone: Appendix~\ref{app:types}). Each of the 4,214 edits runs twice. \emph{Stale} leaves every digest as it was,
-as an accidental change would. \emph{Resealed} recomputes every digest the
-verifier checks, in the canonical form the edited schema version requires, as
-our editor would. An edit counts as detected on a non-zero exit.
-
-Stale, 4,184 of 4,214 edits are detected (99.3\%); that rate is a property of
-the digests, and the 30 misses are two version labels that the
-experiment-gate digest does not cover. Resealed, 3,466 are detected (82.2\%)
-and 748 pass (Table~\ref{tab:sweep}). By record type the rate runs from
-68.4\% for the agent-facing record, decision-control record v5 (527 of 770),
-to 96.8\% (Appendix~\ref{app:types}). We
-did not run the baseline on the edited records, so the sweep measures the
-verifiers: what recomputation adds over hash and schema checks is measured on
-the 64 tampered vectors only, and we cannot say how many of the 717
-invalid-input rejections a schema alone would give. As a control, all 56 valid vectors verify when rewritten unmutated.
-
-\emph{What binds an edit.} Binding by recomputation is a property of an edit,
-not of a field. A resealed edit is rejected when it changes a value that
-replay recomputes or compares with a copy elsewhere in the record; otherwise
-only a stale digest gives it away, and only a signature over the file would
-bind it. The 748 that pass are listed by field in Appendix~\ref{app:fields};
-the results give no count per kind. They are free text; labels such as a recommendation's model name or the
-proposer; inputs whose new value yields the same verdict, such as a minimum
-probability; content of a frozen external policy that was not re-evaluated;
-and a schema version whose successor reads the same record. The third kind is an equivalent mutant
-\citep{jia2011mutation}: the edit leaves another consistent record, which a
-recomputing verifier is right to accept. Replay establishes that the verdict
-follows from the recorded inputs, not that those inputs are the original
-ones.
+\emph{What rejects an edit.} A resealed edit is rejected when the edited
+record is no longer valid input (exit \code{2}; 717 edits, 605 also rejected
+by the schemas) or when it changes a value that replay recomputes or
+compares with a copy elsewhere in the record (exit \code{1}; 2,749, 486 also
+rejected by the baseline). Recomputation and comparison thus add the 2,263
+mismatches the baseline accepts, 53.7\% of the edits. Only a stale digest,
+a signature or policy re-evaluation exposes an edit the verifiers accept,
+except 13 version relabels that the schemas reject.
+By our grouping (Appendix~\ref{app:fields}), the 748
+passing edits are 333 inputs whose edited value leaves
+every recomputed value unchanged, 295 labels such as a recommendation's model
+name or the proposer, 61 edits to frozen external-policy content checked
+digest-only, 46 free text and 13 schema versions whose successor reads the
+same record. The first kind depends on the operator and the fixtures: 25 of
+the 28 action records have probability 0.95 against a minimum of 0.8, which
+the minimum's +0.125 edit never crosses, and replay never reads some such inputs, such as a
+seed (14 edits). Bar the 61 policy edits, which replay did not re-evaluate,
+a passing edit breaks no rule that replay applies. By record type the
+verifiers reject from 68.4\% (decision-control record v5, 527 of 770) to
+96.8\% of resealed edits; decision-control types hold 646 of the 748
+passes, including 261 labels and 307 inputs. Record v5 is lowest because
+61 of its 243 passes are these policy edits; with OPA it rejects 535
+(69.5\%), above record v4 (69.2\%). Over the five action-record types only
+the verifiers reject 464 of 1,212 edits (38.3\%).
 
 \emph{One edit, two records.} Append a character to a model name and reseal.
-In the Jev answer record the edit is rejected, because the verifier
-re-derives the model from the stored response. In the decision-control record
-it passes in every record version: that record stores a label in place of the output
-behind it, and for an agent this is the label that matters most. The answer
-record's protection is itself single-leaf: change the name in both places of
-the file, re-hash, and it passes. Replay shows that label and stored response
-agree, not that a provider sent either.
+The Jev answer record rejects it: its verifier re-derives the model
+from the stored response. The decision-control
+record passes it in every version but in the 4 of 15 v5 vectors whose
+frozen OPA input repeats the proposal (a Cedar request keeps the model only
+in a digest, which resealing recomputes): that record stores a label in place
+of the output behind it. The answer record's protection is single-leaf too:
+change the name in both places, re-hash, and it passes. Replay shows that
+the two copies agree, not that a provider sent either.
 
 \emph{Re-evaluating a frozen policy.} With OPA 1.21.2 on the verifier's PATH,
-8 more resealed edits are detected (3,474 of 4,214, 82.4\%): edits to the
-frozen Rego module and query path in record v5, which digest-only replay
-cannot see. This is why \code{digest-only} has to be a visible outcome. Re-evaluation catches an
-edited policy only when the evaluated outcome changes, and Cedar, on neither
-PATH, was replayed digest-only throughout.
+8 more resealed edits are rejected (3,474 of 4,214, 82.4\%): edits to the
+frozen Rego module and query path in record v5, all of which broke
+evaluation. A policy edit that still yields the frozen result passes, and
+Cedar, on neither PATH, was checked digest-only throughout.
 
 \emph{What the rates do not show.} One edit per value type, one leaf at a
 time, on vectors written by the author of the verifiers: the rates describe
 this corpus and operator, not records in general, and not an editor who
-changes several fields together or lowers a schema version, which the sweep
-never does. The baseline is our own construction and models no receipt format; no
-receipt implementation was run. Signatures are not exercised, and we
-report no latency. An earlier version of the sweep
-resealed only the digests the manifests declare, and 34
-edits counted as detected only because a digest stayed stale or was sealed in
-the wrong form.
+changes several fields together or lowers a schema version. The baseline is our own construction and models no receipt
+format; no receipt implementation was run. Signatures and latency are not
+measured.
 
 \section{Lessons}
 \label{sec:lessons}
 
-\emph{One file, two decisions.} One invalid vector has a
-first \code{"decision": "HOLD"} member before the real one: a last-wins
-parser reads a record that would otherwise verify as \code{SHIP}, a
-first-wins parser reads \code{HOLD}. Parsers disagree on such input
-\citep{seriot2016json,miller2021json} and JSON Schema validators do not see
-duplicate keys: read as \code{JSON.parse} does, the baseline accepts 12 of
-the 65 invalid vectors instead of 6, all six extra being duplicate-key
-vectors. So current schema versions reject duplicate keys, NaN, Infinity and
-integers beyond $2^{53}-1$ when parsing. Older versions keep their
-readers: the rule holds per schema version, not per verifier.
+\emph{One file, two decisions.} One invalid vector has a first
+\code{"decision": "HOLD"} member before the real one: a last-wins parser
+reads a record that would otherwise verify as \code{SHIP}, a first-wins
+parser reads \code{HOLD}. Parsers disagree on such input
+\citep{seriot2016json,miller2021json}, and JSON Schema leaves it undefined
+\citep{wright2022jsonschema}: read as \code{JSON.parse} does, the baseline
+accepts 12 of the 65 invalid vectors instead of 6, all six extra with a
+duplicate key. The RFC 8785 schema versions therefore reject duplicate keys,
+NaN, Infinity and integers beyond $2^{53}-1$ on reading. Older versions keep
+lenient readers, and the editor picks the version: a schema 2 \code{HOLD}
+record with an extra first \code{"decision": "SHIP"} verifies, digest
+unchanged.
 
-\emph{Fail closed; exit codes are verdicts.} A recurring defect was a check
-that passed when its input was missing: a missing probability that became
-1.0, a JSON \code{null} read as an option not given, a NaN threshold that
-compared false with everything. Exit codes had the same flaw: where \code{1}
-means that the evidence is wrong, an uncaught exception, on which Python
-exits \code{1}, is a false verdict; all three verifiers needed that fix. An
-ungated evaluation still exits \code{3} in jev-decision and \code{0} in
-decision-control.
+\emph{Fail closed, in checks and in exit codes.} A recurring defect was a
+check that passed when its input was missing or invalid: a missing
+probability that became 1.0, a JSON \code{null} read as an option not given,
+a NaN threshold that compared false with everything. Where exit \code{1}
+reports a result (a mismatch, or a failed gate), an uncaught exception, on
+which Python exits \code{1}, reports a false one; two verifiers and the
+experiment and Jev evaluation gates needed that fix. Three defaults still exit \code{0}
+without a full check: an ungated evaluation in decision-control, a frozen
+policy checked digest-only, and an invalid signature envelope when none is
+required.
 
-\emph{Make digests and floats recomputable elsewhere.} A digest over Python's
-\code{json.dumps} cannot be recomputed in another language: one \code{2.0} in
-an example input gives a SHA-256 starting \code{c0b34a77} in Python and
-\code{c1ff2af0} under RFC 8785 or in Node, so new schema versions use RFC
-8785. By the repository's account, five of
-seven bundled experiment-gate 0.1.0 records made on macOS failed exact replay
-on Linux, where the math library differs in the last digit. Derived floats
-are now compared at relative $10^{-9}$, so a smaller edit to a derived
-statistic goes undetected; everything else stays exact.
-Once records replay, a numerical fix needs a new schema version.
+\emph{Make digests and floats recomputable elsewhere.} A standard JSON parser
+in another language loses the difference between \code{2} and \code{2.0}, so
+a digest over Python's \code{json.dumps} needs a reader that keeps number
+literals and a port of its float \code{repr}, as our Node checker has; new
+schema versions use RFC~8785. Nor is exact float replay portable: five of seven
+experiment-gate 0.1.0 records from macOS failed it on Linux, whose math
+library differs in the last digit. Outside decision-control, whose
+arithmetic is correctly rounded, derived statistics are compared at
+relative $10^{-9}$, and a smaller edit passes.
 
 \section{Related Work}
 \label{sec:related}
 
 The draft of \citet{farley2026acta} defines a signed receipt per
-access-control decision; its receipts ``capture decision
-metadata, NOT request content'', so a verifier learns that an issuer signed a
-denial, not that the denial follows from policy and request. The draft of
+access-control decision; its receipts ``capture decision metadata, not
+request content'', so a verifier learns that an issuer signed a denial, not
+that the denial follows from policy and request. The draft of
 \citet{msebenzi2026evidence} lets a third party ``recompute every verdict
-from signed primitives''; as we read it, those verdicts (\code{VALID},
-\code{INVALID}, \code{UNVERIFIABLE}) are the outcome of verifying a record,
-not a system's allow or deny. The AgentBound preprint
-\citep{kaul2026agentbound} is nearest to our gate as a design: actions are
-permitted, reviewed or denied before execution, with co-signed receipts
-``enabling independent replay verification''. We found no repository for it;
-we add vectors and a measurement, and lack its delegation model. The NovaFabric preprint seals a whole agent run with a trusted timestamp and
-a Merkle log, which we lack, and reports three tamper classes rejected and 140 single
-mutations localized \citep{ardebili2026novafabric}. With one tampered vector \citep{msebenzi2026evidence}
-and a test-vector section \citep{farley2026acta}, those are the nearest
-measurements we found; we found no comparison of recomputation with digest and schema checks.
+from signed primitives'', verdicts that are outcomes of verifying a record
+(\code{VALID}, \code{INVALID}, \code{UNVERIFIABLE}), not a system's allow or
+deny. The verifier of \citet{schrock2026authorization} re-applies separation
+of duties with approver-held keys; its required hostile cases include
+initiator self-approval, and a separately authored verifier passed 164 of
+its conformance vectors from a hash-pinned bundle. AgentBound
+\citep{kaul2026agentbound} is nearest to our gate: actions are permitted,
+reviewed or denied before execution, and validation ``independently replays
+the canonical action against the reconstructed policy models''. Its code and
+results are announced, not released; we lack its delegation model.
+NovaFabric seals a whole agent run with a trusted timestamp, a Merkle log
+and key-separated approval, which we lack, and reports three tamper classes
+rejected and 140 single mutations localized \citep{ardebili2026novafabric}.
+With one tampered vector \citep{msebenzi2026evidence} and a shared test
+suite \citep{farley2026acta}, these are the nearest measurements we found;
+none compares replay with digest and schema checks.
 
-The in-toto Simple Verification Result ``does not include information for reproducing the
-verification result'' \citep{hennen2026svr}. Our records keep that kind of
-information for their own decisions, and could travel as the payload or
-subject of an existing envelope, such as a signed statement in a transparency
-service \citep{birkholz2026scitt}; we have not built that. An
-attestation-aware promotion gate for LLM artifacts has been proposed
-\citep{tan2026attesting}; we did not find a promotion decision over A/B
-aggregates kept as a recomputable record. Decision provenance,
-reviewability and agent visibility asked for such records earlier
-\citep{singh2019decision,cobbe2021reviewable,chan2024visibility}, without a
-format or verifier.
+By design, an in-toto Simple Verification Result may list the policies used but
+leaves ``information for reproducing the verification result'' to additional
+provenance attestations \citep{hennen2026svr}.
+Our records keep it, and could travel as the payload or subject of an existing envelope, such as a
+signed statement in a transparency service \citep{birkholz2026scitt}; we
+have not built that. An attestation-aware promotion gate for LLM artifacts
+has been proposed \citep{tan2026attesting}; we did not find a promotion
+decision over A/B aggregates kept as a recomputable record. Decision
+provenance, reviewability and agent visibility asked for decision and
+activity logs \citep{singh2019decision,cobbe2021reviewable,chan2024visibility}
+and defined no recomputable format or verifier.
 
 \section{Limits and Next Steps}
 \label{sec:limitations}
 
-For an LLM agent, seven things are not bound. (1) The raw model or tool-call
-output behind a proposed action is not in the action record. A chained
-example puts an answer record's digest into the model label and prints
-``Only this recipe checks that link. No verifier does''; storing the output
-and re-deriving the proposal is proposed, not built. (2) Proposer,
-reviewer, producer and model identities are caller-asserted; no record
-authenticates the provider. (3) Execution is local; nothing shows an effect
-in an external system. (4) There is one record per decision: no trajectory or
-multi-agent record, no hash chain across records, and nothing shows that
+For an LLM agent, seven limits apply. (1) The raw model or tool-call output
+behind a proposed action is not in the action record. A chained example puts
+an answer record's digest into the model label and prints ``Only this recipe
+checks that link. No verifier does''; storing the output is proposed, not
+built. (2) Proposer, reviewer, producer and model identities are
+caller-asserted, no field separates an agent from the principal it acts for,
+and no record authenticates the provider. (3) Execution is local; nothing
+shows an effect in an external system. (4) There is one record per decision:
+no trajectory or multi-agent record, no hash chain, and nothing shows that
 every decision produced a record. (5) Sampled actions (bandit or RL
-policies) are not recorded. (6) There is no trusted time; only
-decision-control records timestamps, from the local clock. (7) No agent or
-model runs in any example, and we report nothing on an agent benchmark such
-as AgentDojo \citep{debenedetti2024agentdojo}. On identity (approver-held
-keys bound to one canonical action, \citealp{schrock2026authorization};
-one-shot credentials for the exact bytes that will run,
-\citealp{jing2026separation}), on chaining and completeness
+policies) are not recorded. (6) No record carries a trusted time of the
+decision; only decision-control records timestamps, from the local clock.
+(7) We report nothing on an agent benchmark such as AgentDojo
+\citep{debenedetti2024agentdojo}. On approval binding
+(approver-held keys bound to one canonical action,
+\citealp{schrock2026authorization}; single-use approvals of the exact bytes
+that will run, \citealp{jing2026separation}), on chaining and completeness
 \citep{sharif2026aat} and on trusted time \citep{ardebili2026novafabric},
 existing work is ahead.
 
-A producer who fabricates a self-consistent record passes replay: the party
-that writes the record is the party being audited
+Whoever writes or rewrites a record consistently passes replay, the producer
+included: the party that writes the record is the party being audited
 \citep{figuera2026notarized}, and agents can tamper with their own traces
-\citep{qin2026tamper}. A transparency service is the kind of remedy.
+\citep{qin2026tamper}. A transparency service does not prevent this
+\citep{birkholz2026scitt}; it holds a producer accountable for what it
+registered, in an append-only history that every relying party sees alike.
 Embedding the inputs makes recomputation possible and exposes them to
 whoever holds the record; receipts leave them out on purpose
 \citep{farley2026acta}, and we offer no redaction. A human approval step
 invites rubber-stamping: one vendor reports that users accept 93\% of its
-coding agent's manual permission prompts \citep{hughes2026automode}. A record
-shows that an approval was written down, not that the review was careful.
-Planned and not yet started: an unaffiliated reproduction and a pilot under a
-protocol frozen before any result.
+coding agent's manual permission prompts \citep{hughes2026automode}; a
+record shows that an approval was written down, not that the review was
+careful. An unaffiliated reproduction and a pilot under a protocol frozen
+before any result are planned and not started.
 
 % No acknowledgments section.
 
@@ -589,35 +597,52 @@ protocol frozen before any result.
 \section{Results by Record Type}
 \label{app:types}
 
-Table~\ref{tab:types} reproduces section (c) of the results file,
-\code{scripts/conformance/results/RESULTS.md}; the package rows of
-Table~\ref{tab:sweep} are sums of its rows. Table~\ref{tab:exits} adds the
-exit codes of the resealed runs from \code{results.json}.
+Tables~\ref{tab:types} and~\ref{tab:basetypes} reproduce section (c) of the
+results file, \code{scripts/conformance/results/RESULTS.md}; the package rows
+of Table~\ref{tab:sweep} are sums of their rows. Table~\ref{tab:exits} adds
+the exit codes of the resealed runs from \code{results.json}, with the
+baseline's verdict on the same edits.
 
 \emph{Operators and exclusions.} An integer gets $+1$; a float $+0.125$, or
 is doubled when $|x| \geq 10^{6}$; a string gets \code{x} appended; a boolean
 is flipped; a null becomes the string \code{x}. Digest fields, declared or
 embedded, are not edited; ten of them are embedded leaves that the manifests
-do not declare, and a scan of the valid vectors finds no other 64-digit
-hexadecimal value. In directory vectors only JSON files in compact sorted
-form are edited: \code{provenance.json}, the JSON Lines files and six other
-JSON files are left alone. Every resealed edit could be resealed.
+do not declare, and a scan of the JSON files of the valid vectors finds no
+other 64-digit hexadecimal value. In a directory vector the JSON files that
+\code{provenance.json} hashes are edited if they are in compact sorted form;
+\code{provenance.json} itself, \code{EVALUATION.md}, the JSON Lines files
+and six JSON files not in that form (five \code{questions.json}, one
+\code{requirements.json}) are left alone. No edit was skipped as impossible
+to reseal. A first version of the sweep resealed only the digests the
+manifests declare, and counted 34 edits as rejected only because a digest
+stayed stale or was sealed in the wrong form; the run reported here reseals
+every digest the verifier checks, and fails if a valid vector holds a
+64-digit hexadecimal value it does not account for.
 
-\emph{Stale runs.} Detection is 100.0\% except in the two experiment-gate rows
-(97.6\% and 97.4\%). Over all types the stale runs end with exit code
-\code{1} in 4,124 cases, \code{2} in 60 and \code{0} in 30.
+\emph{Stale runs.} The verifiers reject 100.0\% of the edits except in the
+two experiment-gate rows (97.6\% and 97.4\%). Over all types the stale runs
+end with exit code \code{1} in 4,124 cases, \code{2} in 60 and \code{0} in
+30. The baseline also rejects every stale edit except in those two rows,
+where it rejects 298 of 594 and 309 of 608, because the experiment-gate
+digest covers only \code{/input}.
 
 \emph{Resealed runs.} Within a Jev evaluation directory,
-\code{calibration.json} accounts for all 13 passes (63 of 76 edits detected);
-\code{evaluation.json} (334 of 334) and \code{requirements.json} (2 of 2)
-have none. With OPA 1.21.2 on the verifier's PATH only the record v5 row
-changes: 535 of 770 resealed edits are detected instead of 527, and over all
-types the exit codes become 2,753 (\code{1}), 721 (\code{2}) and 740
-(\code{0}).
+\code{calibration.json} accounts for all 13 passes (63 of 76 edits
+rejected); \code{evaluation.json} (334 of 334) and \code{requirements.json}
+(2 of 2) have none. With OPA 1.21.2 on the verifier's PATH only the record
+v5 row changes: 535 of 770 resealed edits are rejected instead of 527, and
+over all types the exit codes become 2,753 (\code{1}), 721 (\code{2}) and
+740 (\code{0}). The 13 resealed edits that only the baseline rejects all
+edit \code{schema_version}. Every schema fixes that member with
+\code{const}, and the baseline validates an edited record against the schema
+its vector declares, while the verifier reads it as the version it now
+names. Nine of the 13 also fail the baseline's digest check (one fails two
+digests), which uses the declared version's canonical form.
 
-\emph{Controls.} All 56 valid vectors verify after being rewritten unmutated,
-so the rewrite is not what the verifiers detect. No run ended in an uncaught
-exception, and every run returned an exit code.
+\emph{Controls.} All 56 valid vectors verify after being rewritten
+unmutated, and the baseline accepts all 56, so the rewrite is not what
+either rejects. No run ended in an uncaught exception, and every run
+returned an exit code.
 
 \begin{table}[ht]
 \centering
@@ -625,7 +650,7 @@ exception, and every run returned an exit code.
 \setlength{\tabcolsep}{1mm}
 \begin{tabular}{@{}lrrrrr@{}}
   \toprule
-   & & & \multicolumn{2}{c}{Detected} & \\
+   & & & \multicolumn{2}{c}{Rejected} & \\
   \cmidrule(lr){4-5}
   Record type & Vec. & Edits & stale & resealed & Pass \\
   \midrule
@@ -647,9 +672,44 @@ exception, and every run returned an exit code.
   All & 56 & 4,214 & 4,184 & 3,466 (82.2\%) & 748 \\
   \bottomrule
 \end{tabular}
-\caption{Single-leaf edits by record type and schema version. Vec.: valid
-vectors. Pass: resealed edits that the verifier accepts.}
+\caption{Single-leaf edits that the verifiers reject (non-zero exit), by
+record type and schema version. Vec.: valid vectors. Pass: resealed edits
+that the verifier accepts.}
 \label{tab:types}
+\end{table}
+
+\begin{table}[ht]
+\centering
+\small
+\setlength{\tabcolsep}{1mm}
+\begin{tabular}{@{}lrrrrrr@{}}
+  \toprule
+   & & \multicolumn{2}{c}{Rejected by} & \multicolumn{2}{c}{Only the} & Pass \\
+  \cmidrule(lr){3-4} \cmidrule(lr){5-6}
+  Record type & Edits & baseline & verifier & verifier & baseline & both \\
+  \midrule
+  \multicolumn{7}{@{}l}{decision-control} \\
+  \enspace evaluation v1 & 481 & 83 & 369 & 288 & 2 & 110 \\
+  \enspace evaluation v2 & 738 & 131 & 573 & 442 & 0 & 165 \\
+  \enspace record v1 & 67 & 25 & 50 & 27 & 2 & 15 \\
+  \enspace record v2 & 67 & 26 & 50 & 24 & 0 & 17 \\
+  \enspace record v3 & 107 & 40 & 77 & 40 & 3 & 27 \\
+  \enspace record v4 & 201 & 75 & 139 & 64 & 0 & 62 \\
+  \enspace record v5 & 770 & 218 & 527 & 309 & 0 & 243 \\
+  \multicolumn{7}{@{}l}{experiment-gate} \\
+  \enspace decision v2 & 594 & 187 & 560 & 379 & 6 & 28 \\
+  \enspace decision v3 & 608 & 184 & 577 & 393 & 0 & 31 \\
+  \multicolumn{7}{@{}l}{jev-decision} \\
+  \enspace answer v2 & 169 & 37 & 145 & 108 & 0 & 24 \\
+  \enspace evaluation dir. & 412 & 98 & 399 & 301 & 0 & 13 \\
+  \midrule
+  All & 4,214 & 1,104 & 3,466 & 2,375 & 13 & 735 \\
+  \bottomrule
+\end{tabular}
+\caption{The hash and JSON Schema baseline and the verifier on the same
+resealed edits, by record type. Rows add up as both reject, only the
+verifier, only the baseline, and pass both.}
+\label{tab:basetypes}
 \end{table}
 
 \begin{table}[ht]
@@ -660,27 +720,28 @@ vectors. Pass: resealed edits that the verifier accepts.}
   Record type & Exit \code{1} & Exit \code{2} & Exit \code{0} \\
   \midrule
   \multicolumn{4}{@{}l}{decision-control} \\
-  \quad evaluation v1 & 334 & 35 & 112 \\
-  \quad evaluation v2 & 517 & 56 & 165 \\
-  \quad record v1 & 29 & 21 & 17 \\
-  \quad record v2 & 26 & 24 & 17 \\
-  \quad record v3 & 42 & 35 & 30 \\
-  \quad record v4 & 66 & 73 & 62 \\
-  \quad record v5 & 289 & 238 & 243 \\
+  \quad evaluation v1 & 334 (50) & 35 (31) & 112 (2) \\
+  \quad evaluation v2 & 517 (81) & 56 (50) & 165 (0) \\
+  \quad record v1 & 29 (6) & 21 (17) & 17 (2) \\
+  \quad record v2 & 26 (6) & 24 (20) & 17 (0) \\
+  \quad record v3 & 42 (8) & 35 (29) & 30 (3) \\
+  \quad record v4 & 66 (14) & 73 (61) & 62 (0) \\
+  \quad record v5 & 289 (38) & 238 (180) & 243 (0) \\
   \multicolumn{4}{@{}l}{experiment-gate} \\
-  \quad decision v2 & 493 & 67 & 34 \\
-  \quad decision v3 & 504 & 73 & 31 \\
+  \quad decision v2 & 493 (114) & 67 (67) & 34 (6) \\
+  \quad decision v3 & 504 (111) & 73 (73) & 31 (0) \\
   \multicolumn{4}{@{}l}{jev-decision} \\
-  \quad answer v2 & 126 & 19 & 24 \\
-  \quad evaluation directory & 323 & 76 & 13 \\
+  \quad answer v2 & 126 (18) & 19 (19) & 24 (0) \\
+  \quad evaluation directory & 323 (40) & 76 (58) & 13 (0) \\
   \midrule
-  All & 2,749 & 717 & 748 \\
+  All & 2,749 (486) & 717 (605) & 748 (13) \\
   \bottomrule
 \end{tabular}
-\caption{Exit codes of the resealed runs. Exit \code{1} is a mismatch,
-\code{2} a rejection of the edited record as invalid input, \code{0} a pass.
-For the agent-facing record v5, almost half of the detections are
-invalid-input rejections.}
+\caption{Exit codes of the resealed runs, and in parentheses how many of
+those edits the baseline also rejects. Exit \code{1} is a mismatch, \code{2}
+a rejection of the edited record as invalid input, \code{0} a pass. For the
+agent-facing record v5, 238 of the 527 rejections are invalid input, and the
+baseline also rejects 180 of those.}
 \label{tab:exits}
 \end{table}
 
@@ -719,10 +780,12 @@ readers, because its manifest entry declares no document.
   All invalid & 65 & 6 & 12 & 65 \\
   \bottomrule
 \end{tabular}
-\caption{The hash and JSON Schema baseline against the verifiers, by package
-and kind of vector. \emph{Strict} rejects duplicate keys; \emph{last-wins}
-keeps the last one, as \code{JSON.parse} does. The verifier's exit code
-equals the manifest's on all 185 vectors.}
+\caption{The hash and JSON Schema baseline against the verifiers on the 185
+vectors, by package and kind of vector. \emph{Strict} rejects duplicate
+keys; \emph{last-wins} keeps the last one, as \code{JSON.parse} does. A
+tampered vector is one its verifier rejects, so the last column holds by
+construction; the verifier's exit code equals the manifest's on all 185
+vectors.}
 \label{tab:bykind}
 \end{table}
 
@@ -737,9 +800,10 @@ the largest 19,210.
 \label{app:fields}
 
 The results file lists, per record type, every field for which at least one
-edit went undetected; another instance of the same field may be detected. The
-number after each record type is the count of undetected edits, pointers are
-JSON Pointers, and \code{[]} stands for any array index.
+edit went undetected, and counts the undetected edits per field; another
+instance of the same field may be rejected. The number after each record
+type is its count of undetected edits, pointers are JSON Pointers, and
+\code{[]} stands for any array index.
 
 {\raggedright
 \emph{Stale (30 edits).} \code{/expgate_version} and
@@ -748,7 +812,7 @@ JSON Pointers, and \code{[]} stands for any array index.
 pass resealed.
 \par}
 
-\emph{Resealed (748 edits).} The eleven lists follow.
+\noindent\emph{Resealed (748 edits).} The eleven lists follow.
 
 {\small\raggedright
 \noindent\emph{decision-control evaluation v1 (112):} \code{/report/case_results/[]/case/id}, \code{/report/case_results/[]/case/labels/correct_destination}, \code{/report/case_results/[]/case/labels/safe_to_execute}, \code{/report/case_results/[]/case/recommendation/destination}, \code{/report/case_results/[]/case/recommendation/model}, \code{/report/case_results/[]/case/recommendation/probability}, \code{/report/case_results/[]/case/recommendation/question_version}, \code{/report/case_results/[]/case/recommendation/refused}, \code{/report/case_results/[]/case/ticket/department}, \code{/report/case_results/[]/case/ticket/revision}, \code{/report/policy/reviewers/[]}, \code{/report/policy/version}, \code{/report/schema_version}.\par\smallskip
@@ -775,43 +839,60 @@ pass resealed.
 }
 
 {\raggedright
-\emph{By kind.} The results file names kinds of undetected field with a few
-examples and does not assign each field to one. The grouping below, and the
-five kinds of Section~\ref{sec:evaluation}, are ours. Free text: the
-\code{note} fields, question \code{instructions} and \code{criteria}, and
-\code{/input/description}. Labels: \code{model}, \code{question_version},
-\code{proposed_by}, \code{produced_by/version}, \code{expgate_version}, the
-policy \code{version}, a case \code{id}, and the \code{decision_id},
-\code{labels}, \code{timestamp} and bundle \code{revision} of a frozen OPA
-decision. Inputs whose edited value left every recomputed value unchanged,
-or that the recomputation does not use: the policy lists and
+\emph{By kind.} The results file counts undetected edits per field but does
+not assign a field to a kind. The grouping below, and its counts in
+Section~\ref{sec:evaluation}, are ours: each count is a sum of the per-field
+counts of the resealed runs. Labels (295): \code{model},
+\code{question_version}, \code{proposed_by}, \code{produced_by/version},
+\code{expgate_version}, the policy \code{version}, a case \code{id}, and the
+\code{decision_id}, \code{labels}, \code{timestamp} and bundle
+\code{revision} of a frozen OPA decision. Inputs whose edited value left
+every recomputed value unchanged (333): the policy lists and
 \code{min_probability}, the ticket members, a recommendation's
-\code{destination}, \code{probability} and \code{refused}, the case labels,
-\code{/input/seed}, and the fitting case ids, map points and counts of a
-calibration. Content of a frozen external policy that was replayed
-digest-only: the Rego module and query path, which re-evaluation with OPA
-detects, and the Cedar policy text, entities and diagnostics, which were
-never re-evaluated. And \code{schema_version}, in decision-control record v1
-and v3, evaluation v1 and experiment-gate decision v2, where the next
-version reads the same record and the edit is resealed in that version's
-canonical form.
+\code{destination}, \code{probability} and \code{refused}, the cases'
+expected outcomes (\code{correct_destination}, \code{safe_to_execute}), the
+fitting case ids, map points and counts of an applied calibration, and
+\code{/input/seed} (14 edits), which the experiment-gate decision never
+reads. Content of a frozen external policy checked digest-only (61): the
+Rego module and query path (8), which re-evaluation with OPA rejects, and
+the Cedar policy text, entities and diagnostics (53), which were never
+re-evaluated. Free text (46): the \code{note} fields, question
+\code{instructions} and \code{criteria}, and \code{/input/description}. And
+\code{schema_version} (13), in decision-control record v1 and v3,
+evaluation v1 and experiment-gate decision v2, where the next version reads
+the same record and the edit is resealed in that version's canonical form.
+For record v5 the counts are 99 inputs, 79 labels, 61 external-policy edits
+and 4 notes.
 
-\emph{Two edits outside the sweep.} \code{/model} is not in the answer v2
-list: the verifier compares it with the model named in the stored response.
-When a response names no model, the verifier only requires a non-empty
-string; every answer vector here names one. Section~\ref{sec:evaluation}
-also states that an editor who changes the name in both places and re-hashes
-passes, and Section~\ref{sec:boundary} that a record rewritten as schema 2
-passes with the proposer as reviewer. Neither edit is in the results file.
-Both follow from the code (Appendix~\ref{app:trace}) and, for the second,
-from the valid vector
-\code{valid/record-v2-review-approved-by-proposer.json}; we also ran each
-once on a scratch copy of a committed vector.
+\emph{Edits outside the sweep.} The main text states eight edits that the
+sweep does not make: each changes several fields, a schema version or a
+schema. None is in the results file; each follows from the code
+(Appendix~\ref{app:trace}), and we ran each once on a scratch copy of a
+committed vector. A pending record v4 given a review by a listed reviewer, an
+\code{APPROVED} and an \code{EXECUTED} event and a result, and re-hashed,
+replays with exit \code{0}. A record v5 with the proposer as reviewer passes
+once the proposer is renamed and the record digest recomputed; one that
+names an unlisted reviewer passes once that name is added to the frozen
+list and both digests are recomputed. A self-approval rewritten as
+schema 2 passes, as the valid vector
+\code{valid/record-v2-review-approved-by-proposer.json} shows. A record v5
+whose frozen OPA \code{DENY} is deleted, with the built-in \code{ALLOW}, an
+execution and a recomputed digest, passes even under
+\code{--require-reevaluation}. An experiment-gate schema 2 \code{HOLD}
+record with an extra first \code{"decision": "SHIP"} member verifies with its
+digest unchanged. A Jev answer whose model name is changed in both places
+and re-hashed passes. And one \code{if}/\code{then} rule added to record
+schema 4 rejects the lead example, while every valid v4 vector still
+validates. \code{/model} is not in the answer v2 list because the verifier
+compares it with the model named in the stored response; when a response
+names no model, the verifier only requires a non-empty string, and every
+answer vector here names one.
 \par}
 
-\section{The Lead Example as a Conformance Vector}
+\section{The Lead Example's Manifest Entry}
 \label{app:manifest}
 
+{\raggedright
 Each conformance tree has a \code{manifest.json} with one entry per vector.
 Table~\ref{tab:manifest} shows the entry for the edited record of the
 introduction. Its verifier prints \code{event history contains a prohibited
@@ -824,6 +905,7 @@ list. For the pending decision that the edit starts from,
 that holds the exact canonical bytes. The other canonical forms are
 \code{python-json-v1}, for older schema versions, and \code{bytes}, for a
 digest of a file.
+\par}
 
 \begin{table}[ht]
 \centering
@@ -861,8 +943,8 @@ the verifier exits \code{1}.}
 \section{The LangGraph Mapping}
 \label{app:langgraph}
 
-The example is in \code{ai-workflows/decision-control/examples/langgraph/}
-and is not part of the package, which never imports LangGraph. A
+The example is not part of the package, which never imports LangGraph: it is
+in \code{ai-workflows/decision-control/examples/langgraph/}. A
 \code{propose} node submits the proposal, which freezes proposal, policy and
 verdict. A \code{review} node calls \code{interrupt()} with the pending
 decision as payload. \code{Command(resume=...)} carries the decision, the
@@ -878,30 +960,36 @@ a refusal is returned as state, not raised. The example has no model call:
 its proposal is a hand-written literal. Thread and checkpoint identifiers go
 into the review note, which replay treats as free text.
 
-Three details of the package that Section~\ref{sec:boundary} leaves out. The
-registered actions are \code{reassign_ticket} and \code{set_ticket_priority}.
-A built-in verdict and a frozen external verdict combine by taking the more
-restrictive one, in the order \code{DENY}, \code{ABSTAIN}, \code{REVIEW},
-\code{ALLOW}. And the corpus holds three tampered vectors in which the
-reviewer is set to the proposer (record v3, v4 and v5) and a fourth in which
-the cancelling reviewer is; replay rejects all four with exit \code{1}.
+Three details of the package that Section~\ref{sec:boundary} leaves out or
+only counts. The registered actions are \code{reassign_ticket} and
+\code{set_ticket_priority}. A built-in verdict and a frozen external verdict
+combine by taking the more restrictive one, in the order \code{DENY},
+\code{ABSTAIN}, \code{REVIEW}, \code{ALLOW}. And the four self-review
+vectors of Section~\ref{sec:boundary} are records v3, v4 and v5 with the
+proposer as reviewer and a v4 record with the proposer as the cancelling
+reviewer; replay rejects all four with exit \code{1}.
 
 \section{Reproduction}
 \label{app:repro}
 
-The cross-language check and the evaluation run from a checkout of the
-repository (\repourl); the schemas and vectors are also served at \siteurl.
+{\raggedright
+The cross-language check and the evaluation run from a checkout of commit
+\commitid{b90ebc0}, on the branch that carries this draft. Outside the evaluator, its
+packages, schemas, vectors and Node checker equal those of commit
+\commitid{1626280} of the repository (\repourl); the schemas and vectors are
+also served at \siteurl.
+\par}
 
 {\small
 \begin{verbatim}
 cd scripts/conformance && npm ci
 node verify.mjs  # schemas and digests
-V=/tmp/ads-venv; W=../../ai-workflows
-python3 -m venv $V
+V=/tmp/venv; W=../../ai-workflows
+python3 -m venv $V  # Python 3.11+
 $V/bin/pip install $W/experiment-gate \
   $W/jev-decision $W/decision-control
 npm run evaluate -- --bin $V/bin \
-  --out /tmp/ads-eval --latency-runs 0 \
+  --out /tmp/eval-out --latency-runs 0 \
   --compare-inherit-path
 cd ../.. && make records-chain \
   DEMO_OUT=/abs/new/dir
@@ -909,37 +997,46 @@ cd ../.. && make records-chain \
 }
 
 {\raggedright
-The second command is the Node checker: it validates every declared document
+The second line runs the Node checker: it validates every declared document
 against its schema, recomputes every digest of the valid vectors, and prints
-\code{conformance OK: 3 manifests, 185 vectors, 319 checks, 0 failures}. The evaluation writes \code{results.json} and
-\code{RESULTS.md}; with latency measurement off, as here, its output is
-deterministic. It gives the verifiers a PATH of the virtual environment's
-\code{bin}, \code{/usr/bin} and \code{/bin}, so frozen OPA and Cedar
-decisions replay digest-only, and \code{--compare-inherit-path} repeats the
-sweep with the caller's PATH; the 82.4\% figure needs \code{opa} 1.21.2
-there. The last command writes and verifies one record with each package. It
-builds a decision-control proposal from a Jev answer, puts \code{jev:}
-followed by that answer's record digest in the proposal's model label, and
-prints the limit quoted in Section~\ref{sec:limitations}.
+\code{conformance OK: 3 manifests, 185 vectors, 319 checks, 0 failures}. The
+evaluation writes \code{results.json} and \code{RESULTS.md}; with latency
+measurement off, as here, its output is deterministic. It runs each edited
+record through the baseline and the verifier. It gives the verifiers a PATH
+of the virtual environment's \code{bin}, \code{/usr/bin} and \code{/bin}, so
+frozen OPA and Cedar decisions are checked digest-only, and
+\code{--compare-inherit-path} repeats the sweep with the caller's PATH; the
+82.4\% figure needs \code{opa} 1.21.2 there. The last command, which runs
+\code{python3} (3.11 or newer) from the source tree, writes and verifies one
+record with each package. It builds a decision-control proposal from a Jev
+answer, puts \code{jev:} followed by that answer's record digest in the
+proposal's model label, and prints the limit quoted in
+Section~\ref{sec:limitations}.
 \par}
 
 \section{Where Each Number Comes From}
 \label{app:trace}
 
 {\raggedright
-Paths are relative to the repository root. The results in
+Paths are relative to the repository root; \code{decisioncontrol/} stands
+for \code{ai-workflows/decision-control/decisioncontrol/}. The results in
 \code{scripts/conformance/results/} (\code{results.json} and
-\code{RESULTS.md}) were regenerated by
-\code{scripts/conformance/evaluate.mjs} with a clean working tree from the
-commit that the files name, \commitid{16262806c73f548d7fef1b745a1031c74f6bd29f},
-with CPython 3.13.16, Node v26.10.0 and the three packages at 0.2.0. The
-copy of the results committed before that regeneration names an earlier
-commit; every count and rate in it is the same.
+\code{RESULTS.md}) were generated by \code{scripts/conformance/evaluate.mjs}
+with a clean working tree from the commit that the files name,
+\commitid{b90ebc0e73346f334f839eeb625ee318bd1130ee}, with CPython 3.13.16,
+Node v26.10.0 and the three packages at 0.2.0. That commit is on the branch
+that carries this draft; a squash merge would leave it off main, but the git tree ids that the files also record for the three
+packages and the evaluator survive such a merge. The package tree ids equal
+those of commit \commitid{1626280}, on main; only the evaluator changed, to
+run the baseline on every edited record. The copy of the results committed
+before it on that branch, which names \commitid{1626280}, has the same value
+for every count and rate it holds; the new run adds the baseline's counts and
+the per-field counts of passing edits.
 
 \begin{itemize}
 \item Vector counts: \code{RESULTS.md}, section (a); \code{results.json} at
   \code{/counts}.
-\item Baseline and verifier outcomes by kind and package: \code{RESULTS.md},
+\item Baseline and verifier outcomes on the 185 vectors: \code{RESULTS.md},
   section (b); \code{results.json} at \code{/baseline}. That all 28
   rejections of tampered vectors name a digest is read from the per-vector
   reasons under \code{/baseline/vectors}.
@@ -950,30 +1047,63 @@ commit; every count and rate in it is the same.
   The exit codes are at \code{/mutations/total/resealed/exit_codes},
   \code{/mutations/total/stale/exit_codes} and under
   \code{/mutations/by_type}.
-\item The run with OPA: \code{RESULTS.md}, the paragraph after the table of
-  section (c); \code{results.json} at \code{/caller_path}.
-\item Arithmetic of ours on those counts, not fields of the file: the package
-  rows of Table~\ref{tab:sweep}, and the 8 extra detections with OPA (3,474
-  less 3,466).
+\item The baseline on the edited records: \code{RESULTS.md}, section (c),
+  ``Hash + JSON Schema baseline on the edited records''; \code{results.json}
+  at \code{/mutations/total/resealed/baseline_strict},
+  \code{/mutations/total/stale/baseline_strict} and
+  \code{/mutations/by_type/*/resealed/baseline_strict}, with the split by
+  exit code under \code{exit_codes} there, the 13 edits only the baseline
+  rejects under \code{only_baseline_fields} and
+  \code{only_baseline_reasons}, and the controls at
+  \code{/mutations/controls/baseline_accepted}.
+\item The counts per kind of field: our sums of
+  \code{/mutations/by_type/*/resealed/undetected_field_counts}, grouped as
+  in Appendix~\ref{app:fields}; summed over the decision-control types
+  alone, 261 labels and 307 inputs.
+\item The run with OPA: \code{RESULTS.md}, the paragraph after the
+  per-record-type table of section (c) and the last paragraph before its
+  limits;
+  \code{results.json} at \code{/caller_path}.
+\item Arithmetic of ours on those counts, not fields of the file: the
+  package rows of Table~\ref{tab:sweep}, the 8 extra rejections with OPA
+  (3,474 less 3,466), the 646 passes of the decision-control types, the
+  sums over the five action-record types (1,212 edits, 464 that only the
+  verifiers reject), and the shares 53.7\% (2,263 of 4,214), 38.3\% (464 of
+  1,212) and 69.5\% (535 of 770).
 \item Record sizes: \code{RESULTS.md}, section ``Record sizes''. Lines of
   Python: \code{wc -l} over the \code{.py} files of \code{jevdecision},
   \code{decisioncontrol} and \code{expgate}.
 \item The 34 miscounted edits: the message of commit \commitid{e894130}.
+\item Probability 0.95 against a minimum of 0.8 in 25 of the 28 action
+  records: the \code{record-v*.json} files in
+  \code{ai-workflows/decision-control/conformance/valid/}. That the seed is
+  never read: \code{ai-workflows/experiment-gate/expgate/decision.py}, line
+  158, its only use, in a list of known keys.
+\item The schemas' limits: the \code{$comment} of
+  \code{decisioncontrol/schema/record.v4.json}; \code{RESULTS.md}, section
+  (c), ``Limits''.
 \item Eight checks in a fixed order, and the combination of verdicts:
-  \code{ai-workflows/decision-control/decisioncontrol/policy.py}, lines 18
-  to 57.
+  \code{decisioncontrol/policy.py}, lines 18 to 57.
 \item Reviewer rules at run time and on replay, the schema 3 condition and
   the stale-state guard: \code{decisioncontrol/store.py}, lines 254 to 265
   and 317 to 342; \code{decisioncontrol/evidence.py}, lines 162 to 212.
+  That no verifier takes a minimum schema version: the \code{--help} of
+  \code{decision-control replay}, \code{experiment-gate-verify} and
+  \code{jev-decision-verify}.
 \item That separation of duties compares labels and that a consistent
   relabelling passes replay:
   \code{ai-workflows/decision-control/README.md}, sections ``JSON Schemas
   and conformance vectors'' and ``Evidence and trust boundary''.
 \item Binding of an OPA or Cedar decision, and the early Cedar request:
   \code{decisioncontrol/adapters/_binding.py}; the message of commit
-  \commitid{f41c67b}. That re-evaluation catches an edited policy only when
-  the outcome changes: the same README, section ``Replay: re-evaluation and
-  digest-only''.
+  \commitid{f41c67b}. That the sweep reseals a Cedar request's proposal
+  digest: \code{RESULTS.md}, section (c), the table of embedded digests.
+  That nothing requires a frozen decision:
+  \code{decisioncontrol/evidence.py}, lines 107 to 113, and
+  \code{external_policy}, which may be null, in
+  \code{decisioncontrol/schema/record.v5.json}. That re-evaluation catches
+  an edited policy only when the outcome changes: the same README, section
+  ``Replay: re-evaluation and digest-only''.
 \item The LangGraph mapping and its two traps:
   \code{ai-workflows/decision-control/examples/langgraph/README.md}.
 \item The comparison of the model name with the stored response:
@@ -981,19 +1111,25 @@ commit; every count and rate in it is the same.
 \item Rule order of the promotion decision:
   \code{ai-workflows/experiment-gate/expgate/decision.py}, lines 3 to 12 and
   325 to 337.
-\item Signing, exit codes including \code{3} and \code{0} for an ungated
-  evaluation, five of seven records failing exact replay (a $z$ of
-  1.9599639845400534 against 1.9599639845400536) and the $10^{-9}$ rule:
-  \code{docs/DECISION_RECORDS.md}, sections ``Signed records'', ``Exit
-  codes'' and ``Compatibility and limits''. That the records were made on
-  macOS and replayed on Linux, and the two digests of one input with a single
-  \code{2.0}: \code{.plan/decisions.md}, entries of 2026-10-19.
+\item Signing: \code{docs/DECISION_RECORDS.md}, section ``Signed records'';
+  \code{SECURITY.md}, which says that every holder of an HMAC key can sign,
+  that the packages never sign with Sigstore and that a cosign bundle holds
+  a Statement v0.1. Exit codes, including
+  \code{3} and \code{0} for an ungated evaluation and \code{0} for
+  digest-only replay: \code{docs/DECISION_RECORDS.md}, section ``Exit
+  codes''. Five of seven records failing exact replay (a $z$ of
+  1.9599639845400534 against 1.9599639845400536) and the scope of the
+  $10^{-9}$ rule: \code{.plan/decisions.md}, entries of 2026-10-19. The
+  Node reader that keeps number literals:
+  \code{scripts/conformance/checks/canonical.mjs}.
 \item The duplicate-key vector:
   \code{ai-workflows/experiment-gate/conformance/invalid/decision-v3-duplicate-key.json}
   and its manifest note.
 \item Checks that passed on missing input, and exceptions that exited
-  \code{1}: the messages of commits \commitid{8a64097}, \commitid{5421e64}
-  and \commitid{1626280}, and the three package changelogs.
+  \code{1}: the messages of commits \commitid{e3b5f91} (the probability of
+  1.0; also \code{ai-workflows/jev-decision/README.md}, ``Safety
+  correction''), \commitid{8a64097}, \commitid{5421e64} and
+  \commitid{1626280}, and the three package changelogs.
 \item Release state and the four independent components: \code{README.md},
   sections ``Why'' and ``Components''.
 \item What the records do not bind: \code{docs/DECISION_RECORDS.md},

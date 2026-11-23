@@ -14,7 +14,7 @@
 
 ## Papers
 
-- [Workshop paper draft](paper/) — Four-page draft on recomputing AI-assisted go/no-go decisions from their records, with build steps and the committed source of every number; not submitted or peer reviewed.
+- [Workshop paper draft](paper/) — Four-page draft on recomputing AI-assisted go/no-go decisions from their records, with build steps and the source of every number; not submitted or peer reviewed.
 
 ## Outreach and portfolio
 
