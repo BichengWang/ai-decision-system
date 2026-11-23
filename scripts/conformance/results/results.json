@@ -2,14 +2,14 @@
   "format": 1,
   "generated_by": "scripts/conformance/evaluate.mjs",
   "source": {
-    "commit": "45fcf6fc26e010d5e6a77f3e7aa3923f617db5c4",
+    "commit": "b90ebc0e73346f334f839eeb625ee318bd1130ee",
     "dirty": false,
     "tree_ids": {
-      "ai-workflows/decision-control": "280e96a04b4651a76dc652440298d40e84306c39",
-      "ai-workflows/experiment-gate": "7c2ecc7dc9da5aac0dc69ffabe881a61530b3bc2",
-      "ai-workflows/jev-decision": "5b112df7a96d5f6da546fb7af21ca4860df8654b",
-      "scripts/conformance/checks": "e0fe2f9b9c18bd6695a79cb03142d74fa76eb58c",
-      "scripts/conformance/evaluate.mjs": "05a8c13063ee7c4cc1520d50599a9659c328ef06"
+      "ai-workflows/decision-control": "63a1695ac8644550df2fcb1cca31651cd377e6af",
+      "ai-workflows/experiment-gate": "f4563b38b7d5ed7bda16658550e71ef00b3e1de0",
+      "ai-workflows/jev-decision": "22e59328ccb61be59bfc3013242f8769e1ca35a9",
+      "scripts/conformance/checks": "37f2ce2618c5d57bd8be07745f4252d628521b48",
+      "scripts/conformance/evaluate.mjs": "bfc35ab3b8e5520bd293007a428464d36922fdd3"
     }
   },
   "manifests": [
@@ -2572,7 +2572,9 @@
     "controls": {
       "runs": 56,
       "accepted": 56,
-      "rejected": []
+      "rejected": [],
+      "baseline_accepted": 56,
+      "baseline_rejected": []
     },
     "skipped": [
       {
@@ -2658,7 +2660,25 @@
           "exit_codes": {
             "1": 481
           },
-          "undetected_fields": []
+          "undetected_fields": [],
+          "undetected_field_counts": {},
+          "baseline_strict": {
+            "edits": 481,
+            "baseline_rejects": 481,
+            "verifier_rejects": 481,
+            "only_verifier_rejects": 0,
+            "only_baseline_rejects": 0,
+            "both_reject": 481,
+            "both_accept": 0,
+            "exit_codes": {
+              "1": {
+                "baseline_rejects": 481,
+                "baseline_accepts": 0
+              }
+            },
+            "only_baseline_fields": {},
+            "only_baseline_reasons": {}
+          }
         },
         "resealed": {
           "mutations": 481,
@@ -2687,7 +2707,52 @@
             "/report/policy/reviewers/[]",
             "/report/policy/version",
             "/report/schema_version"
-          ]
+          ],
+          "undetected_field_counts": {
+            "/report/case_results/[]/case/id": 16,
+            "/report/case_results/[]/case/labels/correct_destination": 8,
+            "/report/case_results/[]/case/labels/safe_to_execute": 8,
+            "/report/case_results/[]/case/recommendation/destination": 2,
+            "/report/case_results/[]/case/recommendation/model": 16,
+            "/report/case_results/[]/case/recommendation/probability": 4,
+            "/report/case_results/[]/case/recommendation/question_version": 16,
+            "/report/case_results/[]/case/recommendation/refused": 2,
+            "/report/case_results/[]/case/ticket/department": 16,
+            "/report/case_results/[]/case/ticket/revision": 16,
+            "/report/policy/reviewers/[]": 4,
+            "/report/policy/version": 2,
+            "/report/schema_version": 2
+          },
+          "baseline_strict": {
+            "edits": 481,
+            "baseline_rejects": 83,
+            "verifier_rejects": 369,
+            "only_verifier_rejects": 288,
+            "only_baseline_rejects": 2,
+            "both_reject": 81,
+            "both_accept": 110,
+            "exit_codes": {
+              "0": {
+                "baseline_rejects": 2,
+                "baseline_accepts": 110
+              },
+              "1": {
+                "baseline_rejects": 50,
+                "baseline_accepts": 284
+              },
+              "2": {
+                "baseline_rejects": 31,
+                "baseline_accepts": 4
+              }
+            },
+            "only_baseline_fields": {
+              "/report/schema_version": 2
+            },
+            "only_baseline_reasons": {
+              "digest /sha256: differs": 2,
+              "schema": 2
+            }
+          }
         }
       },
       {
@@ -2707,7 +2772,29 @@
             "1": 735,
             "2": 3
           },
-          "undetected_fields": []
+          "undetected_fields": [],
+          "undetected_field_counts": {},
+          "baseline_strict": {
+            "edits": 738,
+            "baseline_rejects": 738,
+            "verifier_rejects": 738,
+            "only_verifier_rejects": 0,
+            "only_baseline_rejects": 0,
+            "both_reject": 738,
+            "both_accept": 0,
+            "exit_codes": {
+              "1": {
+                "baseline_rejects": 735,
+                "baseline_accepts": 0
+              },
+              "2": {
+                "baseline_rejects": 3,
+                "baseline_accepts": 0
+              }
+            },
+            "only_baseline_fields": {},
+            "only_baseline_reasons": {}
+          }
         },
         "resealed": {
           "mutations": 738,
@@ -2735,7 +2822,46 @@
             "/report/case_results/[]/case/ticket/revision",
             "/report/policy/reviewers/[]",
             "/report/policy/version"
-          ]
+          ],
+          "undetected_field_counts": {
+            "/report/case_results/[]/case/id": 24,
+            "/report/case_results/[]/case/labels/correct_destination": 12,
+            "/report/case_results/[]/case/labels/safe_to_execute": 12,
+            "/report/case_results/[]/case/recommendation/destination": 3,
+            "/report/case_results/[]/case/recommendation/model": 24,
+            "/report/case_results/[]/case/recommendation/probability": 6,
+            "/report/case_results/[]/case/recommendation/question_version": 24,
+            "/report/case_results/[]/case/recommendation/refused": 3,
+            "/report/case_results/[]/case/ticket/department": 24,
+            "/report/case_results/[]/case/ticket/revision": 24,
+            "/report/policy/reviewers/[]": 6,
+            "/report/policy/version": 3
+          },
+          "baseline_strict": {
+            "edits": 738,
+            "baseline_rejects": 131,
+            "verifier_rejects": 573,
+            "only_verifier_rejects": 442,
+            "only_baseline_rejects": 0,
+            "both_reject": 131,
+            "both_accept": 165,
+            "exit_codes": {
+              "0": {
+                "baseline_rejects": 0,
+                "baseline_accepts": 165
+              },
+              "1": {
+                "baseline_rejects": 81,
+                "baseline_accepts": 436
+              },
+              "2": {
+                "baseline_rejects": 50,
+                "baseline_accepts": 6
+              }
+            },
+            "only_baseline_fields": {},
+            "only_baseline_reasons": {}
+          }
         }
       },
       {
@@ -2754,7 +2880,25 @@
           "exit_codes": {
             "1": 67
           },
-          "undetected_fields": []
+          "undetected_fields": [],
+          "undetected_field_counts": {},
+          "baseline_strict": {
+            "edits": 67,
+            "baseline_rejects": 67,
+            "verifier_rejects": 67,
+            "only_verifier_rejects": 0,
+            "only_baseline_rejects": 0,
+            "both_reject": 67,
+            "both_accept": 0,
+            "exit_codes": {
+              "1": {
+                "baseline_rejects": 67,
+                "baseline_accepts": 0
+              }
+            },
+            "only_baseline_fields": {},
+            "only_baseline_reasons": {}
+          }
         },
         "resealed": {
           "mutations": 67,
@@ -2779,7 +2923,47 @@
             "/record/review/note",
             "/record/schema_version",
             "/record/ticket/department"
-          ]
+          ],
+          "undetected_field_counts": {
+            "/record/policy/allowed_destinations/[]": 1,
+            "/record/policy/min_probability": 2,
+            "/record/policy/reviewers/[]": 3,
+            "/record/policy/version": 2,
+            "/record/recommendation/model": 2,
+            "/record/recommendation/question_version": 2,
+            "/record/review/note": 1,
+            "/record/schema_version": 2,
+            "/record/ticket/department": 2
+          },
+          "baseline_strict": {
+            "edits": 67,
+            "baseline_rejects": 25,
+            "verifier_rejects": 50,
+            "only_verifier_rejects": 27,
+            "only_baseline_rejects": 2,
+            "both_reject": 23,
+            "both_accept": 15,
+            "exit_codes": {
+              "0": {
+                "baseline_rejects": 2,
+                "baseline_accepts": 15
+              },
+              "1": {
+                "baseline_rejects": 6,
+                "baseline_accepts": 23
+              },
+              "2": {
+                "baseline_rejects": 17,
+                "baseline_accepts": 4
+              }
+            },
+            "only_baseline_fields": {
+              "/record/schema_version": 2
+            },
+            "only_baseline_reasons": {
+              "schema": 2
+            }
+          }
         }
       },
       {
@@ -2798,7 +2982,25 @@
           "exit_codes": {
             "1": 67
           },
-          "undetected_fields": []
+          "undetected_fields": [],
+          "undetected_field_counts": {},
+          "baseline_strict": {
+            "edits": 67,
+            "baseline_rejects": 67,
+            "verifier_rejects": 67,
+            "only_verifier_rejects": 0,
+            "only_baseline_rejects": 0,
+            "both_reject": 67,
+            "both_accept": 0,
+            "exit_codes": {
+              "1": {
+                "baseline_rejects": 67,
+                "baseline_accepts": 0
+              }
+            },
+            "only_baseline_fields": {},
+            "only_baseline_reasons": {}
+          }
         },
         "resealed": {
           "mutations": 67,
@@ -2824,7 +3026,44 @@
             "/record/review/note",
             "/record/ticket/department",
             "/record/ticket/revision"
-          ]
+          ],
+          "undetected_field_counts": {
+            "/record/events/[]/note": 1,
+            "/record/policy/allowed_destinations/[]": 2,
+            "/record/policy/min_probability": 2,
+            "/record/policy/reviewers/[]": 2,
+            "/record/policy/version": 2,
+            "/record/recommendation/model": 2,
+            "/record/recommendation/question_version": 2,
+            "/record/review/note": 1,
+            "/record/ticket/department": 2,
+            "/record/ticket/revision": 1
+          },
+          "baseline_strict": {
+            "edits": 67,
+            "baseline_rejects": 26,
+            "verifier_rejects": 50,
+            "only_verifier_rejects": 24,
+            "only_baseline_rejects": 0,
+            "both_reject": 26,
+            "both_accept": 17,
+            "exit_codes": {
+              "0": {
+                "baseline_rejects": 0,
+                "baseline_accepts": 17
+              },
+              "1": {
+                "baseline_rejects": 6,
+                "baseline_accepts": 20
+              },
+              "2": {
+                "baseline_rejects": 20,
+                "baseline_accepts": 4
+              }
+            },
+            "only_baseline_fields": {},
+            "only_baseline_reasons": {}
+          }
         }
       },
       {
@@ -2843,7 +3082,25 @@
           "exit_codes": {
             "1": 107
           },
-          "undetected_fields": []
+          "undetected_fields": [],
+          "undetected_field_counts": {},
+          "baseline_strict": {
+            "edits": 107,
+            "baseline_rejects": 107,
+            "verifier_rejects": 107,
+            "only_verifier_rejects": 0,
+            "only_baseline_rejects": 0,
+            "both_reject": 107,
+            "both_accept": 0,
+            "exit_codes": {
+              "1": {
+                "baseline_rejects": 107,
+                "baseline_accepts": 0
+              }
+            },
+            "only_baseline_fields": {},
+            "only_baseline_reasons": {}
+          }
         },
         "resealed": {
           "mutations": 107,
@@ -2870,7 +3127,51 @@
             "/record/review/note",
             "/record/schema_version",
             "/record/ticket/department"
-          ]
+          ],
+          "undetected_field_counts": {
+            "/record/policy/allowed_destinations/[]": 1,
+            "/record/policy/min_probability": 2,
+            "/record/policy/reviewers/[]": 5,
+            "/record/policy/version": 3,
+            "/record/produced_by/version": 3,
+            "/record/proposed_by": 3,
+            "/record/recommendation/model": 3,
+            "/record/recommendation/question_version": 3,
+            "/record/review/note": 1,
+            "/record/schema_version": 3,
+            "/record/ticket/department": 3
+          },
+          "baseline_strict": {
+            "edits": 107,
+            "baseline_rejects": 40,
+            "verifier_rejects": 77,
+            "only_verifier_rejects": 40,
+            "only_baseline_rejects": 3,
+            "both_reject": 37,
+            "both_accept": 27,
+            "exit_codes": {
+              "0": {
+                "baseline_rejects": 3,
+                "baseline_accepts": 27
+              },
+              "1": {
+                "baseline_rejects": 8,
+                "baseline_accepts": 34
+              },
+              "2": {
+                "baseline_rejects": 29,
+                "baseline_accepts": 6
+              }
+            },
+            "only_baseline_fields": {
+              "/record/schema_version": 3
+            },
+            "only_baseline_reasons": {
+              "digest /record/policy_sha256: differs": 1,
+              "digest /sha256: differs": 1,
+              "schema": 3
+            }
+          }
         }
       },
       {
@@ -2889,7 +3190,25 @@
           "exit_codes": {
             "1": 201
           },
-          "undetected_fields": []
+          "undetected_fields": [],
+          "undetected_field_counts": {},
+          "baseline_strict": {
+            "edits": 201,
+            "baseline_rejects": 201,
+            "verifier_rejects": 201,
+            "only_verifier_rejects": 0,
+            "only_baseline_rejects": 0,
+            "both_reject": 201,
+            "both_accept": 0,
+            "exit_codes": {
+              "1": {
+                "baseline_rejects": 201,
+                "baseline_accepts": 0
+              }
+            },
+            "only_baseline_fields": {},
+            "only_baseline_reasons": {}
+          }
         },
         "resealed": {
           "mutations": 201,
@@ -2919,7 +3238,48 @@
             "/record/review/note",
             "/record/ticket/department",
             "/record/ticket/revision"
-          ]
+          ],
+          "undetected_field_counts": {
+            "/record/events/[]/note": 1,
+            "/record/policy/allowed_destinations/[]": 4,
+            "/record/policy/min_probability": 5,
+            "/record/policy/reviewers/[]": 10,
+            "/record/policy/version": 6,
+            "/record/produced_by/version": 6,
+            "/record/proposed_by": 6,
+            "/record/recommendation/destination": 1,
+            "/record/recommendation/model": 6,
+            "/record/recommendation/question_version": 6,
+            "/record/recommendation/refused": 1,
+            "/record/review/note": 1,
+            "/record/ticket/department": 6,
+            "/record/ticket/revision": 3
+          },
+          "baseline_strict": {
+            "edits": 201,
+            "baseline_rejects": 75,
+            "verifier_rejects": 139,
+            "only_verifier_rejects": 64,
+            "only_baseline_rejects": 0,
+            "both_reject": 75,
+            "both_accept": 62,
+            "exit_codes": {
+              "0": {
+                "baseline_rejects": 0,
+                "baseline_accepts": 62
+              },
+              "1": {
+                "baseline_rejects": 14,
+                "baseline_accepts": 52
+              },
+              "2": {
+                "baseline_rejects": 61,
+                "baseline_accepts": 12
+              }
+            },
+            "only_baseline_fields": {},
+            "only_baseline_reasons": {}
+          }
         }
       },
       {
@@ -2939,7 +3299,29 @@
             "1": 755,
             "2": 15
           },
-          "undetected_fields": []
+          "undetected_fields": [],
+          "undetected_field_counts": {},
+          "baseline_strict": {
+            "edits": 770,
+            "baseline_rejects": 770,
+            "verifier_rejects": 770,
+            "only_verifier_rejects": 0,
+            "only_baseline_rejects": 0,
+            "both_reject": 770,
+            "both_accept": 0,
+            "exit_codes": {
+              "1": {
+                "baseline_rejects": 755,
+                "baseline_accepts": 0
+              },
+              "2": {
+                "baseline_rejects": 15,
+                "baseline_accepts": 0
+              }
+            },
+            "only_baseline_fields": {},
+            "only_baseline_reasons": {}
+          }
         },
         "resealed": {
           "mutations": 770,
@@ -2983,7 +3365,62 @@
             "/record/ticket/department",
             "/record/ticket/priority",
             "/record/ticket/revision"
-          ]
+          ],
+          "undetected_field_counts": {
+            "/record/external_policy/bundles/bundle/revision": 4,
+            "/record/external_policy/decision_id": 4,
+            "/record/external_policy/diagnostics/reason/[]": 1,
+            "/record/external_policy/entities/[]/parents/[]/id": 8,
+            "/record/external_policy/entities/[]/parents/[]/type": 8,
+            "/record/external_policy/entities/[]/uid/id": 16,
+            "/record/external_policy/entities/[]/uid/type": 16,
+            "/record/external_policy/labels/id": 4,
+            "/record/external_policy/labels/version": 4,
+            "/record/external_policy/modules/routing.rego": 4,
+            "/record/external_policy/path": 4,
+            "/record/external_policy/policies/text": 4,
+            "/record/external_policy/timestamp": 4,
+            "/record/policy/allowed_destinations/[]": 16,
+            "/record/policy/allowed_priorities/[]": 28,
+            "/record/policy/min_probability": 14,
+            "/record/policy/reviewers/[]": 26,
+            "/record/policy/version": 15,
+            "/record/produced_by/version": 15,
+            "/record/proposed_by": 7,
+            "/record/recommendation/destination": 1,
+            "/record/recommendation/model": 11,
+            "/record/recommendation/question_version": 11,
+            "/record/recommendation/refused": 3,
+            "/record/review/note": 4,
+            "/record/ticket/department": 5,
+            "/record/ticket/priority": 2,
+            "/record/ticket/revision": 4
+          },
+          "baseline_strict": {
+            "edits": 770,
+            "baseline_rejects": 218,
+            "verifier_rejects": 527,
+            "only_verifier_rejects": 309,
+            "only_baseline_rejects": 0,
+            "both_reject": 218,
+            "both_accept": 243,
+            "exit_codes": {
+              "0": {
+                "baseline_rejects": 0,
+                "baseline_accepts": 243
+              },
+              "1": {
+                "baseline_rejects": 38,
+                "baseline_accepts": 251
+              },
+              "2": {
+                "baseline_rejects": 180,
+                "baseline_accepts": 58
+              }
+            },
+            "only_baseline_fields": {},
+            "only_baseline_reasons": {}
+          }
         }
       },
       {
@@ -3007,7 +3444,36 @@
           "undetected_fields": [
             "/expgate_version",
             "/produced_by/version"
-          ]
+          ],
+          "undetected_field_counts": {
+            "/expgate_version": 7,
+            "/produced_by/version": 7
+          },
+          "baseline_strict": {
+            "edits": 594,
+            "baseline_rejects": 298,
+            "verifier_rejects": 580,
+            "only_verifier_rejects": 282,
+            "only_baseline_rejects": 0,
+            "both_reject": 298,
+            "both_accept": 14,
+            "exit_codes": {
+              "0": {
+                "baseline_rejects": 0,
+                "baseline_accepts": 14
+              },
+              "1": {
+                "baseline_rejects": 291,
+                "baseline_accepts": 282
+              },
+              "2": {
+                "baseline_rejects": 7,
+                "baseline_accepts": 0
+              }
+            },
+            "only_baseline_fields": {},
+            "only_baseline_reasons": {}
+          }
         },
         "resealed": {
           "mutations": 594,
@@ -3028,7 +3494,44 @@
             "/input/seed",
             "/produced_by/version",
             "/schema_version"
-          ]
+          ],
+          "undetected_field_counts": {
+            "/expgate_version": 7,
+            "/input/description": 7,
+            "/input/seed": 7,
+            "/produced_by/version": 7,
+            "/schema_version": 6
+          },
+          "baseline_strict": {
+            "edits": 594,
+            "baseline_rejects": 187,
+            "verifier_rejects": 560,
+            "only_verifier_rejects": 379,
+            "only_baseline_rejects": 6,
+            "both_reject": 181,
+            "both_accept": 28,
+            "exit_codes": {
+              "0": {
+                "baseline_rejects": 6,
+                "baseline_accepts": 28
+              },
+              "1": {
+                "baseline_rejects": 114,
+                "baseline_accepts": 379
+              },
+              "2": {
+                "baseline_rejects": 67,
+                "baseline_accepts": 0
+              }
+            },
+            "only_baseline_fields": {
+              "/schema_version": 6
+            },
+            "only_baseline_reasons": {
+              "digest /input_sha256: differs": 6,
+              "schema": 6
+            }
+          }
         }
       },
       {
@@ -3052,7 +3555,36 @@
           "undetected_fields": [
             "/expgate_version",
             "/produced_by/version"
-          ]
+          ],
+          "undetected_field_counts": {
+            "/expgate_version": 8,
+            "/produced_by/version": 8
+          },
+          "baseline_strict": {
+            "edits": 608,
+            "baseline_rejects": 309,
+            "verifier_rejects": 592,
+            "only_verifier_rejects": 283,
+            "only_baseline_rejects": 0,
+            "both_reject": 309,
+            "both_accept": 16,
+            "exit_codes": {
+              "0": {
+                "baseline_rejects": 0,
+                "baseline_accepts": 16
+              },
+              "1": {
+                "baseline_rejects": 293,
+                "baseline_accepts": 283
+              },
+              "2": {
+                "baseline_rejects": 16,
+                "baseline_accepts": 0
+              }
+            },
+            "only_baseline_fields": {},
+            "only_baseline_reasons": {}
+          }
         },
         "resealed": {
           "mutations": 608,
@@ -3072,7 +3604,38 @@
             "/input/description",
             "/input/seed",
             "/produced_by/version"
-          ]
+          ],
+          "undetected_field_counts": {
+            "/expgate_version": 8,
+            "/input/description": 8,
+            "/input/seed": 7,
+            "/produced_by/version": 8
+          },
+          "baseline_strict": {
+            "edits": 608,
+            "baseline_rejects": 184,
+            "verifier_rejects": 577,
+            "only_verifier_rejects": 393,
+            "only_baseline_rejects": 0,
+            "both_reject": 184,
+            "both_accept": 31,
+            "exit_codes": {
+              "0": {
+                "baseline_rejects": 0,
+                "baseline_accepts": 31
+              },
+              "1": {
+                "baseline_rejects": 111,
+                "baseline_accepts": 393
+              },
+              "2": {
+                "baseline_rejects": 73,
+                "baseline_accepts": 0
+              }
+            },
+            "only_baseline_fields": {},
+            "only_baseline_reasons": {}
+          }
         }
       },
       {
@@ -3092,7 +3655,29 @@
             "1": 150,
             "2": 19
           },
-          "undetected_fields": []
+          "undetected_fields": [],
+          "undetected_field_counts": {},
+          "baseline_strict": {
+            "edits": 169,
+            "baseline_rejects": 169,
+            "verifier_rejects": 169,
+            "only_verifier_rejects": 0,
+            "only_baseline_rejects": 0,
+            "both_reject": 169,
+            "both_accept": 0,
+            "exit_codes": {
+              "1": {
+                "baseline_rejects": 150,
+                "baseline_accepts": 0
+              },
+              "2": {
+                "baseline_rejects": 19,
+                "baseline_accepts": 0
+              }
+            },
+            "only_baseline_fields": {},
+            "only_baseline_reasons": {}
+          }
         },
         "resealed": {
           "mutations": 169,
@@ -3123,7 +3708,49 @@
             "/questions/tone/criteria/דּ",
             "/questions/tone/instructions",
             "/questions/urgency/instructions"
-          ]
+          ],
+          "undetected_field_counts": {
+            "/produced_by/version": 3,
+            "/questions/department/criteria/billing": 2,
+            "/questions/department/criteria/sales": 2,
+            "/questions/department/criteria/technical": 2,
+            "/questions/department/instructions": 2,
+            "/questions/frustration/instructions": 2,
+            "/questions/rare/instructions": 1,
+            "/questions/refund/instructions": 3,
+            "/questions/tone/criteria/a": 1,
+            "/questions/tone/criteria/é": 1,
+            "/questions/tone/criteria/€": 1,
+            "/questions/tone/criteria/😀": 1,
+            "/questions/tone/criteria/דּ": 1,
+            "/questions/tone/instructions": 1,
+            "/questions/urgency/instructions": 1
+          },
+          "baseline_strict": {
+            "edits": 169,
+            "baseline_rejects": 37,
+            "verifier_rejects": 145,
+            "only_verifier_rejects": 108,
+            "only_baseline_rejects": 0,
+            "both_reject": 37,
+            "both_accept": 24,
+            "exit_codes": {
+              "0": {
+                "baseline_rejects": 0,
+                "baseline_accepts": 24
+              },
+              "1": {
+                "baseline_rejects": 18,
+                "baseline_accepts": 108
+              },
+              "2": {
+                "baseline_rejects": 19,
+                "baseline_accepts": 0
+              }
+            },
+            "only_baseline_fields": {},
+            "only_baseline_reasons": {}
+          }
         }
       },
       {
@@ -3142,7 +3769,25 @@
           "exit_codes": {
             "1": 412
           },
-          "undetected_fields": []
+          "undetected_fields": [],
+          "undetected_field_counts": {},
+          "baseline_strict": {
+            "edits": 412,
+            "baseline_rejects": 412,
+            "verifier_rejects": 412,
+            "only_verifier_rejects": 0,
+            "only_baseline_rejects": 0,
+            "both_reject": 412,
+            "both_accept": 0,
+            "exit_codes": {
+              "1": {
+                "baseline_rejects": 412,
+                "baseline_accepts": 0
+              }
+            },
+            "only_baseline_fields": {},
+            "only_baseline_reasons": {}
+          }
         },
         "resealed": {
           "mutations": 412,
@@ -3166,7 +3811,42 @@
             "calibration.json#/questions/frustration/n",
             "calibration.json#/questions/refund/n",
             "calibration.json#/questions/refund/positives"
-          ]
+          ],
+          "undetected_field_counts": {
+            "calibration.json#/fitted_on/case_ids/[]": 6,
+            "calibration.json#/produced_by/version": 1,
+            "calibration.json#/questions/department/map/x/[]": 1,
+            "calibration.json#/questions/department/n": 1,
+            "calibration.json#/questions/frustration/map/x/[]": 1,
+            "calibration.json#/questions/frustration/n": 1,
+            "calibration.json#/questions/refund/n": 1,
+            "calibration.json#/questions/refund/positives": 1
+          },
+          "baseline_strict": {
+            "edits": 412,
+            "baseline_rejects": 98,
+            "verifier_rejects": 399,
+            "only_verifier_rejects": 301,
+            "only_baseline_rejects": 0,
+            "both_reject": 98,
+            "both_accept": 13,
+            "exit_codes": {
+              "0": {
+                "baseline_rejects": 0,
+                "baseline_accepts": 13
+              },
+              "1": {
+                "baseline_rejects": 40,
+                "baseline_accepts": 283
+              },
+              "2": {
+                "baseline_rejects": 58,
+                "baseline_accepts": 18
+              }
+            },
+            "only_baseline_fields": {},
+            "only_baseline_reasons": {}
+          }
         },
         "files": {
           "calibration.json": {
@@ -3181,7 +3861,25 @@
               "exit_codes": {
                 "1": 76
               },
-              "undetected_fields": []
+              "undetected_fields": [],
+              "undetected_field_counts": {},
+              "baseline_strict": {
+                "edits": 76,
+                "baseline_rejects": 76,
+                "verifier_rejects": 76,
+                "only_verifier_rejects": 0,
+                "only_baseline_rejects": 0,
+                "both_reject": 76,
+                "both_accept": 0,
+                "exit_codes": {
+                  "1": {
+                    "baseline_rejects": 76,
+                    "baseline_accepts": 0
+                  }
+                },
+                "only_baseline_fields": {},
+                "only_baseline_reasons": {}
+              }
             },
             "resealed": {
               "mutations": 76,
@@ -3205,7 +3903,42 @@
                 "/questions/frustration/n",
                 "/questions/refund/n",
                 "/questions/refund/positives"
-              ]
+              ],
+              "undetected_field_counts": {
+                "/fitted_on/case_ids/[]": 6,
+                "/produced_by/version": 1,
+                "/questions/department/map/x/[]": 1,
+                "/questions/department/n": 1,
+                "/questions/frustration/map/x/[]": 1,
+                "/questions/frustration/n": 1,
+                "/questions/refund/n": 1,
+                "/questions/refund/positives": 1
+              },
+              "baseline_strict": {
+                "edits": 76,
+                "baseline_rejects": 38,
+                "verifier_rejects": 63,
+                "only_verifier_rejects": 25,
+                "only_baseline_rejects": 0,
+                "both_reject": 38,
+                "both_accept": 13,
+                "exit_codes": {
+                  "0": {
+                    "baseline_rejects": 0,
+                    "baseline_accepts": 13
+                  },
+                  "1": {
+                    "baseline_rejects": 0,
+                    "baseline_accepts": 17
+                  },
+                  "2": {
+                    "baseline_rejects": 38,
+                    "baseline_accepts": 8
+                  }
+                },
+                "only_baseline_fields": {},
+                "only_baseline_reasons": {}
+              }
             }
           },
           "evaluation.json": {
@@ -3220,7 +3953,25 @@
               "exit_codes": {
                 "1": 334
               },
-              "undetected_fields": []
+              "undetected_fields": [],
+              "undetected_field_counts": {},
+              "baseline_strict": {
+                "edits": 334,
+                "baseline_rejects": 334,
+                "verifier_rejects": 334,
+                "only_verifier_rejects": 0,
+                "only_baseline_rejects": 0,
+                "both_reject": 334,
+                "both_accept": 0,
+                "exit_codes": {
+                  "1": {
+                    "baseline_rejects": 334,
+                    "baseline_accepts": 0
+                  }
+                },
+                "only_baseline_fields": {},
+                "only_baseline_reasons": {}
+              }
             },
             "resealed": {
               "mutations": 334,
@@ -3234,7 +3985,29 @@
                 "1": 304,
                 "2": 30
               },
-              "undetected_fields": []
+              "undetected_fields": [],
+              "undetected_field_counts": {},
+              "baseline_strict": {
+                "edits": 334,
+                "baseline_rejects": 60,
+                "verifier_rejects": 334,
+                "only_verifier_rejects": 274,
+                "only_baseline_rejects": 0,
+                "both_reject": 60,
+                "both_accept": 0,
+                "exit_codes": {
+                  "1": {
+                    "baseline_rejects": 40,
+                    "baseline_accepts": 264
+                  },
+                  "2": {
+                    "baseline_rejects": 20,
+                    "baseline_accepts": 10
+                  }
+                },
+                "only_baseline_fields": {},
+                "only_baseline_reasons": {}
+              }
             }
           },
           "requirements.json": {
@@ -3249,7 +4022,25 @@
               "exit_codes": {
                 "1": 2
               },
-              "undetected_fields": []
+              "undetected_fields": [],
+              "undetected_field_counts": {},
+              "baseline_strict": {
+                "edits": 2,
+                "baseline_rejects": 2,
+                "verifier_rejects": 2,
+                "only_verifier_rejects": 0,
+                "only_baseline_rejects": 0,
+                "both_reject": 2,
+                "both_accept": 0,
+                "exit_codes": {
+                  "1": {
+                    "baseline_rejects": 2,
+                    "baseline_accepts": 0
+                  }
+                },
+                "only_baseline_fields": {},
+                "only_baseline_reasons": {}
+              }
             },
             "resealed": {
               "mutations": 2,
@@ -3262,7 +4053,25 @@
               "exit_codes": {
                 "1": 2
               },
-              "undetected_fields": []
+              "undetected_fields": [],
+              "undetected_field_counts": {},
+              "baseline_strict": {
+                "edits": 2,
+                "baseline_rejects": 0,
+                "verifier_rejects": 2,
+                "only_verifier_rejects": 2,
+                "only_baseline_rejects": 0,
+                "both_reject": 0,
+                "both_accept": 0,
+                "exit_codes": {
+                  "1": {
+                    "baseline_rejects": 0,
+                    "baseline_accepts": 2
+                  }
+                },
+                "only_baseline_fields": {},
+                "only_baseline_reasons": {}
+              }
             }
           }
         }
@@ -3281,6 +4090,31 @@
           "0": 30,
           "1": 4124,
           "2": 60
+        },
+        "baseline_strict": {
+          "edits": 4214,
+          "baseline_rejects": 3619,
+          "verifier_rejects": 4184,
+          "only_verifier_rejects": 565,
+          "only_baseline_rejects": 0,
+          "both_reject": 3619,
+          "both_accept": 30,
+          "exit_codes": {
+            "0": {
+              "baseline_rejects": 0,
+              "baseline_accepts": 30
+            },
+            "1": {
+              "baseline_rejects": 3559,
+              "baseline_accepts": 565
+            },
+            "2": {
+              "baseline_rejects": 60,
+              "baseline_accepts": 0
+            }
+          },
+          "only_baseline_fields": {},
+          "only_baseline_reasons": {}
         }
       },
       "resealed": {
@@ -3295,6 +4129,41 @@
           "0": 748,
           "1": 2749,
           "2": 717
+        },
+        "baseline_strict": {
+          "edits": 4214,
+          "baseline_rejects": 1104,
+          "verifier_rejects": 3466,
+          "only_verifier_rejects": 2375,
+          "only_baseline_rejects": 13,
+          "both_reject": 1091,
+          "both_accept": 735,
+          "exit_codes": {
+            "0": {
+              "baseline_rejects": 13,
+              "baseline_accepts": 735
+            },
+            "1": {
+              "baseline_rejects": 486,
+              "baseline_accepts": 2263
+            },
+            "2": {
+              "baseline_rejects": 605,
+              "baseline_accepts": 112
+            }
+          },
+          "only_baseline_fields": {
+            "decision-control:evaluation.v1:/report/schema_version": 2,
+            "decision-control:record.v1:/record/schema_version": 2,
+            "decision-control:record.v3:/record/schema_version": 3,
+            "experiment-gate:decision.v2:/schema_version": 6
+          },
+          "only_baseline_reasons": {
+            "digest /input_sha256: differs": 6,
+            "digest /record/policy_sha256: differs": 1,
+            "digest /sha256: differs": 3,
+            "schema": 13
+          }
         }
       }
     }
@@ -3412,6 +4281,31 @@
           "0": 30,
           "1": 4124,
           "2": 60
+        },
+        "baseline_strict": {
+          "edits": 4214,
+          "baseline_rejects": 3619,
+          "verifier_rejects": 4184,
+          "only_verifier_rejects": 565,
+          "only_baseline_rejects": 0,
+          "both_reject": 3619,
+          "both_accept": 30,
+          "exit_codes": {
+            "0": {
+              "baseline_rejects": 0,
+              "baseline_accepts": 30
+            },
+            "1": {
+              "baseline_rejects": 3559,
+              "baseline_accepts": 565
+            },
+            "2": {
+              "baseline_rejects": 60,
+              "baseline_accepts": 0
+            }
+          },
+          "only_baseline_fields": {},
+          "only_baseline_reasons": {}
         }
       },
       "resealed": {
@@ -3426,6 +4320,41 @@
           "0": 740,
           "1": 2753,
           "2": 721
+        },
+        "baseline_strict": {
+          "edits": 4214,
+          "baseline_rejects": 1104,
+          "verifier_rejects": 3474,
+          "only_verifier_rejects": 2383,
+          "only_baseline_rejects": 13,
+          "both_reject": 1091,
+          "both_accept": 727,
+          "exit_codes": {
+            "0": {
+              "baseline_rejects": 13,
+              "baseline_accepts": 727
+            },
+            "1": {
+              "baseline_rejects": 486,
+              "baseline_accepts": 2267
+            },
+            "2": {
+              "baseline_rejects": 605,
+              "baseline_accepts": 116
+            }
+          },
+          "only_baseline_fields": {
+            "decision-control:evaluation.v1:/report/schema_version": 2,
+            "decision-control:record.v1:/record/schema_version": 2,
+            "decision-control:record.v3:/record/schema_version": 3,
+            "experiment-gate:decision.v2:/schema_version": 6
+          },
+          "only_baseline_reasons": {
+            "digest /input_sha256: differs": 6,
+            "digest /record/policy_sha256: differs": 1,
+            "digest /sha256: differs": 3,
+            "schema": 13
+          }
         }
       }
     },

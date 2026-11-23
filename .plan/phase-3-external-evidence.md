@@ -22,7 +22,7 @@ recruited for P-029 may also serve RELIA's reproduction if RELIA is frozen by th
 | P-028 | **Drafted; owner review pending** | [docs/REGULATORY_MAPPING.md](../docs/REGULATORY_MAPPING.md) (#247, then re-mapped to the current schemas, replay rule and signing in #258). It makes no compliance claim. The 2 December 2027 Annex III date was confirmed on EUR-Lex on 2026-10-19; ISO/IEC 42001 text is paywalled and was not reviewed. The owner reviews it; it needs re-mapping whenever a schema version or signing behavior changes |
 | P-029 | **Blocked on owner** | The owner recruits a person with no relationship to the owner or the code. Needs 0.2.x on PyPI (P-023, blocked on P-020 and owner release; P-016 done). Due 2027-04-30. No reproduction record exists |
 | P-032 | **Blocked on owner** | The owner needs a pilot team (P-027 is only a drafted template) and its written permission. Due 2027-05-15, or a dated note why it was not run |
-| P-030 | **Blocked on P-029 and P-032** | The preprint needs the reproduction and pilot outcomes; no draft is committed in this repository. Due 2027-05-31; every number must trace to a committed record |
+| P-030 | **Blocked on P-029 and P-032** | The preprint needs the reproduction and pilot outcomes; no preprint draft is committed in this repository. The workshop draft in [docs/paper/](../docs/paper/README.md) belongs to P-037 and holds neither outcome. Due 2027-05-31; every number must trace to a committed record |
 | P-031 | **Not started; owner** | Quarterly review and JOSS gate check. No JOSS submission is planned until every gate is met with evidence |
 
 ## Exit criteria

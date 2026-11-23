@@ -8,7 +8,8 @@
 //   (b) a "hash + JSON Schema" baseline (Ajv plus digest recomputation, no replay) against each
 //       verifier's exit code;
 //   (c) a single-leaf mutation sweep over every valid vector in two modes: stale (digests kept)
-//       and resealed (every digest the manifest declares for the vector recomputed);
+//       and resealed (every digest the manifest declares for the vector recomputed), each edited
+//       record also checked by the strict baseline of (b) and crossed with its verifier's exit code;
 //   (d) record sizes and, when asked, CLI verify latency (median of N runs).
 //
 // Everything but latency is deterministic: fixed ordering, no randomness, no clock.
@@ -540,7 +541,7 @@ async function mutationTasks(valid, skipped, context) {
   return { tasks, digestLeaves };
 }
 
-async function runTask(task, index, { tmp, bin, env }) {
+async function runTask(task, index, { tmp, bin, env, baseline }) {
   const dir = path.join(tmp, `task-${index}`);
   await fs.mkdir(dir);
   const target = path.join(dir, path.basename(task.vector.abs));
@@ -550,49 +551,90 @@ async function runTask(task, index, { tmp, bin, env }) {
   } else {
     await fs.writeFile(target, task.files[0][1]);
   }
+  // The strict baseline of (b) on the files the verifier gets, read before it runs.
+  const reasons = await baselineReasons({ ...task.vector, abs: target }, "strict", baseline);
   const result = await runVerifier(commandFor(task.vector, target, bin), { env, cwd: dir });
   await fs.rm(dir, { recursive: true, force: true });
-  return { code: result.code, crashed: result.crashed };
+  return { code: result.code, crashed: result.crashed, baseline: reasons };
 }
 
-const emptyMode = () => ({ mutations: 0, detected: 0, undetected: 0, errors: 0, unsealable: 0, detection_percent: null, crashed: 0, exit_codes: {}, undetected_fields: new Set() });
+const emptyCross = () => ({
+  edits: 0, baseline_rejects: 0, verifier_rejects: 0, only_verifier_rejects: 0, only_baseline_rejects: 0, both_reject: 0, both_accept: 0,
+  exit_codes: {}, only_baseline_fields: new Map(), only_baseline_reasons: new Map(),
+});
+const emptyMode = () => ({ mutations: 0, detected: 0, undetected: 0, errors: 0, unsealable: 0, detection_percent: null, crashed: 0, exit_codes: {}, undetected_fields: new Set(), undetected_field_counts: new Map(), baseline_strict: emptyCross() });
+const tally = (map, key) => map.set(key, (map.get(key) ?? 0) + 1);
+const sortedObject = (entries) => Object.fromEntries([...entries].sort(([a], [b]) => byText(a, b)));
 
 // Errors (no exit code) and unsealable edits (no canonical form to reseal) are counted apart and
-// left out of the detection rate.
-function addRun(summary, code, crashed, field, unsealable = false) {
+// left out of the detection rate. `reasons` is the strict baseline's verdict on the same edited
+// files (empty: accepted). It is crossed with the exit code for every run, and in four cells for
+// the runs the rate counts.
+function addRun(summary, code, crashed, field, unsealable, reasons) {
   summary.mutations += 1;
   const key = code === null ? "none" : String(code);
   summary.exit_codes[key] = (summary.exit_codes[key] ?? 0) + 1;
+  const cross = summary.baseline_strict;
+  const rejected = reasons.length > 0;
+  cross.exit_codes[key] ??= { baseline_rejects: 0, baseline_accepts: 0 };
+  cross.exit_codes[key][rejected ? "baseline_rejects" : "baseline_accepts"] += 1;
   if (crashed) summary.crashed += 1;
   if (code === null) {
     summary.errors += 1;
-  } else if (unsealable) {
+    return;
+  }
+  if (unsealable) {
     summary.unsealable += 1;
-  } else if (code === 0) {
+    return;
+  }
+  if (code === 0) {
     summary.undetected += 1;
     summary.undetected_fields.add(generalize(field));
+    tally(summary.undetected_field_counts, generalize(field));
   } else {
     summary.detected += 1;
+  }
+  cross.edits += 1;
+  if (rejected) cross.baseline_rejects += 1;
+  if (code !== 0) cross.verifier_rejects += 1;
+  if (code !== 0 && rejected) {
+    cross.both_reject += 1;
+  } else if (code !== 0) {
+    cross.only_verifier_rejects += 1;
+  } else if (rejected) {
+    cross.only_baseline_rejects += 1;
+    tally(cross.only_baseline_fields, generalize(field));
+    for (const reason of reasons) tally(cross.only_baseline_reasons, reason);
+  } else {
+    cross.both_accept += 1;
   }
 }
 
 function finishMode(summary) {
-  const exitCodes = {};
-  for (const key of Object.keys(summary.exit_codes).sort(byText)) exitCodes[key] = summary.exit_codes[key];
-  return { ...summary, detection_percent: percent(summary.detected, summary.detected + summary.undetected), exit_codes: exitCodes, undetected_fields: [...summary.undetected_fields].sort(byText) };
+  const cross = summary.baseline_strict;
+  return {
+    ...summary,
+    detection_percent: percent(summary.detected, summary.detected + summary.undetected),
+    exit_codes: sortedObject(Object.entries(summary.exit_codes)),
+    undetected_fields: [...summary.undetected_fields].sort(byText),
+    undetected_field_counts: sortedObject(summary.undetected_field_counts),
+    baseline_strict: { ...cross, exit_codes: sortedObject(Object.entries(cross.exit_codes)), only_baseline_fields: sortedObject(cross.only_baseline_fields), only_baseline_reasons: sortedObject(cross.only_baseline_reasons) },
+  };
 }
 
 function summarizeMutations(tasks, results, { skipped, digestLeaves, unaccounted, embedded }) {
   const groups = new Map();
   const totals = Object.fromEntries(MODES.map((mode) => [mode, emptyMode()]));
-  const controls = { runs: 0, accepted: 0, rejected: [] };
+  const controls = { runs: 0, accepted: 0, rejected: [], baseline_accepted: 0, baseline_rejected: [] };
   tasks.forEach((task, index) => {
-    const { code, crashed } = results[index];
+    const { code, crashed, baseline } = results[index];
     const { vector } = task;
     if (task.mode === "control") {
       controls.runs += 1;
       if (code === 0) controls.accepted += 1;
       else controls.rejected.push(`${vector.project}/${vector.path}`);
+      if (baseline.length === 0) controls.baseline_accepted += 1;
+      else controls.baseline_rejected.push(`${vector.project}/${vector.path}`);
       return;
     }
     const key = `${vector.project}\0${vector.type}`;
@@ -600,11 +642,11 @@ function summarizeMutations(tasks, results, { skipped, digestLeaves, unaccounted
     const group = groups.get(key);
     group.vectors.add(vector.path);
     const field = task.group === null ? task.field : `${task.group}#${task.field}`;
-    addRun(group[task.mode], code, crashed, field, task.unsealable);
-    addRun(totals[task.mode], code, crashed, `${vector.project}:${vector.type}:${field}`, task.unsealable);
+    addRun(group[task.mode], code, crashed, field, task.unsealable, baseline);
+    addRun(totals[task.mode], code, crashed, `${vector.project}:${vector.type}:${field}`, task.unsealable, baseline);
     if (task.group !== null) {
       if (!group.files.has(task.group)) group.files.set(task.group, Object.fromEntries(MODES.map((mode) => [mode, emptyMode()])));
-      addRun(group.files.get(task.group)[task.mode], code, crashed, task.field, task.unsealable);
+      addRun(group.files.get(task.group)[task.mode], code, crashed, task.field, task.unsealable, baseline);
     }
   });
   const byType = [...groups.values()]
@@ -618,7 +660,7 @@ function summarizeMutations(tasks, results, { skipped, digestLeaves, unaccounted
       return row;
     });
   const total = Object.fromEntries(MODES.map((mode) => {
-    const { undetected_fields: _fields, ...rest } = finishMode(totals[mode]);
+    const { undetected_fields: _fields, undetected_field_counts: _counts, ...rest } = finishMode(totals[mode]);
     return [mode, rest];
   }));
   const embeddedRows = Object.entries(embedded).flatMap(([project, rules]) => rules.map(({ document, value, what, derive, covers_file: file }) => ({
@@ -776,12 +818,13 @@ export async function evaluate({ root, bin, jobs = os.availableParallelism?.() ?
       if (!schemaCache.has(vector.projectDir)) schemaCache.set(vector.projectDir, loadProjectSchemas(vector.projectDir));
       return schemaCache.get(vector.projectDir);
     };
+    const baselineContext = { specs, schemasFor, embedded };
     const exits = await pool(vectors, jobs, (vector) => runVerifier(commandFor(vector, vector.abs, bin), { env, cwd: tmp }));
     const perVector = [];
     for (const [index, vector] of vectors.entries()) {
       const row = { project: vector.project, path: vector.path, expect: vector.expect, record_type: vector.type, manifest_exit_code: vector.spec.verify.exit_code, verifier_exit_code: exits[index].code };
       for (const mode of BASELINES) {
-        const reasons = await baselineReasons(vector, mode, { specs, schemasFor, embedded });
+        const reasons = await baselineReasons(vector, mode, baselineContext);
         row[`baseline_${mode}`] = reasons.length === 0 ? "accept" : "reject";
         if (reasons.length > 0) row[`baseline_${mode}_reasons`] = reasons;
       }
@@ -808,7 +851,7 @@ export async function evaluate({ root, bin, jobs = os.availableParallelism?.() ?
     log(`mutations: ${tasks.length} verifier runs (${valid.length} controls), ${jobs} at a time`);
     let done = 0;
     const results = await pool(tasks, jobs, async (task, index) => {
-      const result = await runTask(task, index, context);
+      const result = await runTask(task, index, { ...context, baseline: baselineContext });
       done += 1;
       if (done % 1000 === 0) log(`  ${done}/${tasks.length}`);
       return result;
@@ -865,6 +908,7 @@ export function problems(result) {
     if (row.verifier_exit_code !== row.manifest_exit_code) found.push(`${row.project}/${row.path}: verifier exited ${row.verifier_exit_code}, manifest says ${row.manifest_exit_code}`);
   }
   for (const vector of result.mutations.controls.rejected) found.push(`${vector}: the re-serialized, unmutated vector was rejected, so its mutations are confounded`);
+  for (const vector of result.mutations.controls.baseline_rejected) found.push(`${vector}: the baseline rejects the re-serialized, unmutated vector, so its baseline counts are confounded`);
   for (const mode of MODES) {
     const { errors } = result.mutations.total[mode];
     if (errors > 0) found.push(`${errors} ${mode} mutation runs ended without an exit code after ${ATTEMPTS} attempts; they are left out of the rates`);
@@ -912,6 +956,47 @@ const number = (value) => value.toLocaleString("en-US");
 const rate = (summary) => `${number(summary.detected)}/${number(summary.detected + summary.undetected)} (${summary.detection_percent?.toFixed(1) ?? "-"}%)`;
 const toolList = (tools) => Object.entries(tools).filter(([, version]) => version).map(([tool, version]) => `${tool} (${version})`);
 const fields = (list) => (list.length === 0 ? "none" : list.map((field) => `\`${field}\``).join(", "));
+const share = (part, whole) => `${number(part)} (${percent(part, whole)?.toFixed(1) ?? "-"}%)`;
+
+// (c), continued: the baseline of (b) on the same edited records, crossed with the verifiers.
+function renderBaselineOnEdits(add, { mutations, caller_path: caller }) {
+  add("", "### Hash + JSON Schema baseline on the edited records", "");
+  add(`Each edited record also goes through the strict baseline of (b), in process and on the files its verifier gets; a directory vector is checked as a whole, as in (b). *Only the verifier* counts edits that the verifier rejects and the baseline accepts: what the verifier adds to these hash and schema checks on this corpus, by replay (exit 1) or by its own input checks (exit 2; the split is below). *Pass both* counts edits that both accept. The verifier columns are the detections above; unsealable edits and runs without an exit code are left out, as in the rates. The baseline accepts ${mutations.controls.baseline_accepted} of the ${mutations.controls.runs} unmutated controls.`);
+  const header = ["| Project | Record type | Edits | Baseline rejects | Verifier rejects | Only the verifier | Only the baseline | Both reject | Pass both |", "| --- | --- | --- | --- | --- | --- | --- | --- | --- |"];
+  const row = (lead, cross) => add(`${lead} ${number(cross.edits)} | ${number(cross.baseline_rejects)} | ${number(cross.verifier_rejects)} | ${number(cross.only_verifier_rejects)} | ${number(cross.only_baseline_rejects)} | ${number(cross.both_reject)} | ${number(cross.both_accept)} |`);
+  for (const mode of MODES) {
+    add("", `${mode === "stale" ? "Stale" : "Resealed"}:`, "", ...header);
+    for (const item of mutations.by_type) {
+      row(`| ${item.project} | ${item.record_type} |`, item[mode].baseline_strict);
+      for (const [name, file] of Object.entries(item.files ?? {})) row(`| | ${item.record_type}: ${name} |`, file[mode].baseline_strict);
+    }
+    row("| **All** | |", mutations.total[mode].baseline_strict);
+  }
+  const sentence = (cross) => `the baseline rejects ${share(cross.baseline_rejects, cross.edits)} of ${number(cross.edits)} edits and the verifiers ${share(cross.verifier_rejects, cross.edits)}; ${share(cross.only_verifier_rejects, cross.edits)} are rejected only by the verifier, and ${share(cross.both_accept, cross.edits)} pass both`;
+  const { stale, resealed } = mutations.total;
+  add("", `Resealed, ${sentence(resealed.baseline_strict)}. Stale, ${sentence(stale.baseline_strict)}.`, "");
+  add("Resealed edits by verifier exit code (1: the evidence disagrees; 2: invalid or unsupported input):", "", "| Verifier exit code | Edits | Baseline rejects | Baseline accepts |", "| --- | --- | --- | --- |");
+  for (const [code, split] of Object.entries(resealed.baseline_strict.exit_codes)) add(`| ${code} | ${number(split.baseline_rejects + split.baseline_accepts)} | ${number(split.baseline_rejects)} | ${number(split.baseline_accepts)} |`);
+  const onlyBaseline = MODES.map((mode) => ({
+    mode,
+    count: mutations.total[mode].baseline_strict.only_baseline_rejects,
+    reasons: Object.entries(mutations.total[mode].baseline_strict.only_baseline_reasons),
+    fields: mutations.by_type.flatMap((item) => Object.entries(item[mode].baseline_strict.only_baseline_fields).map(([field, n]) => ({ label: `${item.project} ${item.record_type} \`${field}\` (${n})`, field }))),
+  }));
+  const listed = onlyBaseline.filter((item) => item.count > 0).map((item) => `${item.mode}: ${item.fields.map((field) => field.label).join(", ")}; reasons: ${item.reasons.map(([reason, n]) => `\`${reason}\` (${n})`).join(", ")}`);
+  add("", `Edits only the baseline rejects: ${onlyBaseline.map((item) => `${item.count} ${item.mode}`).join(", ")}${listed.length === 0 ? "." : ` (${listed.join("; ")}).`}`);
+  const versionEdits = onlyBaseline.every((item) => item.fields.every(({ field }) => /(^|[/#])schema_version$/.test(field))
+    && item.reasons.filter(([reason]) => /(^|: )schema$/.test(reason)).reduce((sum, [, n]) => sum + n, 0) === item.count);
+  if (listed.length > 0 && versionEdits) {
+    const digestReasons = onlyBaseline.some((item) => item.reasons.some(([reason]) => /(^|: )digest /.test(reason)));
+    add(`Each of them edits \`schema_version\` and fails the schema step: the baseline validates an edited record against the schema its vector declares, and every schema here fixes \`schema_version\` with \`const\`, while the verifier reads the record as the version it now names, resealed in that version's canonical form.${digestReasons ? " Where that form gives other bytes than the declared version's, the baseline's digest check, which uses the declared version's form, fails too." : ""}`);
+  }
+  if (caller) {
+    const other = caller.total.resealed.baseline_strict;
+    add("", `With the caller's PATH, resealed: the baseline rejects ${number(other.baseline_rejects)} of ${number(other.edits)}, the verifiers ${number(other.verifier_rejects)}, only the verifier ${number(other.only_verifier_rejects)}, only the baseline ${number(other.only_baseline_rejects)}, and ${number(other.both_accept)} pass both. The baseline does not depend on PATH; per record type the tables above give the default PATH only.`);
+  }
+  add("", "Limits: the schemas are this repository's own. They constrain each field's type, form and range and pick a shape by a tag such as `type` or `format`; none ties a verdict, a lifecycle state or a policy outcome to other fields. Decision-control's have no conditional rules; experiment-gate's and Jev calibration's use `if`/`then` only to require a guardrail's margin and to pick the form of a calibration map. A stricter schema would reject more of these edits. Each count is one edit to one leaf. `results.json` also counts the undetected edits per field (`undetected_field_counts`, per record type and mode).");
+}
 
 export function renderMarkdown(result) {
   const lines = [];
@@ -970,6 +1055,7 @@ export function renderMarkdown(result) {
   const errors = MODES.map((mode) => mutations.total[mode].errors).reduce((a, b) => a + b, 0);
   add(`Controls: ${mutations.controls.accepted} of ${mutations.controls.runs} valid vectors still verify after being rewritten unmutated, so the rewrite itself is not what the verifiers detect.${mutations.controls.rejected.length ? ` Rejected: ${mutations.controls.rejected.join(", ")}.` : ""} ${crashed === 0 ? "No run ended in an uncaught Python exception." : `${crashed} runs ended in an uncaught Python exception; they count as detected.`} ${errors === 0 ? "Every run returned an exit code (a run killed before it exits is retried up to three times)." : `${errors} runs never returned an exit code; the rates leave them out.`}`);
   if (mutations.skipped.length > 0) add(`Skipped files: ${mutations.skipped.map((item) => `\`${item.vector}/${item.file}\``).join(", ")} (${[...new Set(mutations.skipped.map((item) => item.reason))].join("; ")}).`);
+  renderBaselineOnEdits(add, result);
   for (const mode of MODES) {
     add("", `### Fields whose edits go undetected, ${mode}`, "");
     const missed = mutations.by_type.filter((row) => row[mode].undetected > 0);
